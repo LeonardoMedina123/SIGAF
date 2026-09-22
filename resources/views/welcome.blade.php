@@ -53,7 +53,7 @@
 
                         <label class="block space-y-2">
                             <span class="block text-[1.05rem] font-bold text-[#173a6a]">Correo Laboral <em class="not-italic text-red-500">*</em></span>
-                            <input name="email" type="email" value="23151256@aguascalientes.tecnm.mx" aria-label="Correo Laboral" class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
+                            <input name="email" type="email" placeholder="23151256@aguascalientes.tecnm.mx" aria-label="Correo Laboral" class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
                         </label>
 
                         <label class="block space-y-2">
