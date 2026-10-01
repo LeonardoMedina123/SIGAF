@@ -13,11 +13,11 @@
 
         <header class="relative z-10 flex w-full items-center justify-between px-4 md:px-10" aria-label="Encabezado institucional">
             <div class="flex items-center justify-start text-white drop-shadow-md">
-                <img src="{{ asset('tecnm.png') }}" alt="Tecnológico Nacional de México" class="h-20 w-20 object-contain md:h-32 md:w-32" />
+                <img src="{{ asset('tecnm.png') }}" alt="Tecnológico Nacional de México" class="h-20 w-20 object-contain md:h-32 md:w-45" />
             </div>
 
             <div class="flex items-center justify-center text-white drop-shadow-md">
-                <img src="{{ asset('logo_ITA.png') }}" alt="Instituto Tecnológico de Aguascalientes" class="h-20 w-20 object-contain md:h-28 md:w-28" />
+                <img src="{{ asset('logo_ITA.png') }}" alt="Instituto Tecnológico de Aguascalientes" class="h-60 w-60 object-contain md:h-33 md:w-66" />
             </div>
 
             <div class="flex items-center justify-end gap-2 text-white drop-shadow-md">
@@ -48,17 +48,20 @@
                         <h1 class="text-[2.1rem] font-black leading-none">Inicio de sesión</h1>
                     </div>
 
-                    <form action="{{ route('login') }}" method="POST" class="space-y-5 p-5 md:p-6">
+                    <form action="{{ route('authenticate') }}" method="POST" class="space-y-5 p-5 md:p-6">
                         @csrf
 
                         <label class="block space-y-2">
                             <span class="block text-[1.05rem] font-bold text-[#173a6a]">Correo Laboral <em class="not-italic text-red-500">*</em></span>
-                            <input name="email" type="email" value="23151256@aguascalientes.tecnm.mx" aria-label="Correo Laboral" class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
+                            <input name="email" type="email" value="{{ old('email') }}" placeholder="23151265@aguascalientes.tecnm.mx" aria-label="Correo Laboral" autocomplete="username" required class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
+                            @error('email')
+                                <span class="block text-sm font-semibold text-red-600">{{ $message }}</span>
+                            @enderror
                         </label>
 
                         <label class="block space-y-2">
                             <span class="block text-[1.05rem] font-bold text-[#173a6a]">Contraseña <em class="not-italic text-red-500">*</em></span>
-                            <input name="password" type="password" aria-label="Contraseña" class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
+                            <input name="password" type="password" aria-label="Contraseña" autocomplete="current-password" required class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
                         </label>
 
                         <div class="flex justify-end pt-1">
