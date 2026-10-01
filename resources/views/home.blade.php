@@ -48,25 +48,25 @@
 				<thead class="bg-[#07577f] text-white">
 					<tr class="h-[42px]">
 						<th scope="col" class="rounded-tl-[19px] px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<span class="flex items-center justify-between gap-1">Requisición <span class="shrink-0 text-[9px] leading-[0.75] text-white/50" aria-hidden="true">▴<br>▾</span></span>
+							<button type="button" data-filter-trigger="requisicion" data-filter-title="Requisición" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Requisición <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
 						</th>
 						<th scope="col" class="px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<span class="flex items-center justify-between gap-1">Orden de compra <span class="shrink-0 text-[9px] leading-[0.75] text-white/50" aria-hidden="true">▴<br>▾</span></span>
+							<button type="button" data-filter-trigger="orden-compra" data-filter-title="Orden de compra" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Orden de compra <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
 						</th>
 						<th scope="col" class="px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<span class="flex items-center justify-between gap-1">Factura <span class="shrink-0 text-[9px] leading-[0.75] text-white/50" aria-hidden="true">▴<br>▾</span></span>
+							<button type="button" data-filter-trigger="factura" data-filter-title="Factura" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Factura <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
 						</th>
 						<th scope="col" class="px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<span class="flex items-center justify-between gap-1">Validación <span class="shrink-0 text-[9px] leading-[0.75] text-white/50" aria-hidden="true">▴<br>▾</span></span>
+							<button type="button" data-filter-trigger="validacion" data-filter-title="Validación" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Validación <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
 						</th>
 						<th scope="col" class="px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<span class="flex items-center justify-between gap-1">Pago <span class="shrink-0 text-[9px] leading-[0.75] text-white/50" aria-hidden="true">▴<br>▾</span></span>
+							<button type="button" data-filter-trigger="pago" data-filter-title="Pago" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Pago <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
 						</th>
 						<th scope="col" class="px-3 py-2 text-center text-[15px] font-semibold leading-[1.05]">
-							<span class="flex items-center justify-between gap-2">Validación Recursos Financieros <span class="shrink-0 text-[9px] leading-[0.75] text-white/50" aria-hidden="true">▴<br>▾</span></span>
+							<button type="button" data-filter-trigger="validacion-financiera" data-filter-title="Validación Recursos Financieros" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-2 text-left">Validación Recursos Financieros <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
 						</th>
 						<th scope="col" class="rounded-tr-[19px] px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<span class="flex items-center justify-between gap-1">Complemento proveedor <span class="shrink-0 text-[9px] leading-[0.75] text-white/50" aria-hidden="true">▴<br>▾</span></span>
+							<button type="button" data-filter-trigger="complemento" data-filter-title="Complemento proveedor" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Complemento proveedor <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
 						</th>
 					</tr>
 				</thead>
@@ -79,8 +79,111 @@
 		</section>
 	</main>
 
-	<button type="button" class="fixed bottom-5 right-5 z-20 flex h-12 items-center gap-2 rounded-full bg-[#08bf62] px-4 text-[13px] font-semibold text-[#062b19] shadow-[0_3px_9px_rgba(0,0,0,0.18)] transition hover:bg-[#06ad58] md:bottom-7 md:right-10" aria-label="Crear nueva orden">
-		<span aria-hidden="true" class="text-[25px] font-light leading-none">+</span>
+	<div id="filter-menu" role="dialog" aria-modal="false" aria-labelledby="filter-menu-title" class="fixed z-50 hidden w-[290px] max-w-[calc(100vw-24px)] overflow-y-auto rounded-[18px] bg-white p-3 text-[#171717] shadow-[0_5px_18px_rgba(0,0,0,0.24)]">
+		<div class="mb-2 flex h-5 items-center justify-between rounded-full bg-[#e7f5fc] px-2">
+			<h2 id="filter-menu-title" class="text-xs font-semibold"></h2>
+			<button type="button" data-filter-close aria-label="Cerrar filtros" class="flex h-5 w-5 items-center justify-center rounded-full bg-[#b9b9b9] text-sm font-bold leading-none text-white">×</button>
+		</div>
+		<div id="filter-menu-content" class="space-y-2"></div>
+		<button type="button" data-filter-apply class="mt-3 rounded-full bg-[#08bf62] px-4 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#06ad58]">Aplicar filtros</button>
+	</div>
+
+	<template id="filter-requisicion">
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Partida:</span><input type="text" class="h-7 min-w-0 rounded-full border-0 bg-[#b7b7b7] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Piezas:</span><input type="number" placeholder="2548" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Monto:</span><span class="flex min-w-0 gap-1"><select aria-label="Operador de monto" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+	</template>
+	<template id="filter-orden-compra">
+		<label class="grid grid-cols-[82px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[82px_1fr] items-center gap-2 text-xs"><span>Área solicitante:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[82px_1fr] items-center gap-2 text-xs"><span>Monto:</span><span class="flex min-w-0 gap-1"><select aria-label="Operador de monto" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
+		<label class="grid grid-cols-[82px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+	</template>
+	<template id="filter-factura">
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>UUID:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>RFC:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Total:</span><span class="flex min-w-0 gap-1"><select aria-label="Operador del total" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
+	</template>
+	<template id="filter-validacion">
+		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option>Pendiente</option><option>Aceptada</option><option>Rechazada</option></select></label>
+		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+	</template>
+	<template id="filter-pago">
+		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option>Pendiente</option><option>Pagado</option></select></label>
+		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+	</template>
+	<template id="filter-validacion-financiera">
+		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option>Pendiente</option><option>Validado</option><option>Rechazado</option></select></label>
+		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+	</template>
+	<template id="filter-complemento">
+		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>RFC:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option>Pendiente</option><option>Recibido</option></select></label>
+		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+	</template>
+
+	<script>
+		const filterMenu = document.querySelector('#filter-menu');
+		const filterTitle = document.querySelector('#filter-menu-title');
+		const filterContent = document.querySelector('#filter-menu-content');
+		let activeFilterTrigger = null;
+
+		function closeFilterMenu() {
+			filterMenu.classList.add('hidden');
+			activeFilterTrigger?.setAttribute('aria-expanded', 'false');
+			activeFilterTrigger = null;
+		}
+
+		document.querySelectorAll('[data-filter-trigger]').forEach((trigger) => {
+			trigger.addEventListener('click', () => {
+				if (activeFilterTrigger === trigger) {
+					closeFilterMenu();
+					return;
+				}
+
+				activeFilterTrigger?.setAttribute('aria-expanded', 'false');
+				activeFilterTrigger = trigger;
+				activeFilterTrigger.setAttribute('aria-expanded', 'true');
+				filterTitle.textContent = trigger.dataset.filterTitle;
+				filterContent.replaceChildren(document.querySelector(`#filter-${trigger.dataset.filterTrigger}`).content.cloneNode(true));
+				filterMenu.classList.remove('hidden');
+
+				const bounds = trigger.getBoundingClientRect();
+				const left = Math.min(Math.max(12, bounds.left), window.innerWidth - filterMenu.offsetWidth - 12);
+				const top = Math.min(bounds.bottom, window.innerHeight - filterMenu.offsetHeight - 12);
+				filterMenu.style.left = `${left}px`;
+				filterMenu.style.top = `${Math.max(12, top)}px`;
+			});
+		});
+
+		filterMenu.addEventListener('click', (event) => {
+			if (event.target.closest('[data-filter-close], [data-filter-apply]')) {
+				closeFilterMenu();
+			}
+		});
+
+		document.addEventListener('click', (event) => {
+			if (!filterMenu.contains(event.target) && !event.target.closest('[data-filter-trigger]')) {
+				closeFilterMenu();
+			}
+		});
+
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape') {
+				closeFilterMenu();
+			}
+		});
+
+		window.addEventListener('resize', closeFilterMenu);
+		 document.querySelector('section[aria-label="Requisiciones"]').addEventListener('scroll', closeFilterMenu);
+	</script>
+
+	<button type="button" class="fixed bottom-5 right-5 z-20 flex h-20 items-center gap-2 rounded-full bg-[#08bf62] px-7 text-[20px] font-semibold text-[#062b19] shadow-[0_3px_9px_rgba(0,0,0,0.18)] transition hover:bg-[#06ad58] md:bottom-9 md:right-10" aria-label="Crear nueva orden">
+		<span aria-hidden="true" class="text-[30px] font-light leading-none">+</span>
 		<span>Crear nueva orden</span>
 	</button>
 </body>
