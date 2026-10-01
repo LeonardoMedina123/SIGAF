@@ -12,6 +12,7 @@ class WelcomePageTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeText('Inicio de sesión');
+        $response->assertSee('action="'.route('authenticate').'"', false);
         $response->assertSee('/build/assets/');
     }
 }
