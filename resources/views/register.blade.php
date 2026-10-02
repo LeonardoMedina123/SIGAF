@@ -42,39 +42,62 @@
             </div>
 
             <div class="mb-4 flex w-full max-w-[530px] flex-col items-center md:mr-8 lg:mr-10">
-                <section class="w-full overflow-hidden rounded-[18px] bg-white shadow-[0_18px_45px_rgba(0,0,0,0.2)] backdrop-blur-[2px]" aria-label="Inicio de sesión">
+                <section class="w-full overflow-hidden rounded-[18px] bg-white shadow-[0_18px_45px_rgba(0,0,0,0.2)] backdrop-blur-[2px]" aria-label="Registro de usuario">
                     <div class="flex items-center justify-center gap-3 bg-[#004aad] px-4 py-4 text-white">
                         <img src="{{ asset('persona.png') }}" alt="Logo" class="h-8 w-8 object-contain" />
-                        <h1 class="text-[2.1rem] font-black leading-none">Inicio de sesión</h1>
+                        <h1 class="text-[2.1rem] font-black leading-none">Registro de usuario</h1>
                     </div>
 
-                    <form action="{{ route('authenticate') }}" method="POST" class="space-y-5 p-5 md:p-6">
+                    <form action="{{ route('register.store') }}" method="POST" class="space-y-4 p-5 md:p-6">
                         @csrf
+
+                        @if (session('status'))
+                            <p role="status" class="rounded-lg bg-green-100 px-4 py-3 font-semibold text-green-800">{{ session('status') }}</p>
+                        @endif
+
+                        <label class="block space-y-2">
+                            <span class="block text-[1.05rem] font-bold text-[#173a6a]">Nombre <em class="not-italic text-red-500">*</em></span>
+                            <input name="name" type="text" value="{{ old('name') }}" autocomplete="name" required maxlength="255" class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
+                            @error('name')
+                                <span class="block text-sm font-semibold text-red-600">{{ $message }}</span>
+                            @enderror
+                        </label>
 
                         <label class="block space-y-2">
                             <span class="block text-[1.05rem] font-bold text-[#173a6a]">Correo Laboral <em class="not-italic text-red-500">*</em></span>
-                            <input name="email" type="email" value="{{ old('email') }}" placeholder="23151265@aguascalientes.tecnm.mx" aria-label="Correo Laboral" autocomplete="username" required class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
+                            <input name="email" type="email" value="{{ old('email') }}" placeholder="23151265@aguascalientes.tecnm.mx" aria-label="Correo Laboral" autocomplete="email" required maxlength="255" class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
                             @error('email')
                                 <span class="block text-sm font-semibold text-red-600">{{ $message }}</span>
                             @enderror
                         </label>
 
                         <label class="block space-y-2">
+                            <span class="block text-[1.05rem] font-bold text-[#173a6a]">Departamento <em class="not-italic text-red-500">*</em></span>
+                            <input name="department" type="text" value="{{ old('department') }}" autocomplete="organization-title" required maxlength="255" class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
+                            @error('department')
+                                <span class="block text-sm font-semibold text-red-600">{{ $message }}</span>
+                            @enderror
+                        </label>
+
+                        <label class="block space-y-2">
                             <span class="block text-[1.05rem] font-bold text-[#173a6a]">Contraseña <em class="not-italic text-red-500">*</em></span>
-                            <input name="password" type="password" aria-label="Contraseña" autocomplete="current-password" required class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
+                            <input name="password" type="password" aria-label="Contraseña" autocomplete="new-password" minlength="8" required class="w-full rounded-[10px] border-0 bg-slate-300/85 px-4 py-3 text-[1.05rem] text-[#1d3f73] shadow-inner shadow-slate-400/50 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/50" />
+                            @error('password')
+                                <span class="block text-sm font-semibold text-red-600">{{ $message }}</span>
+                            @enderror
                         </label>
 
                         <div class="flex justify-end pt-1">
                             <button type="submit" class="w-[170px] rounded-xl bg-[#d1edfd] px-4 py-3 text-lg font-black text-[#ef3f43] transition hover:bg-sky-200">
-                                INICIO
+                                REGISTRAR
                             </button>
                         </div>
                     </form>
                 </section>
 
                 <div class="mt-4 flex items-center justify-center gap-2 text-center text-[1rem] font-bold text-white md:text-[1.1rem]">
-                    <span>¿No tienes una cuenta?</span>
-                    <a href="{{ route('register') }}" class=" px-4 py-2 font-black">REGÍSTRATE</a>
+                    <span>¿Ya tienes una cuenta?</span>
+                    <a href="{{ route('login') }}" class="font-black underline decoration-white/80 underline-offset-4">INICIA SESIÓN</a>
                 </div>
             </div>
         </main>
