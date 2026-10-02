@@ -5,6 +5,99 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>SIGAF | Requisiciones</title>
 	@vite(['resources/css/app.css', 'resources/js/app.js'])
+	<style>
+		#filter-menu {
+			width: min(400px, calc(100vw - 24px));
+			max-height: calc(100vh - 24px);
+			padding: 20px;
+			border: 1px solid #d7e1ea;
+			border-radius: 18px;
+			box-shadow: 0 18px 48px rgba(10, 35, 55, 0.24);
+		}
+
+		#filter-menu:not(.hidden) {
+			animation: filter-menu-enter 160ms ease-out;
+		}
+
+		#filter-menu > div:first-child {
+			height: 44px;
+			margin-bottom: 16px;
+			padding: 0 12px;
+			border-radius: 12px;
+			background: #eaf4f9;
+		}
+
+		#filter-menu-title {
+			font-size: 16px;
+			font-weight: 700;
+			color: #07577f;
+		}
+
+		#filter-menu-content {
+			gap: 12px;
+		}
+
+		#filter-menu-content label {
+			grid-template-columns: 104px minmax(0, 1fr);
+			gap: 10px;
+			font-size: 14px;
+			font-weight: 600;
+			color: #34495b;
+		}
+
+		#filter-menu-content input,
+		#filter-menu-content select {
+			min-width: 0;
+			height: 42px;
+			border: 1px solid #d5dee7;
+			border-radius: 10px;
+			background: #f6f8fa;
+			padding: 0 12px;
+			font-size: 14px;
+			color: #20384c;
+			transition: border-color 140ms ease, box-shadow 140ms ease;
+		}
+
+		#filter-menu-content input:focus,
+		#filter-menu-content select:focus {
+			border-color: #1684b5;
+			outline: none;
+			box-shadow: 0 0 0 3px rgba(22, 132, 181, 0.15);
+		}
+
+		#filter-menu [data-filter-close] {
+			height: 30px;
+			width: 30px;
+			background: #cbd5df;
+			color: #34495b;
+		}
+
+		#filter-menu [data-filter-apply] {
+			margin-top: 18px;
+			border-radius: 10px;
+			padding: 10px 18px;
+			font-size: 14px;
+			font-weight: 700;
+		}
+
+		thead [data-filter-trigger] {
+			justify-content: center;
+			text-align: center;
+		}
+
+		thead th + th {
+			border-left: 1px solid rgba(255, 255, 255, 0.18);
+		}
+
+		@keyframes filter-menu-enter {
+			from { opacity: 0; transform: translateY(-5px) scale(0.98); }
+			to { opacity: 1; transform: translateY(0) scale(1); }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			#filter-menu:not(.hidden) { animation: none; }
+		}
+	</style>
 </head>
 <body class="min-h-screen overflow-hidden bg-[#f4f4f4] text-[#161616] antialiased">
 	<header class="relative flex h-[58px] items-center justify-between overflow-hidden border-b-2 border-[#8050e8] bg-[#754b2e] px-3 text-white shadow-sm md:px-6">
@@ -37,36 +130,36 @@
 		<section aria-label="Requisiciones" class="overflow-x-auto rounded-[20px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
 			<table class="w-full min-w-[1080px] table-fixed border-separate border-spacing-0 text-left">
 				<colgroup>
-					<col class="w-[14%]" />
-					<col class="w-[12%]" />
-					<col class="w-[10%]" />
-					<col class="w-[11%]" />
-					<col class="w-[12%]" />
-					<col class="w-[22%]" />
-					<col class="w-[19%]" />
+					<col class="w-[15%]" />
+					<col class="w-[15%]" />
+					<col class="w-[15%]" />
+					<col class="w-[12.5%]" />
+					<col class="w-[15%]" />
+					<col class="w-[12.5%]" />
+					<col class="w-[15%]" />
 				</colgroup>
 				<thead class="bg-[#07577f] text-white">
 					<tr class="h-[42px]">
-						<th scope="col" class="rounded-tl-[19px] px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<button type="button" data-filter-trigger="requisicion" data-filter-title="Requisición" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Requisición <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
+						<th scope="col" class="rounded-tl-[19px] p-0 text-[15px] font-semibold leading-[1.05]">
+							<button type="button" data-filter-trigger="requisicion" data-filter-title="Requisición" aria-haspopup="dialog" aria-expanded="false" class="flex h-full min-h-[42px] w-full items-center justify-center px-1 text-center transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Requisición</button>
 						</th>
-						<th scope="col" class="px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<button type="button" data-filter-trigger="orden-compra" data-filter-title="Orden de compra" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Orden de compra <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
+						<th scope="col" class="p-0 text-[15px] font-semibold leading-[1.05]">
+							<button type="button" data-filter-trigger="orden-compra" data-filter-title="Orden de compra" aria-haspopup="dialog" aria-expanded="false" class="flex h-full min-h-[42px] w-full items-center justify-center px-1 text-center transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Orden de compra</button>
 						</th>
-						<th scope="col" class="px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<button type="button" data-filter-trigger="factura" data-filter-title="Factura" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Factura <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
+						<th scope="col" class="p-0 text-[15px] font-semibold leading-[1.05]">
+							<button type="button" data-filter-trigger="factura" data-filter-title="Factura" aria-haspopup="dialog" aria-expanded="false" class="flex h-full min-h-[42px] w-full items-center justify-center px-1 text-center transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Factura</button>
 						</th>
-						<th scope="col" class="px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<button type="button" data-filter-trigger="validacion" data-filter-title="Validación" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Validación <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
+						<th scope="col" class="p-0 text-[15px] font-semibold leading-[1.05]">
+							<button type="button" data-filter-trigger="validacion" data-filter-title="Validación" aria-haspopup="dialog" aria-expanded="false" class="flex h-full min-h-[42px] w-full items-center justify-center px-1 text-center transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Validación</button>
 						</th>
-						<th scope="col" class="px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<button type="button" data-filter-trigger="pago" data-filter-title="Pago" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Pago <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
+						<th scope="col" class="p-0 text-[15px] font-semibold leading-[1.05]">
+							<button type="button" data-filter-trigger="pago" data-filter-title="Pago" aria-haspopup="dialog" aria-expanded="false" class="flex h-full min-h-[42px] w-full items-center justify-center px-1 text-center transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Pago</button>
 						</th>
-						<th scope="col" class="px-3 py-2 text-center text-[15px] font-semibold leading-[1.05]">
-							<button type="button" data-filter-trigger="validacion-financiera" data-filter-title="Validación Recursos Financieros" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-2 text-left">Validación Recursos Financieros <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
+						<th scope="col" class="p-0 text-center text-[15px] font-semibold leading-[1.05]">
+							<button type="button" data-filter-trigger="validacion-financiera" data-filter-title="Validación Recursos Financieros" aria-haspopup="dialog" aria-expanded="false" class="flex h-full min-h-[42px] w-full items-center justify-center px-1 text-center transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Validación Recursos Financieros</button>
 						</th>
-						<th scope="col" class="rounded-tr-[19px] px-3 py-2 text-[15px] font-semibold leading-[1.05]">
-							<button type="button" data-filter-trigger="complemento" data-filter-title="Complemento proveedor" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-between gap-1 text-left">Complemento proveedor <span class="shrink-0 text-[17px] leading-none text-white/60" aria-hidden="true">⌄</span></button>
+						<th scope="col" class="rounded-tr-[19px] p-0 text-[15px] font-semibold leading-[1.05]">
+							<button type="button" data-filter-trigger="complemento" data-filter-title="Complemento proveedor" aria-haspopup="dialog" aria-expanded="false" class="flex h-full min-h-[42px] w-full items-center justify-center px-1 text-center transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Complemento proveedor</button>
 						</th>
 					</tr>
 				</thead>
@@ -91,7 +184,7 @@
 	<template id="filter-requisicion">
 		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
 		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Partida:</span><input type="text" class="h-7 min-w-0 rounded-full border-0 bg-[#b7b7b7] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Piezas:</span><input type="number" placeholder="2548" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Piezas:</span><input type="number" placeholder="0" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
 		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Monto:</span><span class="flex min-w-0 gap-1"><select aria-label="Operador de monto" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
 		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
 	</template>
