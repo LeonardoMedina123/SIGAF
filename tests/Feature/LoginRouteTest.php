@@ -26,6 +26,18 @@ class LoginRouteTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_authenticated_user_can_open_the_six_step_order_capture(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('Crear nueva orden')
+            ->assertSee('id="order-wizard-form"', false)
+            ->assertSee('Paso 6: Confirmación');
+    }
+
     public function test_login_rejects_invalid_credentials(): void
     {
         User::factory()->create([
