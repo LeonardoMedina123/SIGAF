@@ -74,7 +74,7 @@
 
                 <div class="mt-4 flex items-center justify-center gap-2 text-center text-[1rem] font-bold text-white md:text-[1.1rem]">
                     <span>¿No tienes una cuenta?</span>
-                    <a href="#" class="font-black underline decoration-white/80 underline-offset-4">CONSULTA</a>
+                    <a href="{{ route('register') }}" class=" px-4 py-2 font-black">REGÍSTRATE</a>
                 </div>
             </div>
         </main>
