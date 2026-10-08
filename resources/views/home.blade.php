@@ -304,6 +304,7 @@
 					<legend class="sr-only">Paso 1: Requisición</legend>
 					<div class="space-y-3">
 						<h2 class="text-xl font-semibold text-[#07577f] md:text-2xl">Folio de requisición</h2>
+						<p class="text-xs text-[#315a6b]">Puedes pegar una fila copiada de una tabla en cualquiera de estos campos. Los valores se acomodan desde el campo seleccionado y en el orden del formulario.</p>
 						<div class="grid gap-3 pt-2 sm:grid-cols-2">
 							<label class="grid gap-1 text-sm">Folio <input name="requisition_folio" type="text" required maxlength="100" autocomplete="off" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">Fecha de creación <input name="requisition_created_on" type="date" value="{{ now()->format('Y-m-d') }}" required class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
@@ -415,6 +416,24 @@
 			}
 		});
 		const orderSteps = [...document.querySelectorAll('[data-order-step]')];
+		const requisitionPasteFields = [
+			'requisition_folio',
+			'requisition_created_on',
+			'requisition_requested_on',
+			'requisition_amount',
+			'budget_key',
+			'item_number',
+			'requisition_sp',
+			'requisition_ppp',
+			'requisition_sup',
+			'requisition_dir',
+			'requisition_process',
+			'requisition_rf',
+			'quantity',
+			'unit',
+			'unit_cost',
+			'description',
+		];
 		const stepIndicators = [...document.querySelectorAll('[data-step-indicator]')];
 		const orderProgress = document.querySelector('#order-progress');
 		const previousButton = document.querySelector('#order-previous');
@@ -426,6 +445,83 @@
 		const pdfPreview = document.querySelector('#pdf-preview');
 		let activeOrderStep = 0;
 		let previewUrl = null;
+
+		function normalizePastedDate(value) {
+			const trimmedValue = value.trim();
+			const dateParts = trimmedValue.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+			const isoParts = trimmedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+			const parts = isoParts
+				? [Number(isoParts[1]), Number(isoParts[2]), Number(isoParts[3])]
+				: dateParts
+					? [Number(dateParts[3]), Number(dateParts[2]), Number(dateParts[1])]
+					: null;
+			if (!parts) {
+				return '';
+			}
+
+			const [year, month, day] = parts;
+			const date = new Date(Date.UTC(year, month - 1, day));
+			if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+				return '';
+			}
+
+			return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+		}
+
+		function normalizePastedNumber(value) {
+			let normalizedValue = value.trim().replace(/[^\d,.-]/g, '');
+			const lastComma = normalizedValue.lastIndexOf(',');
+			const lastPeriod = normalizedValue.lastIndexOf('.');
+			if (lastComma !== -1 && lastPeriod !== -1) {
+				const decimalSeparator = lastComma > lastPeriod ? ',' : '.';
+				const thousandsSeparator = decimalSeparator === ',' ? '.' : ',';
+				normalizedValue = normalizedValue.split(thousandsSeparator).join('').replace(decimalSeparator, '.');
+			} else if (lastComma !== -1) {
+				const decimalDigits = normalizedValue.length - lastComma - 1;
+				normalizedValue = decimalDigits > 0 && decimalDigits <= 2
+					? normalizedValue.replace(',', '.')
+					: normalizedValue.replace(/,/g, '');
+			}
+
+			return /^-?\d+(?:\.\d+)?$/.test(normalizedValue) ? normalizedValue : '';
+		}
+
+		orderSteps[0].addEventListener('paste', (event) => {
+			const fieldIndex = requisitionPasteFields.indexOf(event.target.name);
+			if (fieldIndex === -1) {
+				return;
+			}
+
+			const pastedText = event.clipboardData.getData('text/plain');
+			const firstRow = pastedText.split(/\r?\n/, 1)[0];
+			if (!firstRow.includes('\t')) {
+				return;
+			}
+
+			event.preventDefault();
+			const values = firstRow.split('\t');
+			values.forEach((value, index) => {
+				const fieldName = requisitionPasteFields[fieldIndex + index];
+				if (!fieldName) {
+					return;
+				}
+
+				const field = orderForm.elements.namedItem(fieldName);
+				const trimmedValue = value.trim();
+				if (field.type === 'date') {
+					field.value = normalizePastedDate(trimmedValue);
+				} else if (field.type === 'number') {
+					field.value = normalizePastedNumber(trimmedValue);
+				} else if (field instanceof HTMLSelectElement) {
+					const option = [...field.options].find((item) => item.textContent.trim().toLowerCase() === trimmedValue.toLowerCase());
+					field.value = option?.value ?? '';
+				} else {
+					field.value = value.trim();
+				}
+				field.dispatchEvent(new Event('input', { bubbles: true }));
+				field.dispatchEvent(new Event('change', { bubbles: true }));
+			});
+		});
 
 		function renderOrderStep() {
 			orderSteps.forEach((step, index) => {
