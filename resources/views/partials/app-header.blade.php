@@ -8,7 +8,7 @@
 		</div>
 		<div class="min-w-0 text-[13px] font-semibold leading-[1.05] drop-shadow-sm">
 			<p class="max-w-[220px] truncate">{{ auth()->user()->name }}</p>
-			<p class="max-w-[220px] truncate">{{ auth()->user()->department?->name }}</p>
+			<p class="max-w-[220px] truncate">{{ auth()->user()->isSupplier() ? 'Proveedor' : auth()->user()->department?->name }}</p>
 		</div>
 	</div>
 
