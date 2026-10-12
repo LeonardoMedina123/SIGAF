@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Department;
 use App\Models\PurchaseOrder;
 use App\Models\Requisition;
 use App\Models\Supplier;
 use App\Models\User;
-use App\Models\Department;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -18,16 +18,21 @@ class ProcurementWorkflowTest extends TestCase
 
     public function test_authenticated_user_can_create_a_supplier(): void
     {
-        $this->actingAs(User::factory()->create())
+        $this->from(route('suppliers.index'))
+            ->actingAs(User::factory()->create())
             ->post(route('suppliers.store'), [
                 'number' => '3',
                 'name' => 'BBVA México',
                 'rfc' => 'bba830831lj2',
+                'person_type' => 'moral',
+                'tax_regime' => '601',
+                'cfdi_use' => 'G03',
+                'contact_email' => 'compras@bbva.example',
                 'curp' => '',
                 'address' => 'Av. Paseo de la Reforma',
                 'city' => 'Ciudad de México',
                 'phone' => '5550000000',
-                'representative' => 'BBVA México, S.A.',
+                'representative' => 'Contacto BBVA',
                 'cellphone' => '5550000001',
                 'economic_activity' => 'Servicios financieros',
                 'iva_percentage' => '16',
@@ -41,11 +46,15 @@ class ProcurementWorkflowTest extends TestCase
             'number' => '3',
             'name' => 'BBVA México',
             'rfc' => 'BBA830831LJ2',
+            'person_type' => 'moral',
+            'tax_regime' => '601',
+            'cfdi_use' => 'G03',
+            'contact_email' => 'compras@bbva.example',
             'iva_percentage' => '16.00',
         ]);
     }
 
-    public function test_authenticated_user_can_save_requisition_and_purchase_order_documents(): void
+    public function test_authenticated_user_can_save_requisition_and_purchase_order(): void
     {
         Storage::fake('local');
         $user = User::factory()->create();
@@ -53,6 +62,10 @@ class ProcurementWorkflowTest extends TestCase
             'number' => '3',
             'name' => 'BBVA México',
             'rfc' => 'BBA830831LJ2',
+            'person_type' => 'moral',
+            'tax_regime' => '601',
+            'cfdi_use' => 'G03',
+            'contact_email' => 'compras@bbva.example',
             'iva_percentage' => 16,
             'status' => 'Activo',
         ]);
@@ -70,21 +83,13 @@ class ProcurementWorkflowTest extends TestCase
                 'requisition_dir' => 'Dirección',
                 'requisition_process' => 'Proceso',
                 'requisition_rf' => 'RF',
-                'budget_key' => 'REQ/IP/SPV/2026',
-                'quantity' => '1',
-                'unit' => 'Pieza',
-                'unit_cost' => '3650.37',
-                'description' => 'Equipo de oficina',
-                'department' => 'Recursos Financieros',
-                'needed_by' => '2026-10-26',
-                'justification' => 'Necesidad del área',
+                'requisition_pdf' => UploadedFile::fake()->create('requisition.pdf', 20, 'application/pdf'),
                 'supplier_id' => $supplier->id,
-                'quote_email' => 'ventas@example.com',
+                'quote_email' => 'compras@bbva.example',
                 'quote_amount' => '3650.37',
                 'delivery_location' => 'CRODE de Chihuahua',
                 'receiver' => 'Persona receptora',
                 'receiver_phone' => '5550000000',
-                'budget_confirmed' => 'on',
                 'review_confirmed' => 'on',
                 'purchase_order_folio' => 'OC-2026-001',
                 'purchase_order_date' => '2026-10-07',
@@ -92,8 +97,6 @@ class ProcurementWorkflowTest extends TestCase
                 'purchase_order_iva' => '16',
                 'purchase_order_rms' => '21601',
                 'purchase_order_rf' => 'Si',
-                'requisition_pdf' => UploadedFile::fake()->create('requisition.pdf', 20, 'application/pdf'),
-                'requisition_xml' => UploadedFile::fake()->create('requisition.xml', 1, 'text/xml'),
                 'purchase_order_pdf' => UploadedFile::fake()->create('purchase-order.pdf', 20, 'application/pdf'),
                 'purchase_order_xml' => UploadedFile::fake()->create('purchase-order.xml', 1, 'text/xml'),
             ])
@@ -107,14 +110,16 @@ class ProcurementWorkflowTest extends TestCase
         $this->assertSame($requisition->id, $purchaseOrder->requisition_id);
         $this->assertSame($supplier->id, $purchaseOrder->supplier_id);
         $this->assertSame('3650.37', $requisition->amount);
+        $this->assertSame('2026-10-07', $requisition->created_on->format('Y-m-d'));
+        $this->assertSame('2026-10-07', $requisition->requested_on->format('Y-m-d'));
+        $this->assertSame('33901', $requisition->partida);
+        $this->assertSame('Observación', $requisition->ppp);
         $this->assertStringStartsWith('requisitions/', $requisition->pdf_path);
-        $this->assertStringStartsWith('requisitions/', $requisition->xml_path);
         $this->assertStringStartsWith('purchase-orders/', $purchaseOrder->pdf_path);
         $this->assertStringStartsWith('purchase-orders/', $purchaseOrder->xml_path);
 
         Storage::disk('local')->assertExists([
             $requisition->pdf_path,
-            $requisition->xml_path,
             $purchaseOrder->pdf_path,
             $purchaseOrder->xml_path,
         ]);
@@ -126,6 +131,10 @@ class ProcurementWorkflowTest extends TestCase
             'number' => '3',
             'name' => 'BBVA México',
             'rfc' => 'BBA830831LJ2',
+            'person_type' => 'moral',
+            'tax_regime' => '601',
+            'cfdi_use' => 'G03',
+            'contact_email' => 'compras@bbva.example',
             'iva_percentage' => 16,
             'status' => 'Activo',
         ]);
@@ -138,12 +147,125 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSee('Catálogo de proveedores')
             ->assertDontSee('id="add-supplier-button"', false)
             ->assertSee('Crear nueva orden')
-            ->assertSee('value="'.$supplier->id.'"', false);
+            ->assertSee('value="'.$supplier->id.'"', false)
+            ->assertSee('data-purchase-order-paste', false)
+            ->assertSee('Pega una fila copiada desde el campo Folio', false)
+            ->assertSee('name="purchase_order_pdf"', false)
+            ->assertSee('name="purchase_order_xml"', false);
 
         $this->get(route('suppliers.index'))
             ->assertOk()
             ->assertSee('Catálogo de proveedores')
             ->assertSee('Agregar proveedor')
             ->assertSee('BBVA México');
+    }
+
+    public function test_supplier_catalog_requires_and_saves_fiscal_and_contact_details(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post(route('suppliers.store'), [
+                'number' => '4',
+                'name' => 'Proveedor con datos fiscales',
+                'rfc' => 'ABC010203AB1',
+                'person_type' => 'fisica',
+                'tax_regime' => '612',
+                'cfdi_use' => 'G03',
+                'representative' => 'Ana Contacto',
+                'contact_email' => 'ana@example.com',
+                'iva_percentage' => '16',
+                'status' => 'Activo',
+            ])
+            ->assertRedirect(route('suppliers.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('suppliers', [
+            'number' => '4',
+            'rfc' => 'ABC010203AB1',
+            'person_type' => 'fisica',
+            'tax_regime' => '612',
+            'cfdi_use' => 'G03',
+            'representative' => 'Ana Contacto',
+            'contact_email' => 'ana@example.com',
+        ]);
+    }
+
+    public function test_supplier_catalog_rejects_a_tax_regime_outside_the_sat_catalog(): void
+    {
+        $this->from(route('suppliers.index'))
+            ->actingAs(User::factory()->create())
+            ->post(route('suppliers.store'), [
+                'number' => '5',
+                'name' => 'Proveedor inválido',
+                'rfc' => 'XYZ010203AB1',
+                'person_type' => 'moral',
+                'tax_regime' => '999',
+                'cfdi_use' => 'G03',
+                'representative' => 'Contacto',
+                'contact_email' => 'contacto@example.com',
+                'iva_percentage' => '16',
+                'status' => 'Activo',
+            ])
+            ->assertRedirect(route('suppliers.index'))
+            ->assertSessionHasErrors('tax_regime');
+
+        $this->assertDatabaseMissing('suppliers', ['number' => '5']);
+    }
+
+    public function test_requisition_capture_form_contains_only_the_requested_fields(): void
+    {
+        $response = $this->actingAs(User::factory()->create())
+            ->get(route('home'))
+            ->assertOk();
+
+        foreach ([
+            'requisition_folio',
+            'requisition_created_on',
+            'requisition_requested_on',
+            'requisition_amount',
+            'item_number',
+            'requisition_sp',
+            'requisition_ppp',
+            'requisition_sup',
+            'requisition_dir',
+            'requisition_process',
+            'requisition_rf',
+        ] as $field) {
+            $response->assertSee('name="'.$field.'"', false);
+        }
+
+        foreach ([
+            'budget_key',
+            'quantity',
+            'unit',
+            'unit_cost',
+            'description',
+            'department',
+            'needed_by',
+            'justification',
+            'budget_confirmed',
+            'requisition_xml',
+        ] as $field) {
+            $response->assertDontSee('name="'.$field.'"', false);
+        }
+
+        $response->assertSee('name="requisition_pdf"', false);
+    }
+
+    public function test_supplier_email_is_available_to_autofill_the_quote_contact_field(): void
+    {
+        $supplier = Supplier::create([
+            'number' => '6',
+            'name' => 'Proveedor con correo',
+            'rfc' => 'DEF010203AB1',
+            'contact_email' => 'cotizaciones@example.com',
+            'iva_percentage' => 16,
+            'status' => 'Activo',
+        ]);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-email="cotizaciones@example.com"', false)
+            ->assertSee('name="quote_email"', false);
     }
 }

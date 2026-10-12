@@ -40,11 +40,15 @@
 						<th scope="col" class="rounded-tl-[19px] px-4 py-3 text-sm font-semibold">Número</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Nombre</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">R.F.C.</th>
+						<th scope="col" class="px-4 py-3 text-sm font-semibold">Tipo de persona</th>
+						<th scope="col" class="px-4 py-3 text-sm font-semibold">Régimen fiscal</th>
+						<th scope="col" class="px-4 py-3 text-sm font-semibold">Uso CFDI</th>
+						<th scope="col" class="px-4 py-3 text-sm font-semibold">Correo de contacto</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">C.U.R.P.</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Dirección</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Ciudad</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Teléfono 1</th>
-						<th scope="col" class="px-4 py-3 text-sm font-semibold">Representante</th>
+						<th scope="col" class="px-4 py-3 text-sm font-semibold">Nombre de contacto</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Celular</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Act./Eco.</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">I.V.A. (%)</th>
@@ -58,6 +62,10 @@
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->number }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3 font-medium">{{ $supplier->name }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->rfc }}</td>
+							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $personTypes[$supplier->person_type] ?? '—' }}</td>
+							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->tax_regime ? $supplier->tax_regime.' - '.($taxRegimes[$supplier->tax_regime] ?? '') : '—' }}</td>
+							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->cfdi_use ? $supplier->cfdi_use.' - '.($cfdiUses[$supplier->cfdi_use] ?? '') : '—' }}</td>
+							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->contact_email ?? '—' }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->curp ?? '—' }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->address ?? '—' }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->city ?? '—' }}</td>
@@ -71,7 +79,7 @@
 						</tr>
 					@empty
 						<tr>
-							<td colspan="13" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-sm text-[#60737d]">
+							<td colspan="17" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-sm text-[#60737d]">
 								Aún no hay proveedores registrados. Usa el botón para agregar el primero.
 							</td>
 						</tr>
@@ -110,11 +118,36 @@
 				<label class="grid gap-1 text-sm">Número <input name="number" required maxlength="50" value="{{ old('number') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">Nombre <input name="name" required maxlength="255" value="{{ old('name') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">R.F.C. <input name="rfc" required minlength="12" maxlength="13" value="{{ old('rfc') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 uppercase text-[#17252b]" /></label>
+				<label class="grid gap-1 text-sm">Tipo de persona
+					<select name="person_type" required class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
+						<option value="">Selecciona</option>
+						@foreach ($personTypes as $value => $label)
+							<option value="{{ $value }}" @selected(old('person_type') === $value)>{{ $label }}</option>
+						@endforeach
+					</select>
+				</label>
+				<label class="grid gap-1 text-sm">Régimen fiscal
+					<select name="tax_regime" required class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
+						<option value="">Selecciona</option>
+						@foreach ($taxRegimes as $value => $label)
+							<option value="{{ $value }}" @selected(old('tax_regime') === $value)>{{ $value }} - {{ $label }}</option>
+						@endforeach
+					</select>
+				</label>
+				<label class="grid gap-1 text-sm">Uso de CFDI
+					<select name="cfdi_use" required class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
+						<option value="">Selecciona</option>
+						@foreach ($cfdiUses as $value => $label)
+							<option value="{{ $value }}" @selected(old('cfdi_use') === $value)>{{ $value }} - {{ $label }}</option>
+						@endforeach
+					</select>
+				</label>
+				<label class="grid gap-1 text-sm">Correo de contacto <input name="contact_email" type="email" required maxlength="255" value="{{ old('contact_email') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">C.U.R.P. <input name="curp" maxlength="18" value="{{ old('curp') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 uppercase text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm md:col-span-2">Dirección <input name="address" maxlength="1000" value="{{ old('address') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">Ciudad <input name="city" maxlength="255" value="{{ old('city') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">Teléfono 1 <input name="phone" maxlength="30" value="{{ old('phone') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
-				<label class="grid gap-1 text-sm">Representante <input name="representative" maxlength="255" value="{{ old('representative') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+				<label class="grid gap-1 text-sm">Nombre de contacto <input name="representative" required maxlength="255" value="{{ old('representative') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">Celular <input name="cellphone" maxlength="30" value="{{ old('cellphone') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">Act./Eco. <input name="economic_activity" maxlength="255" value="{{ old('economic_activity') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">I.V.A. (%) <input name="iva_percentage" type="number" required min="0" max="100" step="0.01" value="{{ old('iva_percentage', '16') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>

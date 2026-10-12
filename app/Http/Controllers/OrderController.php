@@ -27,21 +27,13 @@ class OrderController extends Controller
             'requisition_dir' => ['nullable', 'string', 'max:255'],
             'requisition_process' => ['nullable', 'string', 'max:255'],
             'requisition_rf' => ['nullable', 'string', 'max:255'],
-            'budget_key' => ['required', 'string', 'max:255'],
-            'quantity' => ['required', 'integer', 'min:1'],
-            'unit' => ['required', 'string', 'max:100'],
-            'unit_cost' => ['required', 'numeric', 'min:0.01', 'decimal:0,2'],
-            'description' => ['required', 'string', 'max:5000'],
-            'department' => ['required', 'string', 'max:255'],
-            'needed_by' => ['required', 'date'],
-            'justification' => ['required', 'string', 'max:5000'],
+            'requisition_pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
             'supplier_id' => ['required', 'exists:suppliers,id'],
             'quote_email' => ['required', 'email', 'max:255'],
             'quote_amount' => ['required', 'numeric', 'min:0.01', 'decimal:0,2'],
             'delivery_location' => ['required', 'string', 'max:1000'],
             'receiver' => ['required', 'string', 'max:255'],
             'receiver_phone' => ['required', 'string', 'max:30'],
-            'budget_confirmed' => ['accepted'],
             'review_confirmed' => ['accepted'],
             'purchase_order_folio' => ['required', 'string', 'max:100', 'unique:purchase_orders,folio'],
             'purchase_order_date' => ['required', 'date'],
@@ -49,8 +41,6 @@ class OrderController extends Controller
             'purchase_order_iva' => ['required', 'numeric', 'between:0,100'],
             'purchase_order_rms' => ['nullable', 'string', 'max:255'],
             'purchase_order_rf' => ['nullable', 'string', 'max:255'],
-            'requisition_pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
-            'requisition_xml' => ['required', 'file', 'mimes:xml', 'max:10240'],
             'purchase_order_pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
             'purchase_order_xml' => ['required', 'file', 'mimes:xml', 'max:10240'],
         ]);
@@ -60,19 +50,16 @@ class OrderController extends Controller
         try {
             $requisitionPdf = $this->storeDocument($request, 'requisition_pdf', 'requisitions');
             $storedPaths[] = $requisitionPdf;
-            $requisitionXml = $this->storeDocument($request, 'requisition_xml', 'requisitions');
-            $storedPaths[] = $requisitionXml;
             $purchaseOrderPdf = $this->storeDocument($request, 'purchase_order_pdf', 'purchase-orders');
             $storedPaths[] = $purchaseOrderPdf;
             $purchaseOrderXml = $this->storeDocument($request, 'purchase_order_xml', 'purchase-orders');
             $storedPaths[] = $purchaseOrderXml;
 
-            DB::transaction(function () use ($validated, $request, $requisitionPdf, $requisitionXml, $purchaseOrderPdf, $purchaseOrderXml): void {
+            DB::transaction(function () use ($validated, $request, $requisitionPdf, $purchaseOrderPdf, $purchaseOrderXml): void {
                 $requisition = Requisition::create([
                     'folio' => $validated['requisition_folio'],
                     'created_on' => $validated['requisition_created_on'],
                     'requested_on' => $validated['requisition_requested_on'],
-                    'needed_by' => $validated['needed_by'],
                     'amount' => $validated['requisition_amount'],
                     'partida' => $validated['item_number'],
                     'sp' => $validated['requisition_sp'] ?? null,
@@ -81,16 +68,7 @@ class OrderController extends Controller
                     'dir' => $validated['requisition_dir'] ?? null,
                     'process' => $validated['requisition_process'] ?? null,
                     'rf' => $validated['requisition_rf'] ?? null,
-                    'budget_key' => $validated['budget_key'],
-                    'quantity' => $validated['quantity'],
-                    'unit' => $validated['unit'],
-                    'unit_cost' => $validated['unit_cost'],
-                    'description' => $validated['description'],
-                    'department' => $validated['department'],
-                    'justification' => $validated['justification'],
-                    'budget_confirmed' => true,
                     'pdf_path' => $requisitionPdf,
-                    'xml_path' => $requisitionXml,
                     'user_id' => $request->user()->id,
                 ]);
 

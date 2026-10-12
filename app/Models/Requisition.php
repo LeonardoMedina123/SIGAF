@@ -15,7 +15,6 @@ class Requisition extends Model
         'folio',
         'created_on',
         'requested_on',
-        'needed_by',
         'amount',
         'partida',
         'sp',
@@ -24,16 +23,7 @@ class Requisition extends Model
         'dir',
         'process',
         'rf',
-        'budget_key',
-        'quantity',
-        'unit',
-        'unit_cost',
-        'description',
-        'department',
-        'justification',
-        'budget_confirmed',
         'pdf_path',
-        'xml_path',
         'user_id',
     ];
 
@@ -42,10 +32,7 @@ class Requisition extends Model
         return [
             'created_on' => 'date',
             'requested_on' => 'date',
-            'needed_by' => 'date',
             'amount' => 'decimal:2',
-            'unit_cost' => 'decimal:2',
-            'budget_confirmed' => 'boolean',
         ];
     }
 

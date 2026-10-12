@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Supplier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SupplierController extends Controller
 {
@@ -20,11 +21,15 @@ class SupplierController extends Controller
             'number' => ['required', 'string', 'max:50', 'unique:suppliers,number'],
             'name' => ['required', 'string', 'max:255'],
             'rfc' => ['bail', 'required', 'string', 'regex:/^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/iu', 'unique:suppliers,rfc'],
+            'person_type' => ['required', Rule::in(array_keys(Supplier::PERSON_TYPES))],
+            'tax_regime' => ['required', Rule::in(array_keys(Supplier::TAX_REGIMES))],
+            'cfdi_use' => ['required', Rule::in(array_keys(Supplier::CFDI_USES))],
+            'representative' => ['required', 'string', 'max:255'],
+            'contact_email' => ['required', 'email', 'max:255'],
             'curp' => ['nullable', 'string', 'size:18'],
             'address' => ['nullable', 'string', 'max:1000'],
             'city' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'representative' => ['nullable', 'string', 'max:255'],
             'cellphone' => ['nullable', 'string', 'max:30'],
             'economic_activity' => ['nullable', 'string', 'max:255'],
             'iva_percentage' => ['required', 'numeric', 'between:0,100'],

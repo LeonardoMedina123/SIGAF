@@ -287,14 +287,13 @@
 			</header>
 
 			<div class="px-4 pt-5 md:px-8 md:pt-6">
-				<ol id="order-stepper" class="relative grid grid-cols-6 gap-1" aria-label="Progreso de la orden">
+				<ol id="order-stepper" class="relative grid grid-cols-5 gap-1" aria-label="Progreso de la orden">
 					<div class="absolute left-[8%] right-[8%] top-4 h-1 rounded-full bg-[#d8dfe2]" aria-hidden="true"><div id="order-progress" class="h-full w-0 rounded-full bg-[#00c978] transition-[width] duration-300"></div></div>
 					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center" aria-current="step"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#aab1b5] text-sm font-semibold text-white ring-2 ring-[#aab1b5]">1</span><span class="text-[10px] leading-tight text-[#3f4a50] md:text-xs">Requisición</span></li>
-					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">2</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Solicitud</span></li>
-					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">3</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Cotización</span></li>
-					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">4</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Entrega</span></li>
-					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">5</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Validación</span></li>
-					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">6</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Confirmación</span></li>
+					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">2</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Cotización</span></li>
+					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">3</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Entrega</span></li>
+					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">4</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Validación</span></li>
+					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">5</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Confirmación</span></li>
 				</ol>
 			</div>
 
@@ -310,7 +309,6 @@
 							<label class="grid gap-1 text-sm">Fecha de creación <input name="requisition_created_on" type="date" value="{{ now()->format('Y-m-d') }}" required class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">Fecha de solicitud <input name="requisition_requested_on" type="date" value="{{ now()->format('Y-m-d') }}" required class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">Importe de requisición <input name="requisition_amount" type="number" required min="0" step="0.01" inputmode="decimal" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
-							<label class="grid gap-1 text-sm sm:col-span-2">Clave presupuestal <input name="budget_key" type="text" required autocomplete="off" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">Partida <input name="item_number" type="text" required autocomplete="off" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">SP <input name="requisition_sp" type="text" maxlength="255" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">PPP <input name="requisition_ppp" type="text" maxlength="255" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
@@ -318,41 +316,27 @@
 							<label class="grid gap-1 text-sm">Dir <input name="requisition_dir" type="text" maxlength="255" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">Proceso <input name="requisition_process" type="text" maxlength="255" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">RF <input name="requisition_rf" type="text" maxlength="255" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
-							<label class="grid gap-1 text-sm">Cantidad <input name="quantity" type="number" required min="1" step="1" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
-							<label class="grid gap-1 text-sm">Unidad <select name="unit" required class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20"><option value="">Selecciona</option><option>Pieza</option><option>Servicio</option><option>Paquete</option><option>Lote</option><option>Otro</option></select></label>
-							<label class="grid gap-1 text-sm">Costo unitario <input name="unit_cost" type="number" required min="0.01" step="0.01" inputmode="decimal" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
-							<label class="grid gap-1 text-sm sm:col-span-2">Descripción <textarea name="description" required rows="2" class="w-full resize-y rounded-2xl border border-transparent bg-white px-4 py-2 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20"></textarea></label>
 						</div>
 					</div>
-					<div class="space-y-2">
-						<label for="requisition-pdf" class="block text-sm font-medium">PDF de requisición <span class="text-[#8a2f2f]">*</span></label>
+					<div class="grid content-start gap-2 self-start text-[#173f50]">
+						<label for="requisition-pdf" class="text-sm font-semibold">PDF de requisición <span class="text-[#8a2f2f]">*</span></label>
 						<input id="requisition-pdf" name="requisition_pdf" type="file" required accept="application/pdf,.pdf" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm file:text-[#171717] hover:file:bg-[#9ba4a8]" />
-						<label for="requisition-xml" class="block pt-2 text-sm font-medium">XML de requisición <span class="text-[#8a2f2f]">*</span></label>
-						<input id="requisition-xml" name="requisition_xml" type="file" required accept="application/xml,text/xml,.xml" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm file:text-[#171717] hover:file:bg-[#9ba4a8]" />
-						<p class="text-xs text-[#315a6b]">Los documentos se guardan como archivos privados; la base de datos conserva sus rutas. Máximo 10 MB por archivo.</p>
-						<div id="file-preview-box" class="hidden min-h-[220px] overflow-hidden rounded border border-[#68777d] bg-[#e7eef1]">
-							<div id="file-preview-name" class="truncate bg-[#56646b] px-3 py-1.5 text-xs font-semibold text-white"></div>
-							<iframe id="pdf-preview" class="hidden h-[340px] w-full bg-white" title="Vista previa del PDF"></iframe>
+						<p class="text-xs text-[#315a6b]">Este archivo se adjunta por separado y no forma parte del pegado de datos. Máximo 10 MB.</p>
+						<div id="requisition-pdf-preview-box" class="hidden overflow-hidden rounded border border-[#68777d] bg-[#e7eef1]">
+							<p id="requisition-pdf-preview-name" class="truncate bg-[#56646b] px-3 py-1.5 text-xs font-semibold text-white"></p>
+							<iframe id="requisition-pdf-preview" class="h-[340px] w-full bg-white" title="Vista previa del PDF de requisición"></iframe>
 						</div>
 					</div>
 				</fieldset>
 
 				<fieldset data-order-step hidden class="grid gap-4 rounded-[14px] bg-[#b7dcef] p-4 text-[#07577f] md:grid-cols-2 md:p-6">
-					<legend class="sr-only">Paso 2: Solicitud</legend>
-					<div class="md:col-span-2"><h2 class="text-xl font-semibold md:text-2xl">Datos de la solicitud</h2><p class="mt-1 text-sm">Indica el motivo y la fecha en que se requiere el bien o servicio.</p></div>
-					<label class="grid gap-1 text-sm">Área solicitante <input name="department" type="text" value="{{ auth()->user()->department?->name }}" required class="h-10 rounded-full border-0 bg-white px-4 text-sm text-[#17252b] outline-none focus:ring-2 focus:ring-[#087aa7]/30" /></label>
-					<label class="grid gap-1 text-sm">Fecha requerida <input name="needed_by" type="date" required class="h-10 rounded-full border-0 bg-white px-4 text-sm text-[#17252b] outline-none focus:ring-2 focus:ring-[#087aa7]/30" /></label>
-					<label class="grid gap-1 text-sm md:col-span-2">Justificación <textarea name="justification" required rows="4" class="rounded-2xl border-0 bg-white px-4 py-3 text-sm text-[#17252b] outline-none focus:ring-2 focus:ring-[#087aa7]/30"></textarea></label>
-				</fieldset>
-
-				<fieldset data-order-step hidden class="grid gap-4 rounded-[14px] bg-[#b7dcef] p-4 text-[#07577f] md:grid-cols-2 md:p-6">
-					<legend class="sr-only">Paso 3: Cotización</legend>
+					<legend class="sr-only">Paso 2: Cotización</legend>
 					<div class="md:col-span-2"><h2 class="text-xl font-semibold md:text-2xl">Cotización</h2><p class="mt-1 text-sm">Registra los datos de la cotización de referencia.</p></div>
 					<label class="grid gap-1 text-sm">Proveedor cotizante
 						<select name="supplier_id" required class="h-10 rounded-full border-0 bg-white px-4 text-sm text-[#17252b] outline-none focus:ring-2 focus:ring-[#087aa7]/30">
 							<option value="">Selecciona un proveedor</option>
 							@foreach ($suppliers as $supplier)
-								<option value="{{ $supplier->id }}" data-iva="{{ $supplier->iva_percentage }}">{{ $supplier->name }} ({{ $supplier->rfc }})</option>
+								<option value="{{ $supplier->id }}" data-iva="{{ $supplier->iva_percentage }}" data-email="{{ $supplier->contact_email }}" data-name="{{ $supplier->name }}" data-rfc="{{ $supplier->rfc }}">{{ $supplier->name }} ({{ $supplier->rfc }})</option>
 							@endforeach
 						</select>
 					</label>
@@ -361,7 +345,7 @@
 				</fieldset>
 
 				<fieldset data-order-step hidden class="grid gap-4 rounded-[14px] bg-[#b7dcef] p-4 text-[#07577f] md:grid-cols-2 md:p-6">
-					<legend class="sr-only">Paso 4: Entrega</legend>
+					<legend class="sr-only">Paso 3: Entrega</legend>
 					<div class="md:col-span-2"><h2 class="text-xl font-semibold md:text-2xl">Datos de entrega</h2><p class="mt-1 text-sm">¿Dónde y quién recibirá los bienes o servicios?</p></div>
 					<label class="grid gap-1 text-sm md:col-span-2">Domicilio o lugar de entrega <input name="delivery_location" type="text" required class="h-10 rounded-full border-0 bg-white px-4 text-sm text-[#17252b] outline-none focus:ring-2 focus:ring-[#087aa7]/30" /></label>
 					<label class="grid gap-1 text-sm">Persona que recibe <input name="receiver" type="text" required class="h-10 rounded-full border-0 bg-white px-4 text-sm text-[#17252b] outline-none focus:ring-2 focus:ring-[#087aa7]/30" /></label>
@@ -369,30 +353,29 @@
 				</fieldset>
 
 				<fieldset data-order-step hidden class="space-y-4 rounded-[14px] bg-[#b7dcef] p-4 text-[#07577f] md:p-6">
-					<legend class="sr-only">Paso 5: Validación</legend>
+					<legend class="sr-only">Paso 4: Validación</legend>
 					<h2 class="text-xl font-semibold md:text-2xl">Validación presupuestal</h2>
-					<p class="text-sm">Verifica que la clave y la partida correspondan al gasto solicitado.</p>
-					<label class="flex items-start gap-3 rounded-xl bg-white p-4 text-sm text-[#173f50]"><input name="budget_confirmed" type="checkbox" required class="mt-0.5 h-4 w-4 accent-[#00b96b]" /><span>Confirmo que existe suficiencia presupuestal para esta requisición.</span></label>
+					<p class="text-sm">Verifica que la cotización corresponda a la partida capturada.</p>
 				</fieldset>
 
-				<fieldset data-order-step hidden class="space-y-4 rounded-[14px] bg-[#b7dcef] p-4 text-[#07577f] md:p-6">
-					<legend class="sr-only">Paso 6: Confirmación</legend>
+				<fieldset data-order-step data-purchase-order-paste hidden class="space-y-4 rounded-[14px] bg-[#b7dcef] p-4 text-[#07577f] md:p-6">
+					<legend class="sr-only">Paso 5: Confirmación</legend>
 					<h2 class="text-xl font-semibold md:text-2xl">Revisión final</h2>
 					<div class="grid gap-3 rounded-xl bg-white p-4 sm:grid-cols-2">
 						<h3 class="text-lg font-semibold sm:col-span-2">Orden de compra</h3>
+						<p class="text-xs text-[#315a6b] sm:col-span-2">Pega una fila copiada desde el campo Folio en este orden: Folio, Fecha, Proveedor, Requisición, Importe, Partida, I.V.A., RMS y RF. Los archivos PDF y XML se adjuntan por separado.</p>
 						<label class="grid gap-1 text-sm">Folio <input name="purchase_order_folio" type="text" required maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">Fecha <input name="purchase_order_date" type="date" required value="{{ now()->format('Y-m-d') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">Partida <input name="purchase_order_partida" type="text" required maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">I.V.A. (%) <input name="purchase_order_iva" type="number" required min="0" max="100" step="0.01" value="16" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">RMS <input name="purchase_order_rms" type="text" maxlength="255" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">RF <input name="purchase_order_rf" type="text" maxlength="255" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
-						<p class="text-xs text-[#315a6b] sm:col-span-2">El importe de la orden se toma del importe cotizado en la tarjeta Cotización.</p>
 						<label class="grid gap-1 text-sm">PDF de orden de compra <input name="purchase_order_pdf" type="file" required accept="application/pdf,.pdf" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm file:text-[#171717]" /></label>
 						<label class="grid gap-1 text-sm">XML de orden de compra <input name="purchase_order_xml" type="file" required accept="application/xml,text/xml,.xml" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm text-[#171717]" /></label>
 					</div>
 					<div id="order-summary" class="grid gap-x-6 gap-y-3 rounded-xl bg-white p-4 text-sm sm:grid-cols-2"></div>
 					<label class="flex items-start gap-3 rounded-xl border border-[#8ebdd1] p-4 text-sm text-[#173f50]"><input name="review_confirmed" type="checkbox" required class="mt-0.5 h-4 w-4 accent-[#00b96b]" /><span>Confirmo que los datos capturados son correctos.</span></label>
-					<p class="text-xs text-[#315a6b]">Al finalizar se guardarán la requisición, la orden de compra y las rutas de sus documentos.</p>
+					<p class="text-xs text-[#315a6b]">Al finalizar se guardarán la requisición, la orden de compra y las rutas de los documentos de la orden.</p>
 				</fieldset>
 
 				<div id="order-actions" class="mt-5 flex items-center justify-between gap-3">
@@ -414,114 +397,15 @@
 			if (selectedOption?.dataset.iva) {
 				purchaseOrderIva.value = selectedOption.dataset.iva;
 			}
+			orderForm.elements.namedItem('quote_email').value = selectedOption?.dataset.email ?? '';
 		});
 		const orderSteps = [...document.querySelectorAll('[data-order-step]')];
-		const requisitionPasteFields = [
-			'requisition_folio',
-			'requisition_created_on',
-			'requisition_requested_on',
-			'requisition_amount',
-			'budget_key',
-			'item_number',
-			'requisition_sp',
-			'requisition_ppp',
-			'requisition_sup',
-			'requisition_dir',
-			'requisition_process',
-			'requisition_rf',
-			'quantity',
-			'unit',
-			'unit_cost',
-			'description',
-		];
 		const stepIndicators = [...document.querySelectorAll('[data-step-indicator]')];
 		const orderProgress = document.querySelector('#order-progress');
 		const previousButton = document.querySelector('#order-previous');
 		const nextButton = document.querySelector('#order-next');
 		const orderActions = document.querySelector('#order-actions');
-		const requisitionPdf = document.querySelector('#requisition-pdf');
-		const previewBox = document.querySelector('#file-preview-box');
-		const previewName = document.querySelector('#file-preview-name');
-		const pdfPreview = document.querySelector('#pdf-preview');
 		let activeOrderStep = 0;
-		let previewUrl = null;
-
-		function normalizePastedDate(value) {
-			const trimmedValue = value.trim();
-			const dateParts = trimmedValue.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-			const isoParts = trimmedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-			const parts = isoParts
-				? [Number(isoParts[1]), Number(isoParts[2]), Number(isoParts[3])]
-				: dateParts
-					? [Number(dateParts[3]), Number(dateParts[2]), Number(dateParts[1])]
-					: null;
-			if (!parts) {
-				return '';
-			}
-
-			const [year, month, day] = parts;
-			const date = new Date(Date.UTC(year, month - 1, day));
-			if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
-				return '';
-			}
-
-			return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-		}
-
-		function normalizePastedNumber(value) {
-			let normalizedValue = value.trim().replace(/[^\d,.-]/g, '');
-			const lastComma = normalizedValue.lastIndexOf(',');
-			const lastPeriod = normalizedValue.lastIndexOf('.');
-			if (lastComma !== -1 && lastPeriod !== -1) {
-				const decimalSeparator = lastComma > lastPeriod ? ',' : '.';
-				const thousandsSeparator = decimalSeparator === ',' ? '.' : ',';
-				normalizedValue = normalizedValue.split(thousandsSeparator).join('').replace(decimalSeparator, '.');
-			} else if (lastComma !== -1) {
-				const decimalDigits = normalizedValue.length - lastComma - 1;
-				normalizedValue = decimalDigits > 0 && decimalDigits <= 2
-					? normalizedValue.replace(',', '.')
-					: normalizedValue.replace(/,/g, '');
-			}
-
-			return /^-?\d+(?:\.\d+)?$/.test(normalizedValue) ? normalizedValue : '';
-		}
-
-		orderSteps[0].addEventListener('paste', (event) => {
-			const fieldIndex = requisitionPasteFields.indexOf(event.target.name);
-			if (fieldIndex === -1) {
-				return;
-			}
-
-			const pastedText = event.clipboardData.getData('text/plain');
-			const firstRow = pastedText.split(/\r?\n/, 1)[0];
-			if (!firstRow.includes('\t')) {
-				return;
-			}
-
-			event.preventDefault();
-			const values = firstRow.split('\t');
-			values.forEach((value, index) => {
-				const fieldName = requisitionPasteFields[fieldIndex + index];
-				if (!fieldName) {
-					return;
-				}
-
-				const field = orderForm.elements.namedItem(fieldName);
-				const trimmedValue = value.trim();
-				if (field.type === 'date') {
-					field.value = normalizePastedDate(trimmedValue);
-				} else if (field.type === 'number') {
-					field.value = normalizePastedNumber(trimmedValue);
-				} else if (field instanceof HTMLSelectElement) {
-					const option = [...field.options].find((item) => item.textContent.trim().toLowerCase() === trimmedValue.toLowerCase());
-					field.value = option?.value ?? '';
-				} else {
-					field.value = value.trim();
-				}
-				field.dispatchEvent(new Event('input', { bubbles: true }));
-				field.dispatchEvent(new Event('change', { bubbles: true }));
-			});
-		});
 
 		function renderOrderStep() {
 			orderSteps.forEach((step, index) => {
@@ -549,17 +433,15 @@
 		function updateOrderSummary() {
 			const summary = document.querySelector('#order-summary');
 			const fields = [
-				['Folio de requisición', 'requisition_folio'],
-				['Importe de requisición', 'requisition_amount'],
-				['Descripción', 'description'],
-				['Cantidad', 'quantity'],
-				['Unidad', 'unit'],
-				['Costo unitario', 'unit_cost'],
-				['Área solicitante', 'department'],
-				['Proveedor cotizante', 'supplier_id'],
-				['Importe cotizado', 'quote_amount'],
-				['Lugar de entrega', 'delivery_location'],
-				['Folio de orden de compra', 'purchase_order_folio'],
+				['Folio', 'purchase_order_folio'],
+				['Fecha', 'purchase_order_date'],
+				['Proveedor', 'supplier_id'],
+				['Requisición', 'requisition_folio'],
+				['Importe', 'quote_amount'],
+				['Partida', 'purchase_order_partida'],
+				['I.V.A.', 'purchase_order_iva'],
+				['RMS', 'purchase_order_rms'],
+				['RF', 'purchase_order_rf'],
 			];
 			summary.replaceChildren(...fields.map(([label, name]) => {
 				const item = document.createElement('p');
@@ -582,20 +464,10 @@
 			return true;
 		}
 
-		function releasePreview() {
-			if (previewUrl) {
-				URL.revokeObjectURL(previewUrl);
-				previewUrl = null;
-			}
-		}
-
 		function closeOrderDialog() {
 			orderDialog.classList.add('hidden');
 			orderForm.reset();
 			activeOrderStep = 0;
-			releasePreview();
-			previewBox.classList.add('hidden');
-			pdfPreview.classList.add('hidden');
 			renderOrderStep();
 			createOrderButton.focus();
 		}
@@ -634,29 +506,6 @@
 			activeOrderStep += 1;
 			renderOrderStep();
 		});
-		requisitionPdf.addEventListener('change', () => {
-			releasePreview();
-			pdfPreview.classList.add('hidden');
-			const file = requisitionPdf.files[0];
-			if (!file) {
-				previewBox.classList.add('hidden');
-				return;
-			}
-			if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-				requisitionPdf.setCustomValidity('Selecciona un archivo PDF.');
-				requisitionPdf.reportValidity();
-				requisitionPdf.value = '';
-				requisitionPdf.setCustomValidity('');
-				previewBox.classList.add('hidden');
-				return;
-			}
-			previewUrl = URL.createObjectURL(file);
-			previewName.textContent = file.name;
-			previewBox.classList.remove('hidden');
-			pdfPreview.src = previewUrl;
-			pdfPreview.classList.remove('hidden');
-		});
-
 		renderOrderStep();
 	</script>
 </body>

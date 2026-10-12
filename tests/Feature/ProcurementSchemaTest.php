@@ -11,6 +11,7 @@ use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ProcurementSchemaTest extends TestCase
@@ -31,18 +32,15 @@ class ProcurementSchemaTest extends TestCase
             'folio' => 'REQ-SCHEMA-001',
             'created_on' => '2026-10-08',
             'requested_on' => '2026-10-08',
-            'needed_by' => '2026-10-15',
             'amount' => 1000,
             'partida' => '33901',
-            'budget_key' => 'BUDGET-001',
-            'quantity' => 1,
-            'unit' => 'Pieza',
-            'unit_cost' => 1000,
-            'description' => 'Equipo de prueba',
-            'department' => 'Compras',
-            'justification' => 'Prueba de relaciones',
+            'sp' => 'SP-001',
+            'ppp' => 'PPP-001',
+            'sup' => 'SUP-001',
+            'dir' => 'DIR-001',
+            'process' => 'Proceso de prueba',
+            'rf' => 'RF-001',
             'pdf_path' => 'requisitions/test.pdf',
-            'xml_path' => 'requisitions/test.xml',
             'user_id' => $user->id,
         ]);
         $purchaseOrder = PurchaseOrder::create([
@@ -97,5 +95,37 @@ class ProcurementSchemaTest extends TestCase
             'folio' => 'FAC-SCHEMA-002',
             'supplier_id' => 999999,
         ]);
+    }
+
+    public function test_supplier_table_stores_tax_profile_and_contact_email(): void
+    {
+        $this->assertTrue(Schema::hasColumns('suppliers', [
+            'person_type',
+            'tax_regime',
+            'cfdi_use',
+            'contact_email',
+        ]));
+    }
+
+    public function test_requisition_table_contains_only_capture_fields_and_system_columns(): void
+    {
+        $this->assertSame([
+            'id',
+            'folio',
+            'created_on',
+            'requested_on',
+            'amount',
+            'partida',
+            'sp',
+            'ppp',
+            'sup',
+            'dir',
+            'process',
+            'rf',
+            'pdf_path',
+            'user_id',
+            'created_at',
+            'updated_at',
+        ], Schema::getColumnListing('requisitions'));
     }
 }

@@ -20,6 +20,9 @@ class HomeController extends Controller
     {
         return view('suppliers.index', [
             'suppliers' => Supplier::orderBy('name')->paginate(20),
+            'personTypes' => Supplier::PERSON_TYPES,
+            'taxRegimes' => Supplier::TAX_REGIMES,
+            'cfdiUses' => Supplier::CFDI_USES,
         ]);
     }
 }
