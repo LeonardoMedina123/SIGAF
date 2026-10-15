@@ -19,6 +19,7 @@ class PurchaseOrder extends Model
         'amount',
         'partida',
         'iva_percentage',
+        'iva_included',
         'rms',
         'rf',
         'contact_email',
@@ -35,6 +36,7 @@ class PurchaseOrder extends Model
             'order_date' => 'date',
             'amount' => 'decimal:2',
             'iva_percentage' => 'decimal:2',
+            'iva_included' => 'boolean',
         ];
     }
 

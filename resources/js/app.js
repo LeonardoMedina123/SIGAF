@@ -1,6 +1,8 @@
 import {
 	normalizePastedDate,
 	normalizePastedNumber,
+	normalizePastedOptionText,
+	normalizePurchaseOrderPasteValues,
 	purchaseOrderPasteFields,
 	requisitionPasteFields,
 } from './requisition-paste.js';
@@ -36,7 +38,12 @@ function handleTabularPaste(event, fields) {
 	}
 
 	event.preventDefault();
-	firstRow.split('\t').forEach((value, index) => {
+	let pastedValues = firstRow.split('\t');
+	if (fields === purchaseOrderPasteFields && fieldIndex === 0) {
+		pastedValues = normalizePurchaseOrderPasteValues(pastedValues);
+	}
+
+	pastedValues.forEach((value, index) => {
 		const fieldName = fields[fieldIndex + index];
 		if (!fieldName) {
 			return;
@@ -53,11 +60,11 @@ function handleTabularPaste(event, fields) {
 		} else if (field.type === 'number') {
 			field.value = normalizePastedNumber(trimmedValue);
 		} else if (field instanceof HTMLSelectElement) {
-			const normalizedValue = trimmedValue.toLowerCase();
+			const normalizedValue = normalizePastedOptionText(trimmedValue);
 			const option = [...field.options].find((item) => (
-				item.textContent.trim().toLowerCase() === normalizedValue
-				|| item.dataset.name?.trim().toLowerCase() === normalizedValue
-				|| item.dataset.rfc?.trim().toLowerCase() === normalizedValue
+				normalizePastedOptionText(item.textContent) === normalizedValue
+				|| (item.dataset.name && normalizePastedOptionText(item.dataset.name) === normalizedValue)
+				|| (item.dataset.rfc && normalizePastedOptionText(item.dataset.rfc) === normalizedValue)
 			));
 			field.value = option?.value ?? '';
 		} else {

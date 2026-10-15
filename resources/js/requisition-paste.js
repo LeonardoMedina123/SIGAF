@@ -15,11 +15,11 @@ export const requisitionPasteFields = [
 export const purchaseOrderPasteFields = [
 	'purchase_order_folio',
 	'purchase_order_date',
-	'supplier_id',
+	'purchase_order_supplier',
 	'requisition_folio',
 	'quote_amount',
 	'purchase_order_partida',
-	'purchase_order_iva',
+	'purchase_order_iva_included',
 	'purchase_order_rms',
 	'purchase_order_rf',
 ];
@@ -69,6 +69,33 @@ export function normalizePastedDate(value) {
 	}
 
 	return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+export function normalizePurchaseOrderPasteValues(values) {
+	const hasLeadingRowNumber = /^\d+$/.test(values[0]?.trim() ?? '')
+		&& values[1]?.trim() === ''
+		&& normalizePastedDate(values[3] ?? '') !== '';
+	const hasLeadingBlank = values[0]?.trim() === ''
+		&& normalizePastedDate(values[2] ?? '') !== '';
+
+	if (!hasLeadingRowNumber && !hasLeadingBlank) {
+		return values;
+	}
+
+	const normalizedValues = values.slice(hasLeadingRowNumber ? 2 : 1);
+	const hasMissingPartidaAndIva = normalizedValues.length === 7
+		&& normalizePastedNumber(normalizedValues[4]) !== ''
+		&& ['si', 'no'].includes(normalizePastedOptionText(normalizedValues[6]));
+
+	if (hasMissingPartidaAndIva) {
+		normalizedValues.splice(5, 0, '', '');
+	}
+
+	return normalizedValues.concat(Array(Math.max(purchaseOrderPasteFields.length - normalizedValues.length, 0)).fill(''));
+}
+
+export function normalizePastedOptionText(value) {
+	return value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
 export function normalizePastedNumber(value) {

@@ -361,13 +361,23 @@
 				<fieldset data-order-step data-purchase-order-paste hidden class="space-y-4 rounded-[14px] bg-[#b7dcef] p-4 text-[#07577f] md:p-6">
 					<legend class="sr-only">Paso 5: Confirmación</legend>
 					<h2 class="text-xl font-semibold md:text-2xl">Revisión final</h2>
-					<div class="grid gap-3 rounded-xl bg-white p-4 sm:grid-cols-2">
-						<h3 class="text-lg font-semibold sm:col-span-2">Orden de compra</h3>
-						<p class="text-xs text-[#315a6b] sm:col-span-2">Pega una fila copiada desde el campo Folio en este orden: Folio, Fecha, Proveedor, Requisición, Importe, Partida, I.V.A., RMS y RF. Los archivos PDF y XML se adjuntan por separado.</p>
+					<div class="grid gap-3 rounded-xl bg-white p-4 sm:grid-cols-2 lg:grid-cols-3">
+						<h3 class="text-lg font-semibold sm:col-span-2 lg:col-span-3">Orden de compra</h3>
+						<p class="text-xs text-[#315a6b] sm:col-span-2 lg:col-span-3">Pega la fila copiada en este orden desde el campo Folio: Folio, Fecha, Proveedor, Requisición, Importe, Partida, I.V.A., RMS y RF. Los archivos PDF y XML se adjuntan por separado.</p>
 						<label class="grid gap-1 text-sm">Folio <input name="purchase_order_folio" type="text" required maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">Fecha <input name="purchase_order_date" type="date" required value="{{ now()->format('Y-m-d') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
-						<label class="grid gap-1 text-sm">Partida <input name="purchase_order_partida" type="text" required maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
-						<label class="grid gap-1 text-sm">I.V.A. (%) <input name="purchase_order_iva" type="number" required min="0" max="100" step="0.01" value="16" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+						<label class="grid gap-1 text-sm">Proveedor <input name="purchase_order_supplier" type="text" required autocomplete="off" aria-describedby="purchase-order-supplier-help" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+						<p id="purchase-order-supplier-help" class="text-xs text-[#315a6b] sm:col-span-2 lg:col-span-3">Escribe o pega el nombre del proveedor seleccionado en el paso anterior.</p>
+						<label class="grid gap-1 text-sm">Requisición <output data-purchase-order-review="requisition_folio" class="flex h-10 items-center overflow-hidden rounded-lg border border-[#ccd8de] bg-[#f5f8f9] px-3 text-ellipsis whitespace-nowrap text-[#17252b]">—</output></label>
+						<label class="grid gap-1 text-sm">Importe <output data-purchase-order-review="quote_amount" class="flex h-10 items-center overflow-hidden rounded-lg border border-[#ccd8de] bg-[#f5f8f9] px-3 text-ellipsis whitespace-nowrap text-[#17252b]">—</output></label>
+						<label class="grid gap-1 text-sm">Partida <input name="purchase_order_partida" type="text" maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+						<label class="grid gap-1 text-sm">I.V.A.
+							<select name="purchase_order_iva_included" class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
+								<option value="">Selecciona una opción</option>
+								<option value="1">Sí</option>
+								<option value="0">No</option>
+							</select>
+						</label>
 						<label class="grid gap-1 text-sm">RMS <input name="purchase_order_rms" type="text" maxlength="255" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">RF <input name="purchase_order_rf" type="text" maxlength="255" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">PDF de orden de compra <input name="purchase_order_pdf" type="file" required accept="application/pdf,.pdf" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm file:text-[#171717]" /></label>
@@ -391,14 +401,41 @@
 		const orderDialog = document.querySelector('#order-dialog');
 		const orderForm = document.querySelector('#order-wizard-form');
 		const supplierSelect = orderForm.elements.namedItem('supplier_id');
-		const purchaseOrderIva = orderForm.elements.namedItem('purchase_order_iva');
+		const purchaseOrderSupplier = orderForm.elements.namedItem('purchase_order_supplier');
+		const requisitionFolio = orderForm.elements.namedItem('requisition_folio');
+		const quoteAmount = orderForm.elements.namedItem('quote_amount');
+		const purchaseOrderReviewFields = document.querySelectorAll('[data-purchase-order-review]');
+		function updatePurchaseOrderReview() {
+			const reviewValues = {
+				requisition_folio: requisitionFolio.value,
+				quote_amount: quoteAmount.value,
+			};
+			purchaseOrderReviewFields.forEach((field) => {
+				field.textContent = reviewValues[field.dataset.purchaseOrderReview] || '—';
+			});
+		}
 		supplierSelect.addEventListener('change', () => {
 			const selectedOption = supplierSelect.selectedOptions[0];
-			if (selectedOption?.dataset.iva) {
-				purchaseOrderIva.value = selectedOption.dataset.iva;
-			}
 			orderForm.elements.namedItem('quote_email').value = selectedOption?.dataset.email ?? '';
 		});
+		function normalizeSupplierText(value) {
+			return value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+		}
+		purchaseOrderSupplier.addEventListener('input', () => {
+			const normalizedSupplier = normalizeSupplierText(purchaseOrderSupplier.value);
+			const matchingOption = [...supplierSelect.options].find((option) => (
+				normalizeSupplierText(option.textContent) === normalizedSupplier
+				|| (option.dataset.name && normalizeSupplierText(option.dataset.name) === normalizedSupplier)
+				|| (option.dataset.rfc && normalizeSupplierText(option.dataset.rfc) === normalizedSupplier)
+			));
+			supplierSelect.value = matchingOption?.value ?? '';
+			purchaseOrderSupplier.setCustomValidity(purchaseOrderSupplier.value && !matchingOption ? 'Escribe el nombre o RFC de un proveedor del catálogo.' : '');
+			orderForm.elements.namedItem('quote_email').value = matchingOption?.dataset.email ?? '';
+		});
+		orderForm.addEventListener('reset', () => purchaseOrderSupplier.setCustomValidity(''));
+		requisitionFolio.addEventListener('input', updatePurchaseOrderReview);
+		quoteAmount.addEventListener('input', updatePurchaseOrderReview);
+		updatePurchaseOrderReview();
 		const orderSteps = [...document.querySelectorAll('[data-order-step]')];
 		const stepIndicators = [...document.querySelectorAll('[data-step-indicator]')];
 		const orderProgress = document.querySelector('#order-progress');
@@ -435,18 +472,18 @@
 			const fields = [
 				['Folio', 'purchase_order_folio'],
 				['Fecha', 'purchase_order_date'],
-				['Proveedor', 'supplier_id'],
+				['Proveedor', 'purchase_order_supplier'],
 				['Requisición', 'requisition_folio'],
 				['Importe', 'quote_amount'],
 				['Partida', 'purchase_order_partida'],
-				['I.V.A.', 'purchase_order_iva'],
+				['I.V.A.', 'purchase_order_iva_included'],
 				['RMS', 'purchase_order_rms'],
 				['RF', 'purchase_order_rf'],
 			];
 			summary.replaceChildren(...fields.map(([label, name]) => {
 				const item = document.createElement('p');
 				const field = orderForm.elements.namedItem(name);
-				const value = name === 'supplier_id'
+				const value = field instanceof HTMLSelectElement
 					? field.selectedOptions[0]?.textContent || '—'
 					: field.value || '—';
 				item.textContent = `${label}: ${value}`;
@@ -475,6 +512,7 @@
 		createOrderButton.addEventListener('click', () => {
 			orderDialog.classList.remove('hidden');
 			activeOrderStep = 0;
+			updatePurchaseOrderReview();
 			renderOrderStep();
 			orderSteps[0].querySelector('input').focus();
 		});
