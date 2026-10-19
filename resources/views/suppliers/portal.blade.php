@@ -12,9 +12,21 @@
 
 	<main class="px-3 pb-8 pt-6 md:px-6 md:pt-8">
 		<div class="mx-auto max-w-[1440px]">
-			<div class="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+			@if (session('success'))
+				<p role="status" class="mb-3 rounded-lg bg-[#e8f8f0] px-4 py-2 text-sm font-medium text-[#145538]">{{ session('success') }}</p>
+			@endif
+			@if ($errors->any())
+				<div role="alert" class="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+					<p class="font-semibold">No se pudieron enviar los documentos. Revisa los archivos e inténtalo de nuevo.</p>
+					<ul class="mt-1 list-inside list-disc">
+						@foreach ($errors->all() as $error)
+							<li>{{ $error }}</li>
+						@endforeach
+					</ul>
+				</div>
+			@endif
+			<div class="mb-3 flex flex-wrap items-center gap-2 px-1">
 				<h1 class="text-lg font-semibold text-[#123f57] md:text-xl">Órdenes de compra</h1>
-				<span class="rounded-full bg-[#edf7fb] px-3 py-1 text-xs font-medium text-[#07577f]">Vista de ejemplo</span>
 			</div>
 
 			<div class="overflow-hidden rounded-[28px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
@@ -30,40 +42,47 @@
 							</tr>
 						</thead>
 						<tbody>
-							@foreach ($purchaseOrders as $purchaseOrder)
+							@forelse ($purchaseOrders as $purchaseOrder)
 								<tr class="text-sm text-[#202020] odd:bg-white even:bg-[#fbfbfb]">
 									<td class="border-t border-[#b7b7b7] px-5 py-3 md:px-8">
-										<span class="whitespace-nowrap text-[#07529a] underline decoration-1 underline-offset-2">{{ $purchaseOrder['folio'] }}</span>
+										<a href="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" target="_blank" rel="noopener" class="whitespace-nowrap font-medium text-[#07529a] underline decoration-1 underline-offset-2">{{ $purchaseOrder->folio }}</a>
 									</td>
 									<td class="border-t border-[#b7b7b7] px-5 py-2 md:px-8">
-										@if ($purchaseOrder['documentsSubmitted'])
-											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#b5b5b5] px-4 text-center text-xs text-[#222]">Ya se adjuntaron los archivos solicitados</span>
+										@if ($purchaseOrder->invoice_pdf_path !== null && $purchaseOrder->invoice_xml_path !== null)
+											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#e8f8f0] px-4 text-center text-xs font-medium text-[#145538]">Factura y XML recibidos</span>
 										@else
-											<button type="button" data-open-invoice-dialog data-order-folio="{{ $purchaseOrder['folio'] }}" class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#22a06b] px-4 text-xs font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
+											<button type="button" data-open-invoice-dialog data-order-folio="{{ $purchaseOrder->folio }}" data-invoice-url="{{ route('supplier.purchase-orders.invoices.store', $purchaseOrder) }}" data-pdf-url="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#22a06b] px-4 text-xs font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
 												<span aria-hidden="true" class="text-xl font-light leading-none">+</span>
 												<span>Adjunta factura y XML</span>
 											</button>
 										@endif
 									</td>
 									<td class="border-t border-[#b7b7b7] px-5 py-2 md:px-8">
-										@if ($purchaseOrder['documentsSubmitted'])
-											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#b5b5b5] px-4 text-center text-xs text-[#222]">Ya se adjuntaron los archivos solicitados</span>
+										@if ($purchaseOrder->payment_validated_at === null)
+											<span class="text-xs text-[#64748b]">Pendiente de validación del pago</span>
+										@elseif ($purchaseOrder->payment_complement_path !== null)
+											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#e8f8f0] px-4 text-center text-xs font-medium text-[#145538]">Complemento recibido</span>
 										@else
-											<button type="button" data-open-payment-dialog data-order-folio="{{ $purchaseOrder['folio'] }}" class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#22a06b] px-4 text-xs font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
+											<button type="button" data-open-payment-dialog data-order-folio="{{ $purchaseOrder->folio }}" data-payment-url="{{ route('supplier.purchase-orders.payment-complement.store', $purchaseOrder) }}" data-pdf-url="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#22a06b] px-4 text-xs font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
 												<span aria-hidden="true" class="text-xl font-light leading-none">+</span>
-												<span>Adjunta tu archivo</span>
+												<span>Adjunta complemento de pago</span>
 											</button>
 										@endif
 									</td>
-									<td class="border-t border-[#b7b7b7] px-5 py-3 text-center text-sm md:px-8">{{ $purchaseOrder['modifiedAt'] }}</td>
+									<td class="border-t border-[#b7b7b7] px-5 py-3 text-center text-sm md:px-8">{{ $purchaseOrder->updated_at->format('d/m/Y') }}</td>
 								</tr>
-							@endforeach
+							@empty
+								<tr>
+									<td colspan="4" class="border-t border-[#b7b7b7] px-5 py-12 text-center text-sm text-[#64748b]">
+										Aún no hay órdenes de compra para este proveedor.
+									</td>
+								</tr>
+							@endforelse
 						</tbody>
 					</table>
 				</div>
 			</div>
 
-			<p class="mt-3 px-1 text-xs text-[#64748b]">Los datos son ilustrativos. La selección de archivos es una demostración y aún no los envía al sistema.</p>
 		</div>
 	</main>
 
@@ -78,15 +97,10 @@
 				<span data-dialog-order-folio class="font-normal text-[#161616] underline decoration-1 underline-offset-2"></span>
 			</h2>
 
-			<p class="mt-4 text-base sm:text-lg">
-				Consultar PDF:
-				<span aria-disabled="true" title="El PDF de muestra no está disponible" class="font-semibold italic text-[#07577f] underline decoration-1 underline-offset-2">
-					<span data-dialog-pdf-folio></span>
-				</span>
-				<span class="block text-xs text-[#31576a]">Archivo de ejemplo; el documento PDF aún no está disponible.</span>
-			</p>
+			<a data-dialog-pdf href="#" target="_blank" rel="noopener" class="mt-4 inline-block text-sm font-semibold text-[#07577f] underline decoration-1 underline-offset-2">Consultar PDF de la orden de compra</a>
 
-			<form data-invoice-form class="mt-6">
+			<form data-invoice-form method="POST" enctype="multipart/form-data" class="mt-6">
+				@csrf
 				<div class="grid gap-5 sm:grid-cols-2 sm:gap-8">
 					<label class="grid content-start gap-3 text-base font-medium sm:text-lg">
 						<span>Añadir Factura:</span>
@@ -117,13 +131,12 @@
 
 				<div class="mt-6 rounded-[36px] bg-[#e1e1e1] px-5 py-4 text-sm leading-relaxed text-[#202020] sm:px-7">
 					<p>Antes de enviar estos documentos, le solicitamos revisar que sean los correctos.</p>
-					<p class="mt-2">Asimismo, le recordamos estar atento(a) a su bandeja de mensajes en la plataforma. Cuando se le notifique el pago, le pedimos adjuntar el documento de validación del mismo.</p>
+					<p class="mt-2">El complemento de pago estará disponible en esta pantalla cuando administración valide el pago.</p>
 					<p class="mt-2">Agradecemos su atención.</p>
 					<label class="mt-3 flex cursor-pointer items-start gap-2 font-medium">
-						<input type="checkbox" required class="mt-1 h-4 w-4 shrink-0 accent-[#08d985]" data-confirm-invoice>
+						<input type="checkbox" name="review_confirmed" value="1" required class="mt-1 h-4 w-4 shrink-0 accent-[#08d985]" data-confirm-invoice>
 						<span>He leído y confirmo la información anterior.</span>
 					</label>
-					<p data-invoice-demo-status role="status" class="mt-2 hidden text-center font-medium text-[#07577f]"></p>
 					<div class="mt-2 flex justify-center">
 						<button type="submit" data-invoice-submit disabled class="cursor-not-allowed rounded-full bg-[#b5b5b5] px-5 py-1 text-base font-semibold text-[#555] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f] disabled:cursor-not-allowed enabled:cursor-pointer enabled:bg-[#08d985] enabled:text-[#073a28] enabled:hover:bg-[#00c976]">ENVIAR</button>
 					</div>
@@ -143,26 +156,10 @@
 				<span data-payment-order-folio class="font-normal text-[#161616] underline decoration-1 underline-offset-2"></span>
 			</h2>
 
-			<p class="mt-4 text-base sm:text-lg">
-				Consultar PDF:
-				<span aria-disabled="true" title="El PDF de muestra no está disponible" class="font-semibold italic text-[#07577f] underline decoration-1 underline-offset-2">
-					<span data-payment-pdf-folio></span>
-				</span>
-				<span class="block text-xs text-[#31576a]">Archivo de ejemplo; el documento PDF aún no está disponible.</span>
-			</p>
+			<a data-dialog-pdf href="#" target="_blank" rel="noopener" class="mt-4 inline-block text-sm font-semibold text-[#07577f] underline decoration-1 underline-offset-2">Consultar PDF de la orden de compra</a>
 
-			<div class="mt-5 grid gap-3 text-sm sm:grid-cols-2 sm:text-base">
-				<p class="flex items-center gap-3">
-					<span class="font-medium">FACTURA:</span>
-					<span class="rounded-full bg-[#b5b5b5] px-4 py-2 text-center text-xs text-[#222]">Ya se adjuntaron los archivos solicitados</span>
-				</p>
-				<p class="flex items-center gap-3">
-					<span class="font-medium">XML:</span>
-					<span class="rounded-full bg-[#b5b5b5] px-4 py-2 text-center text-xs text-[#222]">Ya se adjuntaron los archivos solicitados</span>
-				</p>
-			</div>
-
-			<form data-payment-form class="mt-5">
+			<form data-payment-form method="POST" enctype="multipart/form-data" class="mt-5">
+				@csrf
 				<label class="grid justify-items-center gap-3 text-base font-medium sm:text-lg">
 					<span>Añadir complemento de pago:</span>
 					<span data-upload-control data-selected="false" class="inline-flex min-h-10 w-fit max-w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#073b5c] px-5 text-sm font-semibold text-white transition hover:bg-[#052f49] data-[selected=true]:bg-[#b5b5b5] data-[selected=true]:text-[#222] data-[selected=true]:hover:bg-[#a4a4a4] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#07577f]">
@@ -178,13 +175,12 @@
 
 				<div class="mt-6 rounded-[36px] bg-[#e1e1e1] px-5 py-4 text-sm leading-relaxed text-[#202020] sm:px-7">
 					<p>Antes de enviar estos documentos, le solicitamos revisar que sean los correctos.</p>
-					<p class="mt-2">Asimismo, le recordamos estar atento(a) a su bandeja de mensajes en la plataforma. Cuando se le notifique el pago, le pedimos adjuntar el documento de validación del mismo.</p>
+					<p class="mt-2">Este complemento se solicita porque administración ya validó el pago.</p>
 					<p class="mt-2">Agradecemos su atención.</p>
 					<label class="mt-3 flex cursor-pointer items-start gap-2 font-medium">
-						<input type="checkbox" required class="mt-1 h-4 w-4 shrink-0 accent-[#08d985]" data-confirm-payment>
+						<input type="checkbox" name="review_confirmed" value="1" required class="mt-1 h-4 w-4 shrink-0 accent-[#08d985]" data-confirm-payment>
 						<span>He leído y confirmo la información anterior.</span>
 					</label>
-					<p data-payment-demo-status role="status" class="mt-2 hidden text-center font-medium text-[#07577f]"></p>
 					<div class="mt-2 flex justify-center">
 						<button type="submit" data-payment-submit disabled class="cursor-not-allowed rounded-full bg-[#b5b5b5] px-5 py-1 text-base font-semibold text-[#555] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f] disabled:cursor-not-allowed enabled:cursor-pointer enabled:bg-[#08d985] enabled:text-[#073a28] enabled:hover:bg-[#00c976]">ENVIAR</button>
 					</div>
@@ -200,13 +196,11 @@
 		const xmlFile = document.querySelector('[data-xml-file]');
 		const confirmInvoice = document.querySelector('[data-confirm-invoice]');
 		const invoiceSubmit = document.querySelector('[data-invoice-submit]');
-		const invoiceDemoStatus = document.querySelector('[data-invoice-demo-status]');
 		const paymentDialog = document.querySelector('#payment-dialog');
 		const paymentForm = document.querySelector('[data-payment-form]');
 		const paymentFile = document.querySelector('[data-payment-file]');
 		const confirmPayment = document.querySelector('[data-confirm-payment]');
 		const paymentSubmit = document.querySelector('[data-payment-submit]');
-		const paymentDemoStatus = document.querySelector('[data-payment-demo-status]');
 		let currentInvoiceOrderFolio = null;
 		let currentPaymentOrderFolio = null;
 		const updateInvoiceSubmitState = () => {
@@ -232,14 +226,15 @@
 			button.addEventListener('click', () => {
 				const orderFolio = button.dataset.orderFolio;
 
+				invoiceForm.action = button.dataset.invoiceUrl;
 				document.querySelector('[data-dialog-order-folio]').textContent = orderFolio;
-				document.querySelector('[data-dialog-pdf-folio]').textContent = orderFolio;
+				document.querySelectorAll('[data-dialog-pdf]').forEach((link) => {
+					link.href = button.dataset.pdfUrl;
+				});
 				if (currentInvoiceOrderFolio !== orderFolio) {
 					invoiceForm.reset();
 					updateUploadControl(invoiceFile, '[data-invoice-file-label]', '[data-invoice-file-name]', 'Adjunta Factura', 'Modificar factura');
 					updateUploadControl(xmlFile, '[data-xml-file-label]', '[data-xml-file-name]', 'Adjunta archivo XML', 'Modificar XML');
-					invoiceDemoStatus.textContent = '';
-					invoiceDemoStatus.classList.add('hidden');
 					currentInvoiceOrderFolio = orderFolio;
 				}
 				updateInvoiceSubmitState();
@@ -251,13 +246,14 @@
 			button.addEventListener('click', () => {
 				const orderFolio = button.dataset.orderFolio;
 
+				paymentForm.action = button.dataset.paymentUrl;
 				document.querySelector('[data-payment-order-folio]').textContent = orderFolio;
-				document.querySelector('[data-payment-pdf-folio]').textContent = orderFolio;
+				document.querySelectorAll('[data-dialog-pdf]').forEach((link) => {
+					link.href = button.dataset.pdfUrl;
+				});
 				if (currentPaymentOrderFolio !== orderFolio) {
 					paymentForm.reset();
 					updateUploadControl(paymentFile, '[data-payment-file-label]', '[data-payment-file-name]', 'Añadir complemento', 'Modificar complemento');
-					paymentDemoStatus.textContent = '';
-					paymentDemoStatus.classList.add('hidden');
 					currentPaymentOrderFolio = orderFolio;
 				}
 				updatePaymentSubmitState();
@@ -300,18 +296,6 @@
 			updatePaymentSubmitState();
 		});
 		confirmPayment.addEventListener('change', updatePaymentSubmitState);
-
-		invoiceForm.addEventListener('submit', (event) => {
-			event.preventDefault();
-			invoiceDemoStatus.textContent = 'Los archivos se seleccionaron, pero el envío aún no está conectado al sistema.';
-			invoiceDemoStatus.classList.remove('hidden');
-		});
-
-		paymentForm.addEventListener('submit', (event) => {
-			event.preventDefault();
-			paymentDemoStatus.textContent = 'El archivo se seleccionó, pero el envío aún no está conectado al sistema.';
-			paymentDemoStatus.classList.remove('hidden');
-		});
 
 		updateUploadControl(invoiceFile, '[data-invoice-file-label]', '[data-invoice-file-name]', 'Adjunta Factura', 'Modificar factura');
 		updateUploadControl(xmlFile, '[data-xml-file-label]', '[data-xml-file-name]', 'Adjunta archivo XML', 'Modificar XML');

@@ -5,27 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Requisition;
 use App\Models\Supplier;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Str;
 
 class HomeController extends Controller
 {
     public function index(): View
     {
         if (auth()->user()->isSupplier()) {
+            $supplier = Supplier::query()
+                ->whereRaw('LOWER(contact_email) = ?', [Str::lower(auth()->user()->email)])
+                ->first();
+
             return view('suppliers.portal', [
-                'purchaseOrders' => array_map(
-                    static fn (int $orderNumber): array => [
-                        'folio' => sprintf('Orden_Compra_TECNM_%d', 2515485 + $orderNumber),
-                        'documentsSubmitted' => $orderNumber > 1,
-                        'modifiedAt' => '08/10/2026',
-                    ],
-                    range(1, 8),
-                ),
+                'purchaseOrders' => $supplier?->purchaseOrders()->latest('order_date')->get() ?? collect(),
             ]);
         }
 
         return view('home', [
-            'requisitions' => Requisition::with('purchaseOrder')->latest()->get(),
+            'requisitions' => Requisition::with('purchaseOrder.supplier')->latest()->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
+            'canValidatePayments' => auth()->user()->isAdministrator(),
         ]);
     }
 

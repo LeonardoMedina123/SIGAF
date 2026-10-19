@@ -28,6 +28,11 @@ class PurchaseOrder extends Model
         'receiver_phone',
         'pdf_path',
         'xml_path',
+        'invoice_pdf_path',
+        'invoice_xml_path',
+        'payment_complement_path',
+        'payment_validated_at',
+        'payment_validated_by',
     ];
 
     protected function casts(): array
@@ -37,6 +42,7 @@ class PurchaseOrder extends Model
             'amount' => 'decimal:2',
             'iva_percentage' => 'decimal:2',
             'iva_included' => 'boolean',
+            'payment_validated_at' => 'datetime',
         ];
     }
 

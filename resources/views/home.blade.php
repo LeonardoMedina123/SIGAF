@@ -151,15 +151,56 @@
 						<tr class="text-center text-xs text-[#263b46] odd:bg-white even:bg-[#f5f9fb]">
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->folio }}</td>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->purchaseOrder?->folio ?? '—' }}</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">—</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">—</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">—</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+								@if ($requisition->purchaseOrder !== null)
+									<div class="flex flex-col items-center gap-1">
+										<span class="font-semibold">{{ $requisition->purchaseOrder->supplier->name }}</span>
+										<span class="break-all text-[10px] text-[#60737d]">{{ $requisition->purchaseOrder->supplier->contact_email }}</span>
+										@if ($requisition->purchaseOrder->invoice_pdf_path !== null)
+											<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'invoice-pdf']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Factura PDF</a>
+										@endif
+										@if ($requisition->purchaseOrder->invoice_xml_path !== null)
+											<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'invoice-xml']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Factura XML</a>
+										@endif
+										@if ($requisition->purchaseOrder->invoice_pdf_path === null && $requisition->purchaseOrder->invoice_xml_path === null)
+											<span>Pendiente de factura</span>
+										@endif
+									</div>
+								@else
+									—
+								@endif
+							</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+								—
+							</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+								@if ($requisition->purchaseOrder === null)
+									—
+								@elseif ($requisition->purchaseOrder->payment_validated_at !== null)
+									<span class="text-[#145538]">Pago validado</span>
+								@elseif ($canValidatePayments)
+									<form action="{{ route('admin.purchase-orders.validate-payment', $requisition->purchaseOrder) }}" method="POST">
+										@csrf
+										<button type="submit" class="rounded-full bg-[#22a06b] px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f] md:px-3 md:text-xs">Validar pago</button>
+									</form>
+								@else
+									<span>Pendiente de validación</span>
+								@endif
+							</td>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->purchaseOrder?->rf ?? '—' }}</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">—</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+								@if ($requisition->purchaseOrder?->payment_complement_path)
+									<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'payment-complement']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Descargar complemento</a>
+								@elseif ($requisition->purchaseOrder?->payment_validated_at !== null)
+									<span>Pendiente de complemento</span>
+								@else
+									—
+								@endif
+							</td>
 						</tr>
 					@empty
 						<tr>
-							<td colspan="7" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-sm text-[#60737d]">
+							<td colspan="7" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-xs text-[#60737d] md:text-sm">
 								Aún no hay requisiciones registradas.
 							</td>
 						</tr>
@@ -375,7 +416,7 @@
 						<p class="text-xs text-[#315a6b] sm:col-span-2 lg:col-span-3">Pega la fila copiada en este orden desde el campo Folio: Folio, Fecha, Proveedor, Requisición, Importe, Partida, I.V.A., RMS y RF. Los espacios vacíos también se conservan.</p>
 						<label class="grid gap-1 text-sm">Folio <input name="purchase_order_folio" type="text" required maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">Fecha <input name="purchase_order_date" type="date" required value="{{ now()->format('Y-m-d') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
-						<label class="grid gap-1 text-sm">Proveedor <input name="purchase_order_supplier" type="text" required autocomplete="off" aria-describedby="purchase-order-supplier-help" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+						<label class="grid gap-1 text-sm">Proveedor <input name="purchase_order_supplier" type="text" required autocomplete="off" aria-describedby="purchase-order-supplier-help" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /><span id="purchase-order-supplier-help" class="text-xs text-[#315a6b]">Escribe o pega el nombre del proveedor seleccionado.</span></label>
 						<label class="grid gap-1 text-sm">Requisición <output data-purchase-order-review="requisition_folio" class="flex h-10 items-center overflow-hidden rounded-lg border border-[#ccd8de] bg-[#f5f8f9] px-3 text-ellipsis whitespace-nowrap text-[#17252b]">—</output></label>
 						<label class="grid gap-1 text-sm">Importe <output data-purchase-order-review="quote_amount" class="flex h-10 items-center overflow-hidden rounded-lg border border-[#ccd8de] bg-[#f5f8f9] px-3 text-ellipsis whitespace-nowrap text-[#17252b]">—</output></label>
 						<label class="grid gap-1 text-sm">Partida <input name="purchase_order_partida" type="text" maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>

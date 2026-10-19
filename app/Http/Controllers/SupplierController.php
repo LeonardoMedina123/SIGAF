@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\Supplier;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class SupplierController extends Controller
@@ -37,8 +41,31 @@ class SupplierController extends Controller
             'it_capture' => ['nullable', 'string', 'max:255'],
         ]);
 
-        Supplier::create($validated);
+        DB::transaction(function () use ($validated): void {
+            Supplier::create($validated);
 
-        return redirect()->route('suppliers.index')->with('success', 'El proveedor se agregó correctamente.');
+            $email = Str::lower($validated['contact_email']);
+            $userExists = User::query()
+                ->whereRaw('LOWER(email) = ?', [$email])
+                ->exists();
+
+            if (! $userExists) {
+                $supplierDepartment = Department::query()
+                    ->where('slug', 'suppliers')
+                    ->firstOrFail();
+
+                User::create([
+                    'name' => $validated['name'],
+                    'email' => $email,
+                    'password' => '12345',
+                    'department_id' => $supplierDepartment->id,
+                ]);
+            }
+        });
+
+        return redirect()->route('suppliers.index')->with(
+            'success',
+            'El proveedor se agregó correctamente. Si el correo no tenía cuenta, se creó el acceso al portal de proveedor con la contraseña temporal 12345.',
+        );
     }
 }
