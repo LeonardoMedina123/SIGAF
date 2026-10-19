@@ -150,7 +150,18 @@
 					@forelse ($requisitions as $requisition)
 						<tr class="text-center text-xs text-[#263b46] odd:bg-white even:bg-[#f5f9fb]">
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->folio }}</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->purchaseOrder?->folio ?? '—' }}</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+								@if ($requisition->purchaseOrder !== null)
+									<div class="flex flex-col items-center gap-1">
+										<span>{{ $requisition->purchaseOrder->folio }}</span>
+										@if ($requisition->purchaseOrder->hasDocument('purchase_order_pdf'))
+											<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'purchase-order-pdf']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Descargar PDF de orden</a>
+										@endif
+									</div>
+								@else
+									—
+								@endif
+							</td>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
 								@if ($requisition->purchaseOrder !== null)
 									<div class="flex flex-col items-center gap-1">

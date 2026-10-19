@@ -435,18 +435,19 @@ class ProcurementWorkflowTest extends TestCase
     public function test_internal_users_can_view_and_download_supplier_documents(): void
     {
         Storage::fake('local');
+        $purchaseOrderPdf = UploadedFile::fake()->create('orden-compra.pdf', 10, 'application/pdf');
         $invoicePdf = UploadedFile::fake()->create('factura.pdf', 10, 'application/pdf');
         $invoiceXml = UploadedFile::fake()->create('factura.xml', 1, 'text/xml');
         $paymentComplement = UploadedFile::fake()->create('complemento.pdf', 10, 'application/pdf');
         $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
         $administrator = $this->createUserWithType('administrator', 'admin@example.com');
-        $viewer = $this->createUserWithType('departments', 'usuario@example.com');
         $supplier = $this->createSupplier('20', $supplierUser->email);
         $purchaseOrder = $this->createPurchaseOrderForSupplier(
             $supplier,
             'OC-2026-020',
             User::factory()->create(),
         );
+        UploadedDocument::replaceFor($purchaseOrder, 'purchase_order_pdf', $purchaseOrderPdf);
 
         $this->actingAs($supplierUser)
             ->post(route('supplier.purchase-orders.invoices.store', $purchaseOrder), [
@@ -471,18 +472,23 @@ class ProcurementWorkflowTest extends TestCase
             ->assertRedirect(route('home'))
             ->assertSessionHas('success');
 
-        $this->actingAs($viewer)
+        $this->actingAs($administrator)
             ->get(route('home'))
             ->assertOk()
             ->assertSee($supplier->name)
             ->assertSee($supplier->contact_email)
+            ->assertSee('Descargar PDF de orden')
             ->assertSee('Factura PDF')
             ->assertSee('Factura XML')
             ->assertSee('Descargar complemento')
+            ->assertSee(route('purchase-orders.documents.download', [$purchaseOrder, 'purchase-order-pdf']), false)
             ->assertSee(route('purchase-orders.documents.download', [$purchaseOrder, 'invoice-pdf']), false)
             ->assertSee(route('purchase-orders.documents.download', [$purchaseOrder, 'invoice-xml']), false)
             ->assertSee(route('purchase-orders.documents.download', [$purchaseOrder, 'payment-complement']), false);
 
+        $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'purchase-order-pdf']))
+            ->assertDownload('oc-2026-020-orden-compra.pdf')
+            ->assertStreamedContent($purchaseOrderPdf->getContent());
         $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'invoice-pdf']))
             ->assertDownload('oc-2026-020-factura.pdf')
             ->assertStreamedContent($invoicePdf->getContent());
@@ -493,7 +499,7 @@ class ProcurementWorkflowTest extends TestCase
             ->assertDownload('oc-2026-020-complemento-pago.pdf')
             ->assertStreamedContent($paymentComplement->getContent());
 
-        $this->assertSame(3, UploadedDocument::where('purchase_order_id', $purchaseOrder->id)->count());
+        $this->assertSame(4, UploadedDocument::where('purchase_order_id', $purchaseOrder->id)->count());
         $this->assertSame(
             $paymentComplement->getContent(),
             $purchaseOrder->uploadedDocuments()->where('kind', 'payment_complement')->firstOrFail()->content,
