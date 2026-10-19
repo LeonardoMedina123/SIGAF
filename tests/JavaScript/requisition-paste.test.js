@@ -57,6 +57,15 @@ describe('purchaseOrderPasteFields', () => {
 });
 
 describe('normalizePurchaseOrderPasteValues', () => {
+	it('keeps the copied purchase order columns aligned, including blank cells', () => {
+		const values = [
+			'1', '05-oct-26', 'ROCIO DEL SOCORRO DIAZ DE LEON GONZALEZ',
+			'REQ/IP/DRMS/2026/0399', '4,872.07', '21601', '', '', 'Si',
+		];
+
+		assert.deepEqual(normalizePurchaseOrderPasteValues(values), values);
+	});
+
 	it('aligns the copied row and inserts missing Partida and IVA cells before RMS and RF', () => {
 		const values = [
 			'', 'OC/IP/2026/0795', '05-oct-26', 'ROCIO DEL SOCORRO DIAZ DE LEON GONZALEZ',
