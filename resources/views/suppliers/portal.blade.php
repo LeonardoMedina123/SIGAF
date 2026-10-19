@@ -48,7 +48,7 @@
 										<a href="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" target="_blank" rel="noopener" class="whitespace-nowrap font-medium text-[#07529a] underline decoration-1 underline-offset-2">{{ $purchaseOrder->folio }}</a>
 									</td>
 									<td class="border-t border-[#b7b7b7] px-5 py-2 md:px-8">
-										@if ($purchaseOrder->invoice_pdf_path !== null && $purchaseOrder->invoice_xml_path !== null)
+										@if ($purchaseOrder->hasDocument('invoice_pdf') && $purchaseOrder->hasDocument('invoice_xml'))
 											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#e8f8f0] px-4 text-center text-xs font-medium text-[#145538]">Factura y XML recibidos</span>
 										@else
 											<button type="button" data-open-invoice-dialog data-order-folio="{{ $purchaseOrder->folio }}" data-invoice-url="{{ route('supplier.purchase-orders.invoices.store', $purchaseOrder) }}" data-pdf-url="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#22a06b] px-4 text-xs font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
@@ -60,7 +60,7 @@
 									<td class="border-t border-[#b7b7b7] px-5 py-2 md:px-8">
 										@if ($purchaseOrder->payment_validated_at === null)
 											<span class="text-xs text-[#64748b]">Pendiente de validación del pago</span>
-										@elseif ($purchaseOrder->payment_complement_path !== null)
+										@elseif ($purchaseOrder->hasDocument('payment_complement'))
 											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#e8f8f0] px-4 text-center text-xs font-medium text-[#145538]">Complemento recibido</span>
 										@else
 											<button type="button" data-open-payment-dialog data-order-folio="{{ $purchaseOrder->folio }}" data-payment-url="{{ route('supplier.purchase-orders.payment-complement.store', $purchaseOrder) }}" data-pdf-url="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#22a06b] px-4 text-xs font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">

@@ -4,12 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\PurchaseOrder;
 use App\Models\Requisition;
+use App\Models\UploadedDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use RuntimeException;
-use Throwable;
 
 class OrderController extends Controller
 {
@@ -45,67 +43,58 @@ class OrderController extends Controller
             'purchase_order_xml' => ['required', 'file', 'mimes:xml', 'max:10240'],
         ]);
 
-        $storedPaths = [];
+        DB::transaction(function () use ($validated, $request): void {
+            $requisition = Requisition::create([
+                'folio' => $validated['requisition_folio'],
+                'created_on' => $validated['requisition_created_on'],
+                'requested_on' => $validated['requisition_requested_on'],
+                'amount' => $validated['requisition_amount'],
+                'partida' => $validated['item_number'],
+                'sp' => $validated['requisition_sp'] ?? null,
+                'ppp' => $validated['requisition_ppp'] ?? null,
+                'sup' => $validated['requisition_sup'] ?? null,
+                'dir' => $validated['requisition_dir'] ?? null,
+                'process' => $validated['requisition_process'] ?? null,
+                'rf' => $validated['requisition_rf'] ?? null,
+                'pdf_path' => null,
+                'user_id' => $request->user()->id,
+            ]);
 
-        try {
-            $requisitionPdf = $this->storeDocument($request, 'requisition_pdf', 'requisitions');
-            $storedPaths[] = $requisitionPdf;
-            $purchaseOrderPdf = $this->storeDocument($request, 'purchase_order_pdf', 'purchase-orders');
-            $storedPaths[] = $purchaseOrderPdf;
-            $purchaseOrderXml = $this->storeDocument($request, 'purchase_order_xml', 'purchase-orders');
-            $storedPaths[] = $purchaseOrderXml;
+            $purchaseOrder = PurchaseOrder::create([
+                'folio' => $validated['purchase_order_folio'],
+                'order_date' => $validated['purchase_order_date'],
+                'requisition_id' => $requisition->id,
+                'supplier_id' => $validated['supplier_id'],
+                'amount' => $validated['quote_amount'],
+                'partida' => $validated['purchase_order_partida'] ?? null,
+                'iva_included' => $validated['purchase_order_iva_included'] ?? null,
+                'rms' => $validated['purchase_order_rms'] ?? null,
+                'rf' => $validated['purchase_order_rf'] ?? null,
+                'contact_email' => $validated['quote_email'],
+                'delivery_location' => $validated['delivery_location'],
+                'receiver' => $validated['receiver'],
+                'receiver_phone' => $validated['receiver_phone'],
+                'pdf_path' => null,
+                'xml_path' => null,
+            ]);
 
-            DB::transaction(function () use ($validated, $request, $requisitionPdf, $purchaseOrderPdf, $purchaseOrderXml): void {
-                $requisition = Requisition::create([
-                    'folio' => $validated['requisition_folio'],
-                    'created_on' => $validated['requisition_created_on'],
-                    'requested_on' => $validated['requisition_requested_on'],
-                    'amount' => $validated['requisition_amount'],
-                    'partida' => $validated['item_number'],
-                    'sp' => $validated['requisition_sp'] ?? null,
-                    'ppp' => $validated['requisition_ppp'] ?? null,
-                    'sup' => $validated['requisition_sup'] ?? null,
-                    'dir' => $validated['requisition_dir'] ?? null,
-                    'process' => $validated['requisition_process'] ?? null,
-                    'rf' => $validated['requisition_rf'] ?? null,
-                    'pdf_path' => $requisitionPdf,
-                    'user_id' => $request->user()->id,
-                ]);
-
-                PurchaseOrder::create([
-                    'folio' => $validated['purchase_order_folio'],
-                    'order_date' => $validated['purchase_order_date'],
-                    'requisition_id' => $requisition->id,
-                    'supplier_id' => $validated['supplier_id'],
-                    'amount' => $validated['quote_amount'],
-                    'partida' => $validated['purchase_order_partida'] ?? null,
-                    'iva_included' => $validated['purchase_order_iva_included'] ?? null,
-                    'rms' => $validated['purchase_order_rms'] ?? null,
-                    'rf' => $validated['purchase_order_rf'] ?? null,
-                    'contact_email' => $validated['quote_email'],
-                    'delivery_location' => $validated['delivery_location'],
-                    'receiver' => $validated['receiver'],
-                    'receiver_phone' => $validated['receiver_phone'],
-                    'pdf_path' => $purchaseOrderPdf,
-                    'xml_path' => $purchaseOrderXml,
-                ]);
-            });
-        } catch (Throwable $exception) {
-            Storage::disk('local')->delete($storedPaths);
-            throw $exception;
-        }
+            UploadedDocument::replaceFor(
+                $requisition,
+                'requisition_pdf',
+                $validated['requisition_pdf'],
+            );
+            UploadedDocument::replaceFor(
+                $purchaseOrder,
+                'purchase_order_pdf',
+                $validated['purchase_order_pdf'],
+            );
+            UploadedDocument::replaceFor(
+                $purchaseOrder,
+                'purchase_order_xml',
+                $validated['purchase_order_xml'],
+            );
+        });
 
         return redirect()->route('home')->with('success', 'La requisición y la orden de compra se guardaron correctamente.');
-    }
-
-    private function storeDocument(Request $request, string $field, string $directory): string
-    {
-        $path = $request->file($field)->store($directory, 'local');
-
-        if ($path === false) {
-            throw new RuntimeException("No fue posible guardar el archivo {$field}.");
-        }
-
-        return $path;
     }
 }

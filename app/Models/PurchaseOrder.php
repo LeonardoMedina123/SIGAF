@@ -60,4 +60,31 @@ class PurchaseOrder extends Model
     {
         return $this->hasMany(PaymentComplement::class);
     }
+
+    public function uploadedDocuments(): HasMany
+    {
+        return $this->hasMany(UploadedDocument::class);
+    }
+
+    public function hasDocument(string $kind): bool
+    {
+        $legacyPath = match ($kind) {
+            'purchase_order_pdf' => $this->pdf_path,
+            'purchase_order_xml' => $this->xml_path,
+            'invoice_pdf' => $this->invoice_pdf_path,
+            'invoice_xml' => $this->invoice_xml_path,
+            'payment_complement' => $this->payment_complement_path,
+            default => null,
+        };
+
+        if ($legacyPath !== null) {
+            return true;
+        }
+
+        if ($this->relationLoaded('uploadedDocuments')) {
+            return $this->uploadedDocuments->contains('kind', $kind);
+        }
+
+        return $this->uploadedDocuments()->where('kind', $kind)->exists();
+    }
 }

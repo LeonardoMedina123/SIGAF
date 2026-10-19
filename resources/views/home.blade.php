@@ -156,13 +156,13 @@
 									<div class="flex flex-col items-center gap-1">
 										<span class="font-semibold">{{ $requisition->purchaseOrder->supplier->name }}</span>
 										<span class="break-all text-[10px] text-[#60737d]">{{ $requisition->purchaseOrder->supplier->contact_email }}</span>
-										@if ($requisition->purchaseOrder->invoice_pdf_path !== null)
+										@if ($requisition->purchaseOrder->hasDocument('invoice_pdf'))
 											<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'invoice-pdf']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Factura PDF</a>
 										@endif
-										@if ($requisition->purchaseOrder->invoice_xml_path !== null)
+										@if ($requisition->purchaseOrder->hasDocument('invoice_xml'))
 											<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'invoice-xml']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Factura XML</a>
 										@endif
-										@if ($requisition->purchaseOrder->invoice_pdf_path === null && $requisition->purchaseOrder->invoice_xml_path === null)
+										@if (! $requisition->purchaseOrder->hasDocument('invoice_pdf') && ! $requisition->purchaseOrder->hasDocument('invoice_xml'))
 											<span>Pendiente de factura</span>
 										@endif
 									</div>
@@ -189,7 +189,7 @@
 							</td>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->purchaseOrder?->rf ?? '—' }}</td>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
-								@if ($requisition->purchaseOrder?->payment_complement_path)
+								@if ($requisition->purchaseOrder?->hasDocument('payment_complement'))
 									<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'payment-complement']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Descargar complemento</a>
 								@elseif ($requisition->purchaseOrder?->payment_validated_at !== null)
 									<span>Pendiente de complemento</span>
