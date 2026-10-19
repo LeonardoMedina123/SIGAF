@@ -110,43 +110,52 @@
 				</ul>
 			</div>
 		@endif
-		<section aria-label="Requisiciones" class="overflow-auto rounded-[20px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
-			<table class="w-full min-w-[1500px] border-separate border-spacing-0 text-left">
+		<section aria-label="Requisiciones" class="overflow-hidden rounded-[20px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
+			<table class="w-full table-fixed border-separate border-spacing-0 text-center">
+				<colgroup>
+					<col class="w-[19%]" />
+					<col class="w-[15%]" />
+					<col class="w-[8%]" />
+					<col class="w-[9%]" />
+					<col class="w-[7%]" />
+					<col class="w-[22%]" />
+					<col class="w-[20%]" />
+				</colgroup>
 				<thead class="bg-[#07577f] text-white">
 					<tr>
 						<th scope="col" class="rounded-tl-[19px] p-0 text-sm font-semibold">
-							<button type="button" data-filter-trigger="requisicion" data-filter-title="Requisición" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center px-4 py-3 text-left transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Requisición</button>
+							<button type="button" data-filter-trigger="requisicion" data-filter-title="Requisición" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Requisición</button>
 						</th>
 						<th scope="col" class="p-0 text-sm font-semibold">
-							<button type="button" data-filter-trigger="orden-compra" data-filter-title="Orden de compra" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center px-4 py-3 text-left transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Orden de compra</button>
+							<button type="button" data-filter-trigger="orden-compra" data-filter-title="Orden de compra" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Orden de compra</button>
 						</th>
 						<th scope="col" class="p-0 text-sm font-semibold">
-							<button type="button" data-filter-trigger="factura" data-filter-title="Factura" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center px-4 py-3 text-left transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Factura</button>
+							<button type="button" data-filter-trigger="factura" data-filter-title="Factura" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Factura</button>
 						</th>
 						<th scope="col" class="p-0 text-sm font-semibold">
-							<button type="button" data-filter-trigger="validacion" data-filter-title="Validación" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center px-4 py-3 text-left transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Validación</button>
+							<button type="button" data-filter-trigger="validacion" data-filter-title="Validación" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Validación</button>
 						</th>
 						<th scope="col" class="p-0 text-sm font-semibold">
-							<button type="button" data-filter-trigger="pago" data-filter-title="Pago" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center px-4 py-3 text-left transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Pago</button>
+							<button type="button" data-filter-trigger="pago" data-filter-title="Pago" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Pago</button>
 						</th>
 						<th scope="col" class="p-0 text-sm font-semibold">
-							<button type="button" data-filter-trigger="validacion-financiera" data-filter-title="Validación Recursos Financieros" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center px-4 py-3 text-left transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Validación Recursos Financieros</button>
+							<button type="button" data-filter-trigger="validacion-financiera" data-filter-title="Validación Recursos Financieros" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Validación Recursos Financieros</button>
 						</th>
 						<th scope="col" class="rounded-tr-[19px] p-0 text-sm font-semibold">
-							<button type="button" data-filter-trigger="complemento" data-filter-title="Complemento proveedor" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center px-4 py-3 text-left transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80">Complemento proveedor</button>
+							<button type="button" data-filter-trigger="complemento" data-filter-title="Complemento proveedor" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Complemento proveedor</button>
 						</th>
 					</tr>
 				</thead>
 				<tbody>
 					@forelse ($requisitions as $requisition)
-						<tr class="text-sm text-[#263b46] odd:bg-white even:bg-[#f5f9fb]">
-							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $requisition->folio }}</td>
-							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $requisition->purchaseOrder?->folio ?? '—' }}</td>
-							<td class="border-t border-[#d3dfe5] px-4 py-3">—</td>
-							<td class="border-t border-[#d3dfe5] px-4 py-3">—</td>
-							<td class="border-t border-[#d3dfe5] px-4 py-3">—</td>
-							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $requisition->purchaseOrder?->rf ?? '—' }}</td>
-							<td class="border-t border-[#d3dfe5] px-4 py-3">—</td>
+						<tr class="text-center text-xs text-[#263b46] odd:bg-white even:bg-[#f5f9fb]">
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->folio }}</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->purchaseOrder?->folio ?? '—' }}</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">—</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">—</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">—</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->purchaseOrder?->rf ?? '—' }}</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">—</td>
 						</tr>
 					@empty
 						<tr>
@@ -362,12 +371,11 @@
 					<legend class="sr-only">Paso 5: Confirmación</legend>
 					<h2 class="text-xl font-semibold md:text-2xl">Revisión final</h2>
 					<div class="grid gap-3 rounded-xl bg-white p-4 sm:grid-cols-2 lg:grid-cols-3">
-						<h3 class="text-lg font-semibold sm:col-span-2 lg:col-span-3">Orden de compra</h3>
-						<p class="text-xs text-[#315a6b] sm:col-span-2 lg:col-span-3">Pega la fila copiada en este orden desde el campo Folio: Folio, Fecha, Proveedor, Requisición, Importe, Partida, I.V.A., RMS y RF. Los archivos PDF y XML se adjuntan por separado.</p>
+						<h3 class="text-lg font-semibold sm:col-span-2 lg:col-span-3">Datos de la orden de compra</h3>
+						<p class="text-xs text-[#315a6b] sm:col-span-2 lg:col-span-3">Pega la fila copiada en este orden desde el campo Folio: Folio, Fecha, Proveedor, Requisición, Importe, Partida, I.V.A., RMS y RF. Los espacios vacíos también se conservan.</p>
 						<label class="grid gap-1 text-sm">Folio <input name="purchase_order_folio" type="text" required maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">Fecha <input name="purchase_order_date" type="date" required value="{{ now()->format('Y-m-d') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">Proveedor <input name="purchase_order_supplier" type="text" required autocomplete="off" aria-describedby="purchase-order-supplier-help" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
-						<p id="purchase-order-supplier-help" class="text-xs text-[#315a6b] sm:col-span-2 lg:col-span-3">Escribe o pega el nombre del proveedor seleccionado en el paso anterior.</p>
 						<label class="grid gap-1 text-sm">Requisición <output data-purchase-order-review="requisition_folio" class="flex h-10 items-center overflow-hidden rounded-lg border border-[#ccd8de] bg-[#f5f8f9] px-3 text-ellipsis whitespace-nowrap text-[#17252b]">—</output></label>
 						<label class="grid gap-1 text-sm">Importe <output data-purchase-order-review="quote_amount" class="flex h-10 items-center overflow-hidden rounded-lg border border-[#ccd8de] bg-[#f5f8f9] px-3 text-ellipsis whitespace-nowrap text-[#17252b]">—</output></label>
 						<label class="grid gap-1 text-sm">Partida <input name="purchase_order_partida" type="text" maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
@@ -380,6 +388,9 @@
 						</label>
 						<label class="grid gap-1 text-sm">RMS <input name="purchase_order_rms" type="text" maxlength="255" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">RF <input name="purchase_order_rf" type="text" maxlength="255" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+					</div>
+					<div class="grid gap-3 rounded-xl bg-white p-4 sm:grid-cols-2">
+						<h3 class="text-lg font-semibold sm:col-span-2">Documentos de la orden de compra</h3>
 						<label class="grid gap-1 text-sm">PDF de orden de compra <input name="purchase_order_pdf" type="file" required accept="application/pdf,.pdf" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm file:text-[#171717]" /></label>
 						<label class="grid gap-1 text-sm">XML de orden de compra <input name="purchase_order_xml" type="file" required accept="application/xml,text/xml,.xml" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm text-[#171717]" /></label>
 					</div>
