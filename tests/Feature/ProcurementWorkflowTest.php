@@ -86,15 +86,15 @@ class ProcurementWorkflowTest extends TestCase
                 'requisition_pdf' => UploadedFile::fake()->create('requisition.pdf', 20, 'application/pdf'),
                 'supplier_id' => $supplier->id,
                 'quote_email' => 'compras@bbva.example',
-                'quote_amount' => '3650.37',
+                'quote_amount' => '4872.07',
                 'delivery_location' => 'CRODE de Chihuahua',
                 'receiver' => 'Persona receptora',
                 'receiver_phone' => '5550000000',
                 'review_confirmed' => 'on',
                 'purchase_order_folio' => 'OC-2026-001',
                 'purchase_order_date' => '2026-10-07',
-                'purchase_order_partida' => '33901',
-                'purchase_order_iva' => '16',
+                'purchase_order_partida' => '',
+                'purchase_order_iva_included' => '',
                 'purchase_order_rms' => '21601',
                 'purchase_order_rf' => 'Si',
                 'purchase_order_pdf' => UploadedFile::fake()->create('purchase-order.pdf', 20, 'application/pdf'),
@@ -109,6 +109,11 @@ class ProcurementWorkflowTest extends TestCase
         $this->assertSame($user->id, $requisition->user_id);
         $this->assertSame($requisition->id, $purchaseOrder->requisition_id);
         $this->assertSame($supplier->id, $purchaseOrder->supplier_id);
+        $this->assertNull($purchaseOrder->partida);
+        $this->assertNull($purchaseOrder->iva_included);
+        $this->assertSame('4872.07', $purchaseOrder->amount);
+        $this->assertSame('21601', $purchaseOrder->rms);
+        $this->assertSame('Si', $purchaseOrder->rf);
         $this->assertSame('3650.37', $requisition->amount);
         $this->assertSame('2026-10-07', $requisition->created_on->format('Y-m-d'));
         $this->assertSame('2026-10-07', $requisition->requested_on->format('Y-m-d'));
@@ -139,19 +144,46 @@ class ProcurementWorkflowTest extends TestCase
             'status' => 'Activo',
         ]);
 
-        $this->actingAs(User::factory()->create([
+        $response = $this->actingAs(User::factory()->create([
             'department_id' => Department::where('slug', 'departments')->value('id'),
         ]))
             ->get(route('home'))
-            ->assertOk()
+            ->assertOk();
+
+        $response
             ->assertSee('Catálogo de proveedores')
             ->assertDontSee('id="add-supplier-button"', false)
             ->assertSee('Crear nueva orden')
             ->assertSee('value="'.$supplier->id.'"', false)
             ->assertSee('data-purchase-order-paste', false)
-            ->assertSee('Pega una fila copiada desde el campo Folio', false)
+            ->assertSee('Pega la fila copiada en este orden', false)
+            ->assertSee('name="purchase_order_supplier"', false)
+            ->assertSee('Escribe o pega el nombre del proveedor seleccionado', false)
+            ->assertSee('name="purchase_order_iva_included"', false)
+            ->assertSee('name="requisition_folio"', false)
+            ->assertSee('name="quote_amount"', false)
             ->assertSee('name="purchase_order_pdf"', false)
             ->assertSee('name="purchase_order_xml"', false);
+
+        $content = $response->getContent();
+        $previousPosition = -1;
+        foreach ([
+            'name="purchase_order_folio"',
+            'name="purchase_order_date"',
+            'name="purchase_order_supplier"',
+            'data-purchase-order-review="requisition_folio"',
+            'data-purchase-order-review="quote_amount"',
+            'name="purchase_order_partida"',
+            'name="purchase_order_iva_included"',
+            'name="purchase_order_rms"',
+            'name="purchase_order_rf"',
+        ] as $fieldName) {
+            $fieldPosition = strpos($content, $fieldName);
+
+            $this->assertNotFalse($fieldPosition);
+            $this->assertGreaterThan($previousPosition, $fieldPosition);
+            $previousPosition = $fieldPosition;
+        }
 
         $this->get(route('suppliers.index'))
             ->assertOk()

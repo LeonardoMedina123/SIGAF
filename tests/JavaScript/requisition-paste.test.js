@@ -3,6 +3,8 @@ import { describe, it } from 'node:test';
 import {
 	normalizePastedDate,
 	normalizePastedNumber,
+	normalizePastedOptionText,
+	normalizePurchaseOrderPasteValues,
 	purchaseOrderPasteFields,
 	requisitionPasteFields,
 } from '../../resources/js/requisition-paste.js';
@@ -43,14 +45,46 @@ describe('purchaseOrderPasteFields', () => {
 		assert.deepEqual(purchaseOrderPasteFields, [
 			'purchase_order_folio',
 			'purchase_order_date',
-			'supplier_id',
+			'purchase_order_supplier',
 			'requisition_folio',
 			'quote_amount',
 			'purchase_order_partida',
-			'purchase_order_iva',
+			'purchase_order_iva_included',
 			'purchase_order_rms',
 			'purchase_order_rf',
 		]);
+	});
+});
+
+describe('normalizePurchaseOrderPasteValues', () => {
+	it('aligns the copied row and inserts missing Partida and IVA cells before RMS and RF', () => {
+		const values = [
+			'', 'OC/IP/2026/0795', '05-oct-26', 'ROCIO DEL SOCORRO DIAZ DE LEON GONZALEZ',
+			'REQ/IP/DRMS/2026/0399', '4,872.07', '21601', 'Si',
+		];
+
+		const normalizedValues = normalizePurchaseOrderPasteValues(values);
+		assert.equal(normalizedValues[0], 'OC/IP/2026/0795');
+		assert.equal(normalizePastedDate(normalizedValues[1]), '2026-10-05');
+		assert.equal(normalizedValues[2], 'ROCIO DEL SOCORRO DIAZ DE LEON GONZALEZ');
+		assert.equal(normalizedValues[3], 'REQ/IP/DRMS/2026/0399');
+		assert.equal(normalizedValues[4], '4,872.07');
+		assert.equal(normalizedValues[5], '');
+		assert.equal(normalizedValues[6], '');
+		assert.equal(normalizedValues[7], '21601');
+		assert.equal(normalizedValues[8], 'Si');
+	});
+
+	it('keeps rows without the leading row-number pattern unchanged', () => {
+		const values = ['OC/IP/2026/0795', '05-oct-26'];
+
+		assert.deepEqual(normalizePurchaseOrderPasteValues(values), values);
+	});
+});
+
+describe('normalizePastedOptionText', () => {
+	it('matches pasted Spanish yes values with accented option labels', () => {
+		assert.equal(normalizePastedOptionText('Si'), normalizePastedOptionText('Sí'));
 	});
 });
 
