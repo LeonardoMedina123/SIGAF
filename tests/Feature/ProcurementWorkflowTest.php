@@ -639,6 +639,46 @@ class ProcurementWorkflowTest extends TestCase
             ->assertDontSee('Adjunta complemento de pago');
     }
 
+    public function test_supplier_can_replace_a_missing_legacy_payment_complement_and_internal_users_can_download_it(): void
+    {
+        Storage::fake('local');
+        $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
+        $internalUser = $this->createUserWithType('departments', 'usuario@example.com');
+        $supplier = $this->createSupplier('22', $supplierUser->email);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-022',
+            User::factory()->create(),
+        );
+        $purchaseOrder->forceFill([
+            'payment_validated_at' => now(),
+            'payment_complement_path' => 'payment-complements/missing.pdf',
+        ])->save();
+        $paymentComplement = UploadedFile::fake()->create('complemento.pdf', 10, 'application/pdf');
+
+        $this->actingAs($supplierUser)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('Adjunta complemento de pago');
+
+        $this->actingAs($supplierUser)
+            ->post(route('supplier.purchase-orders.payment-complement.store', $purchaseOrder), [
+                'payment_complement' => $paymentComplement,
+                'review_confirmed' => '1',
+            ])
+            ->assertRedirect(route('home'))
+            ->assertSessionHas('success');
+
+        $this->actingAs($internalUser)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('Descargar complemento');
+
+        $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'payment-complement']))
+            ->assertDownload('oc-2026-022-complemento-pago.pdf')
+            ->assertStreamedContent($paymentComplement->getContent());
+    }
+
     public function test_non_administrator_cannot_validate_a_purchase_order_payment(): void
     {
         $user = $this->createUserWithType('departments', 'usuario@example.com');
