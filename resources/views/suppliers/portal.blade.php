@@ -63,6 +63,9 @@
 										@elseif ($purchaseOrder->hasDocument('payment_complement'))
 											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#e8f8f0] px-4 text-center text-xs font-medium text-[#145538]">Complemento recibido</span>
 										@else
+											@if ($purchaseOrder->payment_complement_path !== null)
+												<p role="status" class="mb-2 max-w-56 text-xs text-[#9b2c2c]">El complemento anterior no está disponible. Vuelve a adjuntarlo.</p>
+											@endif
 											<button type="button" data-open-payment-dialog data-order-folio="{{ $purchaseOrder->folio }}" data-payment-url="{{ route('supplier.purchase-orders.payment-complement.store', $purchaseOrder) }}" data-pdf-url="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#22a06b] px-4 text-xs font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
 												<span aria-hidden="true" class="text-xl font-light leading-none">+</span>
 												<span>Adjunta complemento de pago</span>

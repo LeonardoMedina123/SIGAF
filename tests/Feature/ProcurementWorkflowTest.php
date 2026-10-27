@@ -659,6 +659,7 @@ class ProcurementWorkflowTest extends TestCase
         $this->actingAs($supplierUser)
             ->get(route('home'))
             ->assertOk()
+            ->assertSee('El complemento anterior no está disponible. Vuelve a adjuntarlo.')
             ->assertSee('Adjunta complemento de pago');
 
         $this->actingAs($supplierUser)
@@ -668,6 +669,12 @@ class ProcurementWorkflowTest extends TestCase
             ])
             ->assertRedirect(route('home'))
             ->assertSessionHas('success');
+
+        $this->actingAs($supplierUser)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('Complemento recibido')
+            ->assertDontSee('El complemento anterior no está disponible.');
 
         $this->actingAs($internalUser)
             ->get(route('home'))
