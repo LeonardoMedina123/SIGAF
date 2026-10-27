@@ -441,6 +441,7 @@ class ProcurementWorkflowTest extends TestCase
         $paymentComplement = UploadedFile::fake()->create('complemento.pdf', 10, 'application/pdf');
         $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
         $administrator = $this->createUserWithType('administrator', 'admin@example.com');
+        $internalUser = $this->createUserWithType('departments', 'usuario@example.com');
         $supplier = $this->createSupplier('20', $supplierUser->email);
         $purchaseOrder = $this->createPurchaseOrderForSupplier(
             $supplier,
@@ -472,7 +473,7 @@ class ProcurementWorkflowTest extends TestCase
             ->assertRedirect(route('home'))
             ->assertSessionHas('success');
 
-        $this->actingAs($administrator)
+        $this->actingAs($internalUser)
             ->get(route('home'))
             ->assertOk()
             ->assertSee($supplier->name)
