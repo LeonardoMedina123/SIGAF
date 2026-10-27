@@ -21,6 +21,24 @@ class HomeController extends Controller
             ]);
         }
 
+        if (auth()->user()->isSystemsDepartment()) {
+            return view('systems.portal', [
+                'reimbursements' => array_map(
+                    static fn (int $orderNumber): array => [
+                        'folio' => 'Orden_TECNM_2515486',
+                        'documentsSubmitted' => $orderNumber > 1,
+                        'status' => match (true) {
+                            $orderNumber === 1 => 'Enviado',
+                            $orderNumber < 4 => 'En proceso',
+                            default => 'Completado',
+                        },
+                        'modifiedAt' => '08/10/2026',
+                    ],
+                    range(1, 9),
+                ),
+            ]);
+        }
+
         return view('home', [
             'requisitions' => Requisition::with('purchaseOrder.supplier')->latest()->get(),
             'suppliers' => Supplier::orderBy('name')->get(),

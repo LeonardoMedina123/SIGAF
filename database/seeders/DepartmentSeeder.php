@@ -15,6 +15,7 @@ class DepartmentSeeder extends Seeder
             ['name' => 'Departamentos', 'slug' => 'departments'],
             ['name' => 'Compras', 'slug' => 'purchases'],
             ['name' => 'Financieros', 'slug' => 'financials'],
+            ['name' => 'Departamento de Sistemas', 'slug' => 'systems'],
         ] as $department) {
             Department::updateOrCreate(['slug' => $department['slug']], $department);
         }

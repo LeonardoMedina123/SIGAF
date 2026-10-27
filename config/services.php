@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'systems_department_user' => [
+        'email' => env('SYSTEMS_DEPARTMENT_USER_EMAIL'),
+        'password' => env('SYSTEMS_DEPARTMENT_USER_PASSWORD'),
+    ],
+
 ];

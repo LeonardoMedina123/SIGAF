@@ -150,14 +150,23 @@
 					@forelse ($requisitions as $requisition)
 						<tr class="text-center text-xs text-[#263b46] odd:bg-white even:bg-[#f5f9fb]">
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->folio }}</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->purchaseOrder?->folio ?? '—' }}</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+								@if ($requisition->purchaseOrder !== null)
+									<div class="flex flex-col items-center gap-1">
+										<span>{{ $requisition->purchaseOrder->folio }}</span>
+										<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'purchase-order-pdf']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Descargar PDF de orden</a>
+									</div>
+								@else
+									—
+								@endif
+							</td>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
 								@if ($requisition->purchaseOrder !== null)
 									<div class="flex flex-col items-center gap-1">
 										<span class="font-semibold">{{ $requisition->purchaseOrder->supplier->name }}</span>
 										<span class="break-all text-[10px] text-[#60737d]">{{ $requisition->purchaseOrder->supplier->contact_email }}</span>
 										@if ($requisition->purchaseOrder->invoice_pdf_path !== null)
-											<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'invoice-pdf']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Factura PDF</a>
+											<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'invoice-pdf']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Descargar factura PDF</a>
 										@endif
 										@if ($requisition->purchaseOrder->invoice_xml_path !== null)
 											<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'invoice-xml']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Factura XML</a>

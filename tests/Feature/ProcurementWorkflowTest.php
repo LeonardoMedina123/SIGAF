@@ -411,13 +411,13 @@ class ProcurementWorkflowTest extends TestCase
         Storage::fake('local');
         $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
         $administrator = $this->createUserWithType('administrator', 'admin@example.com');
-        $viewer = $this->createUserWithType('departments', 'usuario@example.com');
         $supplier = $this->createSupplier('20', $supplierUser->email);
         $purchaseOrder = $this->createPurchaseOrderForSupplier(
             $supplier,
             'OC-2026-020',
             User::factory()->create(),
         );
+        Storage::disk('local')->put($purchaseOrder->pdf_path, 'PDF orden de compra');
 
         $this->actingAs($supplierUser)
             ->post(route('supplier.purchase-orders.invoices.store', $purchaseOrder), [
@@ -442,18 +442,22 @@ class ProcurementWorkflowTest extends TestCase
             ->assertRedirect(route('home'))
             ->assertSessionHas('success');
 
-        $this->actingAs($viewer)
+        $this->actingAs($administrator)
             ->get(route('home'))
             ->assertOk()
             ->assertSee($supplier->name)
             ->assertSee($supplier->contact_email)
-            ->assertSee('Factura PDF')
+            ->assertSee('Descargar PDF de orden')
+            ->assertSee('Descargar factura PDF')
             ->assertSee('Factura XML')
             ->assertSee('Descargar complemento')
+            ->assertSee(route('purchase-orders.documents.download', [$purchaseOrder, 'purchase-order-pdf']), false)
             ->assertSee(route('purchase-orders.documents.download', [$purchaseOrder, 'invoice-pdf']), false)
             ->assertSee(route('purchase-orders.documents.download', [$purchaseOrder, 'invoice-xml']), false)
             ->assertSee(route('purchase-orders.documents.download', [$purchaseOrder, 'payment-complement']), false);
 
+        $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'purchase-order-pdf']))
+            ->assertDownload('oc-2026-020-orden-compra.pdf');
         $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'invoice-pdf']))
             ->assertDownload('oc-2026-020-factura.pdf');
         $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'invoice-xml']))

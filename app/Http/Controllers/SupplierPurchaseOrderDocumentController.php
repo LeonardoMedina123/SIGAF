@@ -108,6 +108,7 @@ class SupplierPurchaseOrderDocumentController extends Controller
         abort_unless($user instanceof User && ! $user->isSupplier(), 403);
 
         $documentDetails = match ($document) {
+            'purchase-order-pdf' => [$purchaseOrder->pdf_path, 'orden-compra.pdf'],
             'invoice-pdf' => [$purchaseOrder->invoice_pdf_path, 'factura.pdf'],
             'invoice-xml' => [$purchaseOrder->invoice_xml_path, 'factura.xml'],
             'payment-complement' => [$purchaseOrder->payment_complement_path, 'complemento-pago.pdf'],
