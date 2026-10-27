@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\PurchaseOrder;
 use App\Models\Requisition;
 use App\Models\Supplier;
+use App\Models\UploadedDocument;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -97,6 +98,9 @@ class ProcurementWorkflowTest extends TestCase
     public function test_authenticated_user_can_save_requisition_and_purchase_order(): void
     {
         Storage::fake('local');
+        $requisitionPdf = UploadedFile::fake()->create('requisition.pdf', 20, 'application/pdf');
+        $purchaseOrderPdf = UploadedFile::fake()->create('purchase-order.pdf', 20, 'application/pdf');
+        $purchaseOrderXml = UploadedFile::fake()->create('purchase-order.xml', 1, 'text/xml');
         $user = User::factory()->create();
         $supplier = Supplier::create([
             'number' => '3',
@@ -123,7 +127,7 @@ class ProcurementWorkflowTest extends TestCase
                 'requisition_dir' => 'Dirección',
                 'requisition_process' => 'Proceso',
                 'requisition_rf' => 'RF',
-                'requisition_pdf' => UploadedFile::fake()->create('requisition.pdf', 20, 'application/pdf'),
+                'requisition_pdf' => $requisitionPdf,
                 'supplier_id' => $supplier->id,
                 'quote_email' => 'compras@bbva.example',
                 'quote_amount' => '4872.07',
@@ -137,8 +141,8 @@ class ProcurementWorkflowTest extends TestCase
                 'purchase_order_iva_included' => '',
                 'purchase_order_rms' => '21601',
                 'purchase_order_rf' => 'Si',
-                'purchase_order_pdf' => UploadedFile::fake()->create('purchase-order.pdf', 20, 'application/pdf'),
-                'purchase_order_xml' => UploadedFile::fake()->create('purchase-order.xml', 1, 'text/xml'),
+                'purchase_order_pdf' => $purchaseOrderPdf,
+                'purchase_order_xml' => $purchaseOrderXml,
             ])
             ->assertRedirect(route('home'))
             ->assertSessionHas('success');
@@ -159,15 +163,27 @@ class ProcurementWorkflowTest extends TestCase
         $this->assertSame('2026-10-07', $requisition->requested_on->format('Y-m-d'));
         $this->assertSame('33901', $requisition->partida);
         $this->assertSame('Observación', $requisition->ppp);
-        $this->assertStringStartsWith('requisitions/', $requisition->pdf_path);
-        $this->assertStringStartsWith('purchase-orders/', $purchaseOrder->pdf_path);
-        $this->assertStringStartsWith('purchase-orders/', $purchaseOrder->xml_path);
+        $this->assertNull($requisition->pdf_path);
+        $this->assertNull($purchaseOrder->pdf_path);
+        $this->assertNull($purchaseOrder->xml_path);
 
-        Storage::disk('local')->assertExists([
-            $requisition->pdf_path,
-            $purchaseOrder->pdf_path,
-            $purchaseOrder->xml_path,
-        ]);
+        $this->assertSame(
+            $requisitionPdf->getContent(),
+            $requisition->uploadedDocuments()->where('kind', 'requisition_pdf')->firstOrFail()->content,
+        );
+        $this->assertSame(
+            'requisition.pdf',
+            $requisition->uploadedDocuments()->where('kind', 'requisition_pdf')->firstOrFail()->original_name,
+        );
+        $this->assertSame(
+            $purchaseOrderPdf->getContent(),
+            $purchaseOrder->uploadedDocuments()->where('kind', 'purchase_order_pdf')->firstOrFail()->content,
+        );
+        $this->assertSame(
+            $purchaseOrderXml->getContent(),
+            $purchaseOrder->uploadedDocuments()->where('kind', 'purchase_order_xml')->firstOrFail()->content,
+        );
+        Storage::disk('local')->assertEmpty();
 
         $supplierUser = User::factory()->create([
             'email' => $supplier->contact_email,
@@ -179,6 +195,9 @@ class ProcurementWorkflowTest extends TestCase
             ->assertOk()
             ->assertSee('OC-2026-001')
             ->assertSee('Adjunta factura y XML');
+        $this->get(route('supplier.purchase-orders.pdf', $purchaseOrder))
+            ->assertDownload('oc-2026-001.pdf')
+            ->assertStreamedContent($purchaseOrderPdf->getContent());
     }
 
     public function test_home_and_supplier_catalog_are_separate_screens(): void
@@ -378,6 +397,8 @@ class ProcurementWorkflowTest extends TestCase
     public function test_supplier_can_upload_invoice_pdf_and_xml_for_its_order(): void
     {
         Storage::fake('local');
+        $invoicePdf = UploadedFile::fake()->create('factura.pdf', 10, 'application/pdf');
+        $invoiceXml = UploadedFile::fake()->create('factura.xml', 1, 'text/xml');
         $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
         $creator = User::factory()->create();
         $supplier = $this->createSupplier('12', $supplierUser->email);
@@ -386,20 +407,25 @@ class ProcurementWorkflowTest extends TestCase
         $this->actingAs($supplierUser)
             ->from(route('home'))
             ->post(route('supplier.purchase-orders.invoices.store', $purchaseOrder), [
-                'invoice_pdf' => UploadedFile::fake()->create('factura.pdf', 10, 'application/pdf'),
-                'invoice_xml' => UploadedFile::fake()->create('factura.xml', 1, 'text/xml'),
+                'invoice_pdf' => $invoicePdf,
+                'invoice_xml' => $invoiceXml,
                 'review_confirmed' => '1',
             ])
             ->assertRedirect(route('home'))
             ->assertSessionHas('success');
 
         $purchaseOrder->refresh();
-        $this->assertNotNull($purchaseOrder->invoice_pdf_path);
-        $this->assertNotNull($purchaseOrder->invoice_xml_path);
-        Storage::disk('local')->assertExists([
-            $purchaseOrder->invoice_pdf_path,
-            $purchaseOrder->invoice_xml_path,
-        ]);
+        $this->assertNull($purchaseOrder->invoice_pdf_path);
+        $this->assertNull($purchaseOrder->invoice_xml_path);
+        $this->assertSame(
+            $invoicePdf->getContent(),
+            $purchaseOrder->uploadedDocuments()->where('kind', 'invoice_pdf')->firstOrFail()->content,
+        );
+        $this->assertSame(
+            $invoiceXml->getContent(),
+            $purchaseOrder->uploadedDocuments()->where('kind', 'invoice_xml')->firstOrFail()->content,
+        );
+        Storage::disk('local')->assertEmpty();
 
         $this->get(route('home'))
             ->assertOk()
@@ -409,20 +435,25 @@ class ProcurementWorkflowTest extends TestCase
     public function test_internal_users_can_view_and_download_supplier_documents(): void
     {
         Storage::fake('local');
+        $purchaseOrderPdf = UploadedFile::fake()->create('orden-compra.pdf', 10, 'application/pdf');
+        $invoicePdf = UploadedFile::fake()->create('factura.pdf', 10, 'application/pdf');
+        $invoiceXml = UploadedFile::fake()->create('factura.xml', 1, 'text/xml');
+        $paymentComplement = UploadedFile::fake()->create('complemento.pdf', 10, 'application/pdf');
         $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
         $administrator = $this->createUserWithType('administrator', 'admin@example.com');
+        $internalUser = $this->createUserWithType('departments', 'usuario@example.com');
         $supplier = $this->createSupplier('20', $supplierUser->email);
         $purchaseOrder = $this->createPurchaseOrderForSupplier(
             $supplier,
             'OC-2026-020',
             User::factory()->create(),
         );
-        Storage::disk('local')->put($purchaseOrder->pdf_path, 'PDF orden de compra');
+        UploadedDocument::replaceFor($purchaseOrder, 'purchase_order_pdf', $purchaseOrderPdf);
 
         $this->actingAs($supplierUser)
             ->post(route('supplier.purchase-orders.invoices.store', $purchaseOrder), [
-                'invoice_pdf' => UploadedFile::fake()->create('factura.pdf', 10, 'application/pdf'),
-                'invoice_xml' => UploadedFile::fake()->create('factura.xml', 1, 'text/xml'),
+                'invoice_pdf' => $invoicePdf,
+                'invoice_xml' => $invoiceXml,
                 'review_confirmed' => '1',
             ])
             ->assertRedirect(route('home'))
@@ -436,13 +467,13 @@ class ProcurementWorkflowTest extends TestCase
 
         $this->actingAs($supplierUser)
             ->post(route('supplier.purchase-orders.payment-complement.store', $purchaseOrder), [
-                'payment_complement' => UploadedFile::fake()->create('complemento.pdf', 10, 'application/pdf'),
+                'payment_complement' => $paymentComplement,
                 'review_confirmed' => '1',
             ])
             ->assertRedirect(route('home'))
             ->assertSessionHas('success');
 
-        $this->actingAs($administrator)
+        $this->actingAs($internalUser)
             ->get(route('home'))
             ->assertOk()
             ->assertSee($supplier->name)
@@ -457,13 +488,24 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSee(route('purchase-orders.documents.download', [$purchaseOrder, 'payment-complement']), false);
 
         $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'purchase-order-pdf']))
-            ->assertDownload('oc-2026-020-orden-compra.pdf');
+            ->assertDownload('oc-2026-020-orden-compra.pdf')
+            ->assertStreamedContent($purchaseOrderPdf->getContent());
         $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'invoice-pdf']))
-            ->assertDownload('oc-2026-020-factura.pdf');
+            ->assertDownload('oc-2026-020-factura.pdf')
+            ->assertStreamedContent($invoicePdf->getContent());
         $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'invoice-xml']))
-            ->assertDownload('oc-2026-020-factura.xml');
+            ->assertDownload('oc-2026-020-factura.xml')
+            ->assertStreamedContent($invoiceXml->getContent());
         $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'payment-complement']))
-            ->assertDownload('oc-2026-020-complemento-pago.pdf');
+            ->assertDownload('oc-2026-020-complemento-pago.pdf')
+            ->assertStreamedContent($paymentComplement->getContent());
+
+        $this->assertSame(4, UploadedDocument::where('purchase_order_id', $purchaseOrder->id)->count());
+        $this->assertSame(
+            $paymentComplement->getContent(),
+            $purchaseOrder->uploadedDocuments()->where('kind', 'payment_complement')->firstOrFail()->content,
+        );
+        Storage::disk('local')->assertEmpty();
     }
 
     public function test_supplier_cannot_download_internal_supplier_documents(): void
@@ -500,6 +542,11 @@ class ProcurementWorkflowTest extends TestCase
             ->assertNotFound();
 
         $this->assertNull($purchaseOrder->fresh()->invoice_pdf_path);
+        $this->assertDatabaseMissing('uploaded_documents', [
+            'purchase_order_id' => $purchaseOrder->id,
+            'kind' => 'invoice_pdf',
+        ]);
+        $this->assertDatabaseCount('uploaded_documents', 0);
         Storage::disk('local')->assertEmpty();
     }
 
@@ -521,6 +568,11 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSessionHasErrors('invoice_xml');
 
         $this->assertNull($purchaseOrder->fresh()->invoice_pdf_path);
+        $this->assertDatabaseMissing('uploaded_documents', [
+            'purchase_order_id' => $purchaseOrder->id,
+            'kind' => 'invoice_pdf',
+        ]);
+        $this->assertDatabaseCount('uploaded_documents', 0);
         Storage::disk('local')->assertEmpty();
     }
 
@@ -573,13 +625,65 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSessionHas('success');
 
         $purchaseOrder->refresh();
-        $this->assertNotNull($purchaseOrder->payment_complement_path);
-        Storage::disk('local')->assertExists($purchaseOrder->payment_complement_path);
+        $this->assertNull($purchaseOrder->payment_complement_path);
+        $this->assertDatabaseHas('uploaded_documents', [
+            'purchase_order_id' => $purchaseOrder->id,
+            'kind' => 'payment_complement',
+            'mime_type' => 'application/pdf',
+        ]);
+        Storage::disk('local')->assertEmpty();
 
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('Complemento recibido')
             ->assertDontSee('Adjunta complemento de pago');
+    }
+
+    public function test_supplier_can_replace_a_missing_legacy_payment_complement_and_internal_users_can_download_it(): void
+    {
+        Storage::fake('local');
+        $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
+        $internalUser = $this->createUserWithType('departments', 'usuario@example.com');
+        $supplier = $this->createSupplier('22', $supplierUser->email);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-022',
+            User::factory()->create(),
+        );
+        $purchaseOrder->forceFill([
+            'payment_validated_at' => now(),
+            'payment_complement_path' => 'payment-complements/missing.pdf',
+        ])->save();
+        $paymentComplement = UploadedFile::fake()->create('complemento.pdf', 10, 'application/pdf');
+
+        $this->actingAs($supplierUser)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('El complemento anterior no está disponible. Vuelve a adjuntarlo.')
+            ->assertSee('Adjunta complemento de pago');
+
+        $this->actingAs($supplierUser)
+            ->post(route('supplier.purchase-orders.payment-complement.store', $purchaseOrder), [
+                'payment_complement' => $paymentComplement,
+                'review_confirmed' => '1',
+            ])
+            ->assertRedirect(route('home'))
+            ->assertSessionHas('success');
+
+        $this->actingAs($supplierUser)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('Complemento recibido')
+            ->assertDontSee('El complemento anterior no está disponible.');
+
+        $this->actingAs($internalUser)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('Descargar complemento');
+
+        $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'payment-complement']))
+            ->assertDownload('oc-2026-022-complemento-pago.pdf')
+            ->assertStreamedContent($paymentComplement->getContent());
     }
 
     public function test_non_administrator_cannot_validate_a_purchase_order_payment(): void

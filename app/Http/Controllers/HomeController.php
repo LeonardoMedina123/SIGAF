@@ -17,7 +17,10 @@ class HomeController extends Controller
                 ->first();
 
             return view('suppliers.portal', [
-                'purchaseOrders' => $supplier?->purchaseOrders()->latest('order_date')->get() ?? collect(),
+                'purchaseOrders' => $supplier?->purchaseOrders()
+                    ->with('uploadedDocuments:id,purchase_order_id,kind')
+                    ->latest('order_date')
+                    ->get() ?? collect(),
             ]);
         }
 
@@ -40,7 +43,10 @@ class HomeController extends Controller
         }
 
         return view('home', [
-            'requisitions' => Requisition::with('purchaseOrder.supplier')->latest()->get(),
+            'requisitions' => Requisition::with([
+                'purchaseOrder.supplier',
+                'purchaseOrder.uploadedDocuments:id,purchase_order_id,kind',
+            ])->latest()->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'canValidatePayments' => auth()->user()->isAdministrator(),
         ]);
