@@ -148,7 +148,28 @@
 				</thead>
 				<tbody>
 					@forelse ($requisitions as $requisition)
-						<tr class="text-center text-xs text-[#263b46] odd:bg-white even:bg-[#f5f9fb]">
+						<tr
+							data-filter-row
+							data-filter-requisition-folio="{{ $requisition->folio }}"
+							data-filter-requisition-partida="{{ $requisition->partida }}"
+							data-filter-requisition-amount="{{ $requisition->amount }}"
+							data-filter-requisition-created-on="{{ $requisition->created_on?->toDateString() }}"
+							data-filter-requisition-requested-on="{{ $requisition->requested_on?->toDateString() }}"
+							data-filter-order-folio="{{ $requisition->purchaseOrder?->folio }}"
+							data-filter-order-supplier="{{ $requisition->purchaseOrder?->supplier?->name }}"
+							data-filter-order-amount="{{ $requisition->purchaseOrder?->amount }}"
+							data-filter-order-date="{{ $requisition->purchaseOrder?->order_date?->toDateString() }}"
+							data-filter-invoice-search="{{ $requisition->purchaseOrder?->supplier?->name }} {{ $requisition->purchaseOrder?->supplier?->contact_email }} {{ $requisition->purchaseOrder?->uploadedDocuments->firstWhere('kind', 'invoice_pdf')?->original_name }} {{ $requisition->purchaseOrder?->uploadedDocuments->firstWhere('kind', 'invoice_xml')?->original_name }}"
+							data-filter-invoice-rfc="{{ $requisition->purchaseOrder?->supplier?->rfc }}"
+							data-filter-invoice-status="{{ $requisition->purchaseOrder === null ? '' : ($requisition->purchaseOrder->hasDocument('invoice_pdf') && $requisition->purchaseOrder->hasDocument('invoice_xml') ? 'Recibida' : ($requisition->purchaseOrder->hasDocument('invoice_pdf') || $requisition->purchaseOrder->hasDocument('invoice_xml') ? 'Parcial' : 'Pendiente')) }}"
+							data-filter-validation-status="Sin validación"
+							data-filter-payment-status="{{ $requisition->purchaseOrder?->payment_validated_at !== null ? 'Pagado' : ($requisition->purchaseOrder === null ? '' : 'Pendiente') }}"
+							data-filter-payment-date="{{ $requisition->purchaseOrder?->payment_validated_at?->toDateString() }}"
+							data-filter-finance-value="{{ $requisition->purchaseOrder?->rf }}"
+							data-filter-complement-rfc="{{ $requisition->purchaseOrder?->supplier?->rfc }}"
+							data-filter-complement-status="{{ $requisition->purchaseOrder?->hasDocument('payment_complement') ? 'Recibido' : ($requisition->purchaseOrder?->payment_validated_at !== null ? 'Pendiente' : 'Sin validar') }}"
+							class="text-center text-xs text-[#263b46] odd:bg-white even:bg-[#f5f9fb]"
+						>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->folio }}</td>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
 								@if ($requisition->purchaseOrder !== null)
@@ -216,6 +237,11 @@
 							</td>
 						</tr>
 					@endforelse
+					<tr data-filter-empty hidden>
+						<td colspan="7" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-xs text-[#60737d] md:text-sm">
+							No hay requisiciones que coincidan con los filtros.
+						</td>
+					</tr>
 				</tbody>
 			</table>
 		</section>
@@ -231,102 +257,44 @@
 			</button>
 		</div>
 		<div id="filter-menu-content" class="space-y-2"></div>
-		<button type="button" data-filter-apply class="mt-3 rounded-full bg-[#08bf62] px-4 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#06ad58]">Aplicar filtros</button>
+		<div class="mt-3 flex flex-wrap gap-2">
+			<button type="button" data-filter-apply class="rounded-full bg-[#08bf62] px-4 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#06ad58]">Aplicar filtros</button>
+			<button type="button" data-filter-clear class="rounded-full bg-[#e5e7eb] px-4 py-1.5 text-[10px] font-semibold text-[#34495b] transition hover:bg-[#d1d5db]">Limpiar filtros</button>
+		</div>
 	</div>
 
 	<template id="filter-requisicion">
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Partida:</span><input type="text" class="h-7 min-w-0 rounded-full border-0 bg-[#b7b7b7] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Piezas:</span><input type="number" placeholder="0" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Monto:</span><span class="flex min-w-0 gap-1"><select aria-label="Operador de monto" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input data-filter-field="requisition-folio" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Partida:</span><input data-filter-field="requisition-partida" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Monto:</span><span class="flex min-w-0 gap-1"><select data-filter-operator-for="requisition-amount" aria-label="Operador de monto" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input data-filter-field="requisition-amount" data-filter-type="number" type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Creación:</span><input data-filter-field="requisition-created-on" data-filter-type="date" type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Solicitud:</span><input data-filter-field="requisition-requested-on" data-filter-type="date" type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
 	</template>
 	<template id="filter-orden-compra">
-		<label class="grid grid-cols-[82px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[82px_1fr] items-center gap-2 text-xs"><span>Área solicitante:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[82px_1fr] items-center gap-2 text-xs"><span>Monto:</span><span class="flex min-w-0 gap-1"><select aria-label="Operador de monto" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
-		<label class="grid grid-cols-[82px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input data-filter-field="order-folio" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Proveedor:</span><input data-filter-field="order-supplier" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Monto:</span><span class="flex min-w-0 gap-1"><select data-filter-operator-for="order-amount" aria-label="Operador de monto" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input data-filter-field="order-amount" data-filter-type="number" type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input data-filter-field="order-date" data-filter-type="date" type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
 	</template>
 	<template id="filter-factura">
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>UUID:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>RFC:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[58px_1fr] items-center gap-2 text-xs"><span>Total:</span><span class="flex min-w-0 gap-1"><select aria-label="Operador del total" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Buscar:</span><input data-filter-field="invoice-search" type="text" placeholder="Proveedor o archivo" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>RFC:</span><input data-filter-field="invoice-rfc" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select data-filter-field="invoice-status" data-filter-type="select" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option value="Pendiente">Pendiente</option><option value="Parcial">Parcial</option><option value="Recibida">Recibida</option></select></label>
 	</template>
 	<template id="filter-validacion">
-		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option>Pendiente</option><option>Aceptada</option><option>Rechazada</option></select></label>
-		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select data-filter-field="validation-status" data-filter-type="select" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option value="Sin validación">Sin validación</option></select></label>
 	</template>
 	<template id="filter-pago">
-		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option>Pendiente</option><option>Pagado</option></select></label>
-		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select data-filter-field="payment-status" data-filter-type="select" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option value="Pendiente">Pendiente</option><option value="Pagado">Pagado</option></select></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input data-filter-field="payment-date" data-filter-type="date" type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
 	</template>
 	<template id="filter-validacion-financiera">
-		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option>Pendiente</option><option>Validado</option><option>Rechazado</option></select></label>
-		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>RF:</span><input data-filter-field="finance-value" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
 	</template>
 	<template id="filter-complemento">
-		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>RFC:</span><input type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
-		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option>Pendiente</option><option>Recibido</option></select></label>
-		<label class="grid grid-cols-[68px_1fr] items-center gap-2 text-xs"><span>Fecha:</span><input type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>RFC:</span><input data-filter-field="complement-rfc" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select data-filter-field="complement-status" data-filter-type="select" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option value="Sin validar">Sin validar</option><option value="Pendiente">Pendiente</option><option value="Recibido">Recibido</option></select></label>
 	</template>
-
-	<script>
-		const filterMenu = document.querySelector('#filter-menu');
-		const filterTitle = document.querySelector('#filter-menu-title');
-		const filterContent = document.querySelector('#filter-menu-content');
-		let activeFilterTrigger = null;
-
-		function closeFilterMenu() {
-			filterMenu.classList.add('hidden');
-			activeFilterTrigger?.setAttribute('aria-expanded', 'false');
-			activeFilterTrigger = null;
-		}
-
-		document.querySelectorAll('[data-filter-trigger]').forEach((trigger) => {
-			trigger.addEventListener('click', () => {
-				if (activeFilterTrigger === trigger) {
-					closeFilterMenu();
-					return;
-				}
-
-				activeFilterTrigger?.setAttribute('aria-expanded', 'false');
-				activeFilterTrigger = trigger;
-				activeFilterTrigger.setAttribute('aria-expanded', 'true');
-				filterTitle.textContent = trigger.dataset.filterTitle;
-				filterContent.replaceChildren(document.querySelector(`#filter-${trigger.dataset.filterTrigger}`).content.cloneNode(true));
-				filterMenu.classList.remove('hidden');
-
-				const bounds = trigger.getBoundingClientRect();
-				const left = Math.min(Math.max(12, bounds.left), window.innerWidth - filterMenu.offsetWidth - 12);
-				const top = Math.min(bounds.bottom, window.innerHeight - filterMenu.offsetHeight - 12);
-				filterMenu.style.left = `${left}px`;
-				filterMenu.style.top = `${Math.max(12, top)}px`;
-			});
-		});
-
-		filterMenu.addEventListener('click', (event) => {
-			if (event.target.closest('[data-filter-close], [data-filter-apply]')) {
-				closeFilterMenu();
-			}
-		});
-
-		document.addEventListener('click', (event) => {
-			if (!filterMenu.contains(event.target) && !event.target.closest('[data-filter-trigger]')) {
-				closeFilterMenu();
-			}
-		});
-
-		document.addEventListener('keydown', (event) => {
-			if (event.key === 'Escape') {
-				closeFilterMenu();
-			}
-		});
-
-		window.addEventListener('resize', closeFilterMenu);
-		 document.querySelector('section[aria-label="Requisiciones"]').addEventListener('scroll', closeFilterMenu);
-	</script>
 
 	<button id="create-order-button" type="button" class="fixed bottom-5 right-5 z-20 flex h-20 items-center gap-2 rounded-full bg-[#08bf62] px-7 text-[20px] font-semibold text-[#062b19] shadow-[0_3px_9px_rgba(0,0,0,0.18)] transition hover:bg-[#06ad58] md:bottom-9 md:right-10" aria-label="Crear nueva orden">
 		<span aria-hidden="true" class="text-[30px] font-light leading-none">+</span>

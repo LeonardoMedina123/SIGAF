@@ -45,7 +45,7 @@ class HomeController extends Controller
         return view('home', [
             'requisitions' => Requisition::with([
                 'purchaseOrder.supplier',
-                'purchaseOrder.uploadedDocuments:id,purchase_order_id,kind',
+                'purchaseOrder.uploadedDocuments:id,purchase_order_id,kind,original_name,created_at',
             ])->latest()->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'canValidatePayments' => auth()->user()->isAdministrator(),

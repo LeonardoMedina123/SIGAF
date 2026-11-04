@@ -6,6 +6,9 @@ import {
 	purchaseOrderPasteFields,
 	requisitionPasteFields,
 } from './requisition-paste.js';
+import { initializeHomeFilters } from './home-filters.js';
+
+initializeHomeFilters();
 
 const orderForm = document.querySelector('#order-wizard-form');
 const requisitionStep = orderForm?.querySelector('[data-order-step]');
