@@ -90,11 +90,11 @@
 		}
 	</style>
 </head>
-<body class="min-h-screen overflow-hidden bg-[#f4f4f4] text-[#161616] antialiased">
+<body class="min-h-screen bg-[#f4f4f4] text-[#161616] antialiased">
 	@include('partials.app-header')
 	@include('partials.navigation', ['activePage' => 'home'])
 
-	<main class="px-3 pb-4 md:px-4">
+	<main class="px-3 pb-24 md:px-4">
 		<div class="mb-3 flex items-center justify-between gap-3">
 			@if (session('success'))
 				<p role="status" class="rounded-lg bg-[#e8f8f0] px-4 py-2 text-sm font-medium text-[#145538]">{{ session('success') }}</p>
