@@ -245,6 +245,48 @@
 				</tbody>
 			</table>
 		</section>
+
+		@if ($canValidatePayments)
+			<section aria-labelledby="system-reimbursements-heading" class="mt-5 overflow-hidden rounded-[20px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
+				<h2 id="system-reimbursements-heading" class="bg-[#07577f] px-4 py-3 text-sm font-semibold text-white md:px-6">REEMBOLSOS DEL DEPARTAMENTO DE SISTEMAS</h2>
+				<div class="overflow-x-auto">
+					<table class="w-full min-w-[680px] border-separate border-spacing-0 text-center text-sm">
+						<thead class="bg-[#eaf4f9] text-[#173f50]">
+							<tr>
+								<th scope="col" class="px-4 py-3 font-semibold">Orden</th>
+								<th scope="col" class="px-4 py-3 font-semibold">Folio</th>
+								<th scope="col" class="px-4 py-3 font-semibold">REEMBOLSO</th>
+								<th scope="col" class="px-4 py-3 font-semibold">Estado</th>
+								<th scope="col" class="px-4 py-3 font-semibold">Fecha de recepción</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach ($reimbursements as $reimbursement)
+								<tr class="text-[#202020] odd:bg-white even:bg-[#fbfbfb]">
+									<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $reimbursement['orderNumber'] }}</td>
+									<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $reimbursement['folio'] }}</td>
+									<td class="break-all border-t border-[#d3dfe5] px-4 py-3">
+										@if ($reimbursement['document'])
+											<a href="{{ route('systems.reimbursements.documents.download', $reimbursement['orderNumber']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">{{ $reimbursement['document']->original_name }}</a>
+										@else
+											<span class="text-[#64748b]">Sin archivo</span>
+										@endif
+									</td>
+									<td class="border-t border-[#d3dfe5] px-4 py-3">
+										<span @class([
+											'inline-flex rounded-full px-3 py-1 text-xs font-semibold',
+											'bg-[#e5e7eb] text-[#374151]' => $reimbursement['document'],
+											'bg-[#fff7ed] text-[#9a3412]' => ! $reimbursement['document'],
+										])>{{ $reimbursement['document'] ? 'Recibido' : 'Pendiente' }}</span>
+									</td>
+									<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $reimbursement['modifiedAt'] }}</td>
+								</tr>
+							@endforeach
+						</tbody>
+					</table>
+				</div>
+			</section>
+		@endif
 	</main>
 
 	<div id="filter-menu" role="dialog" aria-modal="false" aria-labelledby="filter-menu-title" class="fixed z-50 hidden w-[290px] max-w-[calc(100vw-24px)] overflow-y-auto rounded-[18px] bg-white p-3 text-[#171717] shadow-[0_5px_18px_rgba(0,0,0,0.24)]">

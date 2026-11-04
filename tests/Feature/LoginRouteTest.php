@@ -72,6 +72,7 @@ class LoginRouteTest extends TestCase
             ->assertSee('Ayuda')
             ->assertSee('Cerrar sesión')
             ->assertSee('Aún no hay órdenes de compra para este proveedor.')
+            ->assertDontSee('REEMBOLSOS DEL DEPARTAMENTO DE SISTEMAS')
             ->assertDontSee('Vista de ejemplo')
             ->assertDontSee('data-invoice-url=', false)
             ->assertDontSee('data-payment-url=', false)
@@ -109,9 +110,8 @@ class LoginRouteTest extends TestCase
             ->assertSee('Semáforo de estado')
             ->assertSee('Fecha de modificación')
             ->assertSee('Adjunta documento de reembolso')
-            ->assertSee('Enviado')
-            ->assertSee('En proceso')
-            ->assertSee('Completado')
+            ->assertSee('Pendiente de adjuntar')
+            ->assertDontSee('Los registros y estados son de ejemplo')
             ->assertSee('Salir')
             ->assertDontSee('Crear nueva orden');
     }

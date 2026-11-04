@@ -26,29 +26,8 @@ class HomeController extends Controller
         }
 
         if (auth()->user()->isSystemsDepartment()) {
-            $documents = SystemReimbursementDocument::query()
-                ->get(['order_number', 'original_name', 'updated_at'])
-                ->keyBy('order_number');
-
             return view('systems.portal', [
-                'reimbursements' => array_map(
-                    static function (int $orderNumber) use ($documents): array {
-                        $document = $documents->get($orderNumber);
-
-                        return [
-                            'orderNumber' => $orderNumber,
-                            'folio' => 'Orden_TECNM_2515486',
-                            'document' => $document,
-                            'status' => match (true) {
-                                $orderNumber === 1 => 'Enviado',
-                                $orderNumber < 4 => 'En proceso',
-                                default => 'Completado',
-                            },
-                            'modifiedAt' => $document?->updated_at?->format('d/m/Y') ?? '08/10/2026',
-                        ];
-                    },
-                    range(1, 9),
-                ),
+                'reimbursements' => $this->reimbursements(),
             ]);
         }
 
@@ -59,6 +38,7 @@ class HomeController extends Controller
             ])->latest()->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'canValidatePayments' => auth()->user()->isAdministrator(),
+            'reimbursements' => auth()->user()->isAdministrator() ? $this->reimbursements() : [],
         ]);
     }
 
@@ -70,5 +50,30 @@ class HomeController extends Controller
             'taxRegimes' => Supplier::TAX_REGIMES,
             'cfdiUses' => Supplier::CFDI_USES,
         ]);
+    }
+
+    /**
+     * @return array<int, array{orderNumber: int, folio: string, document: ?SystemReimbursementDocument, status: string, modifiedAt: string}>
+     */
+    private function reimbursements(): array
+    {
+        $documents = SystemReimbursementDocument::query()
+            ->get(['order_number', 'original_name', 'updated_at'])
+            ->keyBy('order_number');
+
+        return array_map(
+            static function (int $orderNumber) use ($documents): array {
+                $document = $documents->get($orderNumber);
+
+                return [
+                    'orderNumber' => $orderNumber,
+                    'folio' => 'Orden_TECNM_2515486',
+                    'document' => $document,
+                    'status' => $document ? 'Enviado a administradores' : 'Pendiente de adjuntar',
+                    'modifiedAt' => $document?->updated_at?->format('d/m/Y') ?? '—',
+                ];
+            },
+            range(1, 9),
+        );
     }
 }

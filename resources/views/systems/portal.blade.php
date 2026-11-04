@@ -33,7 +33,7 @@
 			<section aria-label="Órdenes de reembolso" class="overflow-hidden rounded-[28px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
 				<div class="max-h-[calc(100vh-190px)] overflow-auto">
 					<table class="w-full min-w-[760px] border-separate border-spacing-0 text-left">
-						<caption class="sr-only">Órdenes de reembolso, carga de documentos, estado y fecha de modificación. Datos de ejemplo.</caption>
+						<caption class="sr-only">Órdenes de reembolso, carga de documentos, estado y fecha de modificación.</caption>
 						<thead class="sticky top-0 z-10 bg-[#07577f] text-white">
 							<tr>
 								<th scope="col" class="rounded-tl-[24px] px-5 py-4 text-sm font-semibold md:px-8">Orden de reembolso</th>
@@ -50,25 +50,30 @@
 									</td>
 									<td class="border-t border-[#b7b7b7] px-5 py-2 md:px-8">
 										@if ($reimbursement['document'])
-											<a href="{{ route('systems.reimbursements.documents.download', $reimbursement['orderNumber']) }}" class="mb-2 block break-all font-semibold text-[#07577f] underline hover:text-[#064967]">{{ $reimbursement['document']->original_name }}</a>
+											<a data-saved-document href="{{ route('systems.reimbursements.documents.download', $reimbursement['orderNumber']) }}" class="mb-2 inline-flex max-w-full break-all rounded-full bg-[#e5e7eb] px-3 py-2 font-semibold text-[#374151] underline hover:bg-[#d1d5db]">{{ $reimbursement['document']->original_name }}</a>
 										@endif
-										<form action="{{ route('systems.reimbursements.documents.store', $reimbursement['orderNumber']) }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
+										<form data-document-form action="{{ route('systems.reimbursements.documents.store', $reimbursement['orderNumber']) }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
 											@csrf
-											<label class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#00e885] px-4 text-xs font-semibold text-[#111] transition hover:bg-[#00d77b] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#07577f]">
+											@if ($reimbursement['document'])
+												<button type="button" data-change-document class="rounded-full border border-[#07577f] px-3 py-2 text-xs font-semibold text-[#07577f] transition hover:bg-[#eef7fb]">Cambiar documento</button>
+												<button type="button" data-cancel-change class="hidden rounded-full border border-[#6b7280] px-3 py-2 text-xs font-semibold text-[#4b5563] transition hover:bg-[#f3f4f6]">Cancelar</button>
+											@endif
+											<label data-file-label @class([
+												'inline-flex min-h-9 max-w-full cursor-pointer items-center justify-center gap-2 rounded-full px-4 text-xs font-semibold transition focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#07577f]',
+												'bg-[#14532d] text-white hover:bg-[#166534]' => ! $reimbursement['document'],
+												'hidden bg-[#14532d] text-white hover:bg-[#166534]' => $reimbursement['document'],
+											])>
 												<span aria-hidden="true" class="text-xl font-light leading-none">+</span>
-												<span>{{ $reimbursement['document'] ? 'Reemplazar documento' : 'Adjunta documento de reembolso' }}</span>
-												<input type="file" name="document" class="sr-only" accept=".pdf,application/pdf" aria-label="Seleccionar documento PDF para la orden {{ $reimbursement['orderNumber'] }}" required>
+												<span data-file-name>{{ $reimbursement['document'] ? 'Selecciona el nuevo documento' : 'Adjunta documento de reembolso' }}</span>
+												<input data-file-input type="file" name="document" class="sr-only" accept=".pdf,application/pdf" aria-label="Seleccionar documento PDF para la orden {{ $reimbursement['orderNumber'] }}" required>
 											</label>
-											<button type="submit" class="rounded-full border border-[#07577f] px-3 py-2 text-xs font-semibold text-[#07577f] transition hover:bg-[#eef7fb]">Guardar</button>
+											<button type="submit" data-save-document @class([
+												'hidden rounded-full border border-[#07577f] px-3 py-2 text-xs font-semibold text-[#07577f] transition hover:bg-[#eef7fb]',
+											])>Guardar</button>
 										</form>
 									</td>
 									<td class="border-t border-[#b7b7b7] px-5 py-2 text-center md:px-8">
-										<span @class([
-											'inline-flex min-h-9 min-w-32 items-center justify-center rounded-full px-4 text-xs font-medium text-black',
-											'bg-[#bd1e2d] text-white' => $reimbursement['status'] === 'Enviado',
-											'bg-[#ffea00]' => $reimbursement['status'] === 'En proceso',
-											'bg-[#00e885]' => $reimbursement['status'] === 'Completado',
-										])>{{ $reimbursement['status'] }}</span>
+										<span data-document-status data-saved="{{ $reimbursement['document'] ? 'true' : 'false' }}" class="inline-flex min-h-9 min-w-32 items-center justify-center rounded-full bg-[#e5e7eb] px-4 text-xs font-medium text-[#374151]" role="status">{{ $reimbursement['status'] }}</span>
 									</td>
 									<td class="border-t border-[#b7b7b7] px-5 py-3 text-center text-sm md:px-8">{{ $reimbursement['modifiedAt'] }}</td>
 								</tr>
@@ -78,8 +83,51 @@
 				</div>
 			</section>
 
-			<p class="mt-3 px-1 text-xs text-[#64748b]">Los registros y estados son de ejemplo. Los documentos se guardan en la base de datos y están disponibles para todas las sesiones conectadas a esta instalación.</p>
+			<p class="mt-3 px-1 text-xs text-[#64748b]">Al guardar, el documento queda disponible para administradores. Puedes reemplazarlo cuando sea necesario.</p>
 		</div>
 	</main>
+	<script>
+		document.querySelectorAll('[data-document-form]').forEach((form) => {
+			const fileInput = form.querySelector('[data-file-input]');
+			const fileLabel = form.querySelector('[data-file-label]');
+			const fileName = form.querySelector('[data-file-name]');
+			const saveButton = form.querySelector('[data-save-document]');
+			const changeButton = form.querySelector('[data-change-document]');
+			const cancelButton = form.querySelector('[data-cancel-change]');
+			const status = form.closest('tr').querySelector('[data-document-status]');
+			const hasSavedDocument = status.dataset.saved === 'true';
+			const defaultFileLabel = hasSavedDocument ? 'Selecciona el nuevo documento' : 'Adjunta documento de reembolso';
+
+			changeButton?.addEventListener('click', () => {
+				changeButton.classList.add('hidden');
+				cancelButton.classList.remove('hidden');
+				fileLabel.classList.remove('hidden');
+				fileInput.click();
+			});
+
+			cancelButton?.addEventListener('click', () => {
+				fileInput.value = '';
+				fileName.textContent = defaultFileLabel;
+				fileLabel.classList.add('hidden');
+				saveButton.classList.add('hidden');
+				cancelButton.classList.add('hidden');
+				changeButton.classList.remove('hidden');
+				status.textContent = 'Enviado a administradores';
+				status.className = 'inline-flex min-h-9 min-w-32 items-center justify-center rounded-full bg-[#e5e7eb] px-4 text-xs font-medium text-[#374151]';
+			});
+
+			fileInput.addEventListener('change', () => {
+				const file = fileInput.files?.[0];
+				if (!file) {
+					return;
+				}
+
+				fileName.textContent = file.name;
+				saveButton.classList.remove('hidden');
+				status.textContent = 'Listo para guardar';
+				status.className = 'inline-flex min-h-9 min-w-32 items-center justify-center rounded-full bg-[#14532d] px-4 text-xs font-medium text-white';
+			});
+		});
+	</script>
 </body>
 </html>

@@ -37,11 +37,60 @@ class SystemReimbursementDocumentTest extends TestCase
             ->get(route('home'))
             ->assertOk()
             ->assertSee('reembolso.pdf')
+            ->assertSee('Enviado a administradores')
             ->assertSee(route('systems.reimbursements.documents.download', 1), false);
 
         $this->get(route('systems.reimbursements.documents.download', 1))
             ->assertDownload('reembolso-1.pdf')
             ->assertStreamedContent($file->getContent());
+    }
+
+    public function test_administrators_can_view_and_download_system_reimbursement_documents(): void
+    {
+        $this->seed(DepartmentSeeder::class);
+        $administrator = $this->createUserWithDepartment('administrator');
+        SystemReimbursementDocument::query()->create([
+            'order_number' => 1,
+            'original_name' => 'reembolso-sistemas.pdf',
+            'mime_type' => 'application/pdf',
+            'content' => 'PDF content',
+        ]);
+
+        $this->actingAs($administrator)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('REEMBOLSOS DEL DEPARTAMENTO DE SISTEMAS')
+            ->assertSee('REEMBOLSO')
+            ->assertSee('reembolso-sistemas.pdf')
+            ->assertSee(route('systems.reimbursements.documents.download', 1), false)
+            ->assertSee('Recibido');
+
+        $this->get(route('systems.reimbursements.documents.download', 1))
+            ->assertDownload('reembolso-1.pdf')
+            ->assertStreamedContent('PDF content');
+    }
+
+    public function test_systems_users_can_replace_an_existing_reimbursement_document(): void
+    {
+        $this->seed(DepartmentSeeder::class);
+        $systemsUser = $this->createUserWithDepartment('systems');
+        $firstFile = UploadedFile::fake()->create('anterior.pdf', 20, 'application/pdf');
+        $replacementFile = UploadedFile::fake()->create('actualizado.pdf', 20, 'application/pdf');
+
+        $this->actingAs($systemsUser)
+            ->post(route('systems.reimbursements.documents.store', 1), ['document' => $firstFile])
+            ->assertRedirect(route('home'));
+
+        $this->post(route('systems.reimbursements.documents.store', 1), ['document' => $replacementFile])
+            ->assertRedirect(route('home'))
+            ->assertSessionHas('success', 'El documento se guardó correctamente.');
+
+        $this->assertDatabaseCount('system_reimbursement_documents', 1);
+        $this->assertDatabaseHas('system_reimbursement_documents', [
+            'order_number' => 1,
+            'original_name' => 'actualizado.pdf',
+            'content' => $replacementFile->getContent(),
+        ]);
     }
 
     public function test_users_outside_systems_cannot_upload_or_download_documents(): void

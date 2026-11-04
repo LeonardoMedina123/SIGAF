@@ -39,7 +39,7 @@ class SystemReimbursementDocumentController extends Controller
 
     public function download(Request $request, int $orderNumber): StreamedResponse
     {
-        $this->authorizeSystemsUser($request);
+        $this->authorizeDocumentViewer($request);
 
         $document = SystemReimbursementDocument::query()
             ->where('order_number', $orderNumber)
@@ -62,5 +62,14 @@ class SystemReimbursementDocumentController extends Controller
     {
         $user = $request->user();
         abort_unless($user instanceof User && $user->isSystemsDepartment(), 403);
+    }
+
+    private function authorizeDocumentViewer(Request $request): void
+    {
+        $user = $request->user();
+        abort_unless(
+            $user instanceof User && ($user->isSystemsDepartment() || $user->isAdministrator()),
+            403,
+        );
     }
 }
