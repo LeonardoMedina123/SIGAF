@@ -44,6 +44,10 @@ Route::middleware('auth')->group(function () {
         '/admin/purchase-orders/{purchaseOrder}/validate-payment',
         ValidatePurchaseOrderPaymentController::class,
     )->name('admin.purchase-orders.validate-payment');
+    Route::middleware(EnsureAdministrator::class)->get(
+        '/admin/system-reimbursements',
+        [HomeController::class, 'systemReimbursements'],
+    )->name('admin.system-reimbursements.index');
     Route::middleware(EnsureAdministrator::class)->prefix('admin/users')->name('admin.users.')->group(function () {
         Route::get('/', [AdminUserController::class, 'index'])->name('index');
         Route::post('/', [AdminUserController::class, 'store'])->name('store');

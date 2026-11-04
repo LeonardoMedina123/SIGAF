@@ -59,7 +59,12 @@ class SystemReimbursementDocumentTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('home'))
             ->assertOk()
-            ->assertSee('REEMBOLSOS DEL DEPARTAMENTO DE SISTEMAS')
+            ->assertSee('Reembolsos de Sistemas')
+            ->assertDontSee('REEMBOLSOS DEL DEPARTAMENTO DE SISTEMAS');
+
+        $this->get(route('admin.system-reimbursements.index'))
+            ->assertOk()
+            ->assertSee('Reembolsos del Departamento de Sistemas')
             ->assertSee('REEMBOLSO')
             ->assertSee('reembolso-sistemas.pdf')
             ->assertSee(route('systems.reimbursements.documents.download', 1), false)
@@ -108,6 +113,9 @@ class SystemReimbursementDocumentTest extends TestCase
             ->post(route('systems.reimbursements.documents.store', 1), [
                 'document' => UploadedFile::fake()->create('nuevo.pdf', 1, 'application/pdf'),
             ])
+            ->assertForbidden();
+
+        $this->get(route('admin.system-reimbursements.index'))
             ->assertForbidden();
 
         $this->get(route('systems.reimbursements.documents.download', 1))
@@ -162,6 +170,9 @@ class SystemReimbursementDocumentTest extends TestCase
             ->assertRedirect(route('login'));
 
         $this->get(route('systems.reimbursements.documents.download', 1))
+            ->assertRedirect(route('login'));
+
+        $this->get(route('admin.system-reimbursements.index'))
             ->assertRedirect(route('login'));
     }
 

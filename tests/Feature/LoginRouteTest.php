@@ -52,6 +52,7 @@ class LoginRouteTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('home'))
             ->assertOk()
+            ->assertSee('Reembolsos de Sistemas')
             ->assertSee('Administrar usuarios');
     }
 

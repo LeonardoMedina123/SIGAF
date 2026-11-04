@@ -38,7 +38,13 @@ class HomeController extends Controller
             ])->latest()->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'canValidatePayments' => auth()->user()->isAdministrator(),
-            'reimbursements' => auth()->user()->isAdministrator() ? $this->reimbursements() : [],
+        ]);
+    }
+
+    public function systemReimbursements(): View
+    {
+        return view('admin.system-reimbursements.index', [
+            'reimbursements' => $this->reimbursements(),
         ]);
     }
 

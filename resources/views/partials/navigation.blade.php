@@ -12,6 +12,11 @@
 				'text-[#34495b] hover:bg-[#edf7fb]' => $activePage !== 'suppliers',
 			]) @if ($activePage === 'suppliers') aria-current="page" @endif>Catálogo de proveedores</a>
 			@if (auth()->user()->isAdministrator())
+				<a href="{{ route('admin.system-reimbursements.index') }}" @class([
+					'rounded-lg px-4 py-2 text-sm font-semibold transition',
+					'bg-[#07577f] text-white' => $activePage === 'system-reimbursements',
+					'text-[#34495b] hover:bg-[#edf7fb]' => $activePage !== 'system-reimbursements',
+				]) @if ($activePage === 'system-reimbursements') aria-current="page" @endif>Reembolsos de Sistemas</a>
 				<a href="{{ route('admin.users.index') }}" @class([
 					'rounded-lg px-4 py-2 text-sm font-semibold transition',
 					'bg-[#07577f] text-white' => $activePage === 'admin-users',
