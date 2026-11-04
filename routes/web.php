@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierPurchaseOrderDocumentController;
+use App\Http\Controllers\SystemReimbursementDocumentController;
 use App\Http\Controllers\ValidatePurchaseOrderPaymentController;
 use App\Http\Middleware\EnsureAdministrator;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/suppliers', [HomeController::class, 'suppliers'])->name('suppliers.index');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
+    Route::post('/systems/reimbursements/{orderNumber}/document', [
+        SystemReimbursementDocumentController::class,
+        'store',
+    ])->where('orderNumber', '[1-9]')->name('systems.reimbursements.documents.store');
+    Route::get('/systems/reimbursements/{orderNumber}/document', [
+        SystemReimbursementDocumentController::class,
+        'download',
+    ])->where('orderNumber', '[1-9]')->name('systems.reimbursements.documents.download');
     Route::post('/supplier/purchase-orders/{purchaseOrder}/invoices', [SupplierPurchaseOrderDocumentController::class, 'storeInvoice'])
         ->name('supplier.purchase-orders.invoices.store');
     Route::post('/supplier/purchase-orders/{purchaseOrder}/payment-complement', [SupplierPurchaseOrderDocumentController::class, 'storePaymentComplement'])

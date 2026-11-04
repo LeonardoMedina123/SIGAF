@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\SystemReimbursementDocument;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+class SystemReimbursementDocumentController extends Controller
+{
+    public function store(Request $request, int $orderNumber): RedirectResponse
+    {
+        $this->authorizeSystemsUser($request);
+
+        $validated = $request->validate([
+            'document' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+        ], [
+            'document.required' => 'Selecciona un documento PDF.',
+            'document.file' => 'El documento seleccionado no es válido.',
+            'document.mimes' => 'El documento debe ser un archivo PDF.',
+            'document.max' => 'El documento no puede superar 10 MB.',
+        ]);
+
+        $file = $validated['document'];
+
+        SystemReimbursementDocument::query()->updateOrCreate(
+            ['order_number' => $orderNumber],
+            [
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType() ?? 'application/pdf',
+                'content' => $file->getContent(),
+            ],
+        );
+
+        return redirect()->route('home')->with('success', 'El documento se guardó correctamente.');
+    }
+
+    public function download(Request $request, int $orderNumber): StreamedResponse
+    {
+        $this->authorizeSystemsUser($request);
+
+        $document = SystemReimbursementDocument::query()
+            ->where('order_number', $orderNumber)
+            ->firstOrFail();
+        $content = $document->content;
+
+        return response()->streamDownload(
+            static function () use ($content): void {
+                echo $content;
+            },
+            'reembolso-'.$orderNumber.'.pdf',
+            [
+                'Content-Type' => $document->mime_type,
+                'X-Content-Type-Options' => 'nosniff',
+            ],
+        );
+    }
+
+    private function authorizeSystemsUser(Request $request): void
+    {
+        $user = $request->user();
+        abort_unless($user instanceof User && $user->isSystemsDepartment(), 403);
+    }
+}

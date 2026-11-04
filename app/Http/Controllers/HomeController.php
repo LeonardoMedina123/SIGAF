@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Requisition;
 use App\Models\Supplier;
+use App\Models\SystemReimbursementDocument;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
 
@@ -25,18 +26,27 @@ class HomeController extends Controller
         }
 
         if (auth()->user()->isSystemsDepartment()) {
+            $documents = SystemReimbursementDocument::query()
+                ->get(['order_number', 'original_name', 'updated_at'])
+                ->keyBy('order_number');
+
             return view('systems.portal', [
                 'reimbursements' => array_map(
-                    static fn (int $orderNumber): array => [
-                        'folio' => 'Orden_TECNM_2515486',
-                        'documentsSubmitted' => $orderNumber > 1,
-                        'status' => match (true) {
-                            $orderNumber === 1 => 'Enviado',
-                            $orderNumber < 4 => 'En proceso',
-                            default => 'Completado',
-                        },
-                        'modifiedAt' => '08/10/2026',
-                    ],
+                    static function (int $orderNumber) use ($documents): array {
+                        $document = $documents->get($orderNumber);
+
+                        return [
+                            'orderNumber' => $orderNumber,
+                            'folio' => 'Orden_TECNM_2515486',
+                            'document' => $document,
+                            'status' => match (true) {
+                                $orderNumber === 1 => 'Enviado',
+                                $orderNumber < 4 => 'En proceso',
+                                default => 'Completado',
+                            },
+                            'modifiedAt' => $document?->updated_at?->format('d/m/Y') ?? '08/10/2026',
+                        ];
+                    },
                     range(1, 9),
                 ),
             ]);

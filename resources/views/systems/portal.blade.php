@@ -23,6 +23,13 @@
 				</form>
 			</div>
 
+			@if (session('success'))
+				<p role="status" class="mb-3 rounded-lg bg-[#e8fff5] px-4 py-3 text-sm text-[#14532d]">{{ session('success') }}</p>
+			@endif
+			@if ($errors->has('document'))
+				<p role="alert" class="mb-3 rounded-lg bg-[#fff1f2] px-4 py-3 text-sm text-[#9f1239]">{{ $errors->first('document') }}</p>
+			@endif
+
 			<section aria-label="Órdenes de reembolso" class="overflow-hidden rounded-[28px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
 				<div class="max-h-[calc(100vh-190px)] overflow-auto">
 					<table class="w-full min-w-[760px] border-separate border-spacing-0 text-left">
@@ -42,15 +49,18 @@
 										<span class="whitespace-nowrap text-[#07529a] underline decoration-1 underline-offset-2">{{ $reimbursement['folio'] }}</span>
 									</td>
 									<td class="border-t border-[#b7b7b7] px-5 py-2 md:px-8">
-										@if ($reimbursement['documentsSubmitted'])
-											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#b5b5b5] px-4 text-center text-xs text-[#222]">Ya se adjuntaron los archivos solicitados</span>
-										@else
+										@if ($reimbursement['document'])
+											<a href="{{ route('systems.reimbursements.documents.download', $reimbursement['orderNumber']) }}" class="mb-2 block break-all font-semibold text-[#07577f] underline hover:text-[#064967]">{{ $reimbursement['document']->original_name }}</a>
+										@endif
+										<form action="{{ route('systems.reimbursements.documents.store', $reimbursement['orderNumber']) }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
+											@csrf
 											<label class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#00e885] px-4 text-xs font-semibold text-[#111] transition hover:bg-[#00d77b] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#07577f]">
 												<span aria-hidden="true" class="text-xl font-light leading-none">+</span>
-												<span>Adjunta documento de reembolso</span>
-												<input type="file" class="sr-only" aria-label="Adjuntar documento de reembolso">
+												<span>{{ $reimbursement['document'] ? 'Reemplazar documento' : 'Adjunta documento de reembolso' }}</span>
+												<input type="file" name="document" class="sr-only" accept=".pdf,application/pdf" aria-label="Seleccionar documento PDF para la orden {{ $reimbursement['orderNumber'] }}" required>
 											</label>
-										@endif
+											<button type="submit" class="rounded-full border border-[#07577f] px-3 py-2 text-xs font-semibold text-[#07577f] transition hover:bg-[#eef7fb]">Guardar</button>
+										</form>
 									</td>
 									<td class="border-t border-[#b7b7b7] px-5 py-2 text-center md:px-8">
 										<span @class([
@@ -68,7 +78,7 @@
 				</div>
 			</section>
 
-			<p class="mt-3 px-1 text-xs text-[#64748b]">Los registros son de ejemplo; la carga todavía no envía documentos al sistema.</p>
+			<p class="mt-3 px-1 text-xs text-[#64748b]">Los registros y estados son de ejemplo. Los documentos se guardan en la base de datos y están disponibles para todas las sesiones conectadas a esta instalación.</p>
 		</div>
 	</main>
 </body>
