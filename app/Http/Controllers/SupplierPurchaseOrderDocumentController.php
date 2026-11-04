@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -26,11 +25,6 @@ class SupplierPurchaseOrderDocumentController extends Controller
             'review_confirmed' => ['accepted'],
         ]);
 
-        $previousPaths = array_filter([
-            $purchaseOrder->invoice_pdf_path,
-            $purchaseOrder->invoice_xml_path,
-        ]);
-
         DB::transaction(function () use ($validated, $purchaseOrder): void {
             UploadedDocument::replaceFor($purchaseOrder, 'invoice_pdf', $validated['invoice_pdf']);
             UploadedDocument::replaceFor($purchaseOrder, 'invoice_xml', $validated['invoice_xml']);
@@ -44,8 +38,6 @@ class SupplierPurchaseOrderDocumentController extends Controller
             }
         });
 
-        Storage::disk('local')->delete($previousPaths);
-
         return redirect()->route('home')->with('success', 'La factura y el XML se enviaron correctamente.');
     }
 
@@ -58,8 +50,6 @@ class SupplierPurchaseOrderDocumentController extends Controller
             'payment_complement' => ['required', 'file', 'mimes:pdf', 'max:10240'],
             'review_confirmed' => ['accepted'],
         ]);
-
-        $previousPath = $purchaseOrder->payment_complement_path;
 
         DB::transaction(function () use ($validated, $purchaseOrder): void {
             UploadedDocument::replaceFor(
@@ -76,10 +66,6 @@ class SupplierPurchaseOrderDocumentController extends Controller
             }
         });
 
-        if ($previousPath !== null) {
-            Storage::disk('local')->delete($previousPath);
-        }
-
         return redirect()->route('home')->with('success', 'El complemento de pago se envió correctamente.');
     }
 
@@ -88,16 +74,9 @@ class SupplierPurchaseOrderDocumentController extends Controller
         $this->authorizeSupplierOrder($request, $purchaseOrder);
 
         $document = $this->findDocument($purchaseOrder, 'purchase_order_pdf');
-        if ($document !== null) {
-            return $this->downloadUploadedDocument($document, Str::slug($purchaseOrder->folio).'.pdf');
-        }
+        abort_if($document === null, 404);
 
-        abort_unless(
-            is_string($purchaseOrder->pdf_path) && Storage::disk('local')->exists($purchaseOrder->pdf_path),
-            404,
-        );
-
-        return Storage::disk('local')->download($purchaseOrder->pdf_path, Str::slug($purchaseOrder->folio).'.pdf');
+        return $this->downloadUploadedDocument($document, Str::slug($purchaseOrder->folio).'.pdf');
     }
 
     public function downloadInternalDocument(
@@ -109,27 +88,19 @@ class SupplierPurchaseOrderDocumentController extends Controller
         abort_unless($user instanceof User && ! $user->isSupplier(), 403);
 
         $documentDetails = match ($document) {
-            'purchase-order-pdf' => ['purchase_order_pdf', $purchaseOrder->pdf_path, 'orden-compra.pdf'],
-            'invoice-pdf' => ['invoice_pdf', $purchaseOrder->invoice_pdf_path, 'factura.pdf'],
-            'invoice-xml' => ['invoice_xml', $purchaseOrder->invoice_xml_path, 'factura.xml'],
-            'payment-complement' => ['payment_complement', $purchaseOrder->payment_complement_path, 'complemento-pago.pdf'],
+            'purchase-order-pdf' => ['purchase_order_pdf', 'orden-compra.pdf'],
+            'invoice-pdf' => ['invoice_pdf', 'factura.pdf'],
+            'invoice-xml' => ['invoice_xml', 'factura.xml'],
+            'payment-complement' => ['payment_complement', 'complemento-pago.pdf'],
             default => abort(404),
         };
 
-        [$kind, $path, $fileName] = $documentDetails;
+        [$kind, $fileName] = $documentDetails;
         $storedDocument = $this->findDocument($purchaseOrder, $kind);
+        abort_if($storedDocument === null, 404);
 
-        if ($storedDocument !== null) {
-            return $this->downloadUploadedDocument(
-                $storedDocument,
-                Str::slug($purchaseOrder->folio).'-'.$fileName,
-            );
-        }
-
-        abort_unless(is_string($path) && Storage::disk('local')->exists($path), 404);
-
-        return Storage::disk('local')->download(
-            $path,
+        return $this->downloadUploadedDocument(
+            $storedDocument,
             Str::slug($purchaseOrder->folio).'-'.$fileName,
         );
     }

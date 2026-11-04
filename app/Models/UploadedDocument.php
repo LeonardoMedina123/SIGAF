@@ -26,12 +26,28 @@ class UploadedDocument extends Model
         string $kind,
         UploadedFile $file,
     ): self {
+        return self::replaceContentFor(
+            $owner,
+            $kind,
+            $file->getClientOriginalName(),
+            $file->getMimeType() ?? 'application/octet-stream',
+            $file->getContent(),
+        );
+    }
+
+    public static function replaceContentFor(
+        Requisition|PurchaseOrder $owner,
+        string $kind,
+        string $originalName,
+        string $mimeType,
+        string $content,
+    ): self {
         return $owner->uploadedDocuments()->updateOrCreate(
             ['kind' => $kind],
             [
-                'original_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType() ?? 'application/octet-stream',
-                'content' => $file->getContent(),
+                'original_name' => $originalName,
+                'mime_type' => $mimeType,
+                'content' => $content,
             ],
         );
     }

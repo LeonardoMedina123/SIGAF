@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class PurchaseOrder extends Model
 {
@@ -69,19 +68,6 @@ class PurchaseOrder extends Model
 
     public function hasDocument(string $kind): bool
     {
-        $legacyPath = match ($kind) {
-            'purchase_order_pdf' => $this->pdf_path,
-            'purchase_order_xml' => $this->xml_path,
-            'invoice_pdf' => $this->invoice_pdf_path,
-            'invoice_xml' => $this->invoice_xml_path,
-            'payment_complement' => $this->payment_complement_path,
-            default => null,
-        };
-
-        if (is_string($legacyPath) && Storage::disk('local')->exists($legacyPath)) {
-            return true;
-        }
-
         if ($this->relationLoaded('uploadedDocuments')) {
             return $this->uploadedDocuments->contains('kind', $kind);
         }

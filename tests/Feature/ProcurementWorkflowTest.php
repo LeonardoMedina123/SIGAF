@@ -529,6 +529,26 @@ class ProcurementWorkflowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_internal_document_download_does_not_fall_back_to_a_local_file(): void
+    {
+        Storage::fake('local');
+        $internalUser = $this->createUserWithType('departments', 'usuario@example.com');
+        $supplier = $this->createSupplier('23', 'proveedor@example.com');
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-023',
+            User::factory()->create(),
+        );
+        $purchaseOrder->forceFill(['invoice_pdf_path' => 'supplier-invoices/factura.pdf'])->save();
+        Storage::disk('local')->put($purchaseOrder->invoice_pdf_path, 'PDF factura heredado');
+
+        $this->assertFalse($purchaseOrder->hasDocument('invoice_pdf'));
+
+        $this->actingAs($internalUser)
+            ->get(route('purchase-orders.documents.download', [$purchaseOrder, 'invoice-pdf']))
+            ->assertNotFound();
+    }
+
     public function test_supplier_cannot_upload_documents_for_another_supplier_order(): void
     {
         Storage::fake('local');
@@ -707,17 +727,19 @@ class ProcurementWorkflowTest extends TestCase
         Storage::fake('local');
         $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
         $otherSupplier = $this->createSupplier('16', 'otro@example.com');
+        $purchaseOrderPdf = UploadedFile::fake()->create('orden-compra.pdf', 10, 'application/pdf');
         $purchaseOrder = $this->createPurchaseOrderForSupplier(
             $this->createSupplier('17', $supplierUser->email),
             'OC-2026-016',
             User::factory()->create(),
         );
-        Storage::disk('local')->put($purchaseOrder->pdf_path, 'orden de compra');
+        UploadedDocument::replaceFor($purchaseOrder, 'purchase_order_pdf', $purchaseOrderPdf);
         $otherPurchaseOrder = $this->createPurchaseOrderForSupplier($otherSupplier, 'OC-2026-017', User::factory()->create());
 
         $this->actingAs($supplierUser)
             ->get(route('supplier.purchase-orders.pdf', $purchaseOrder))
-            ->assertOk();
+            ->assertDownload('oc-2026-016.pdf')
+            ->assertStreamedContent($purchaseOrderPdf->getContent());
 
         $this->get(route('supplier.purchase-orders.pdf', $otherPurchaseOrder))
             ->assertNotFound();
