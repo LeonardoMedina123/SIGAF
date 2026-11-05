@@ -56,8 +56,8 @@
 											@csrf
 											@if ($reimbursement['document'])
 												<button type="button" data-change-document class="rounded-full border border-[#07577f] px-3 py-2 text-xs font-semibold text-[#07577f] transition hover:bg-[#eef7fb]">Cambiar documento</button>
-												<button type="button" data-cancel-change class="hidden rounded-full border border-[#6b7280] px-3 py-2 text-xs font-semibold text-[#4b5563] transition hover:bg-[#f3f4f6]">Cancelar</button>
 											@endif
+											<button type="button" data-cancel-change class="hidden rounded-full border border-[#6b7280] px-3 py-2 text-xs font-semibold text-[#4b5563] transition hover:bg-[#f3f4f6]">Cancelar</button>
 											<label data-file-label @class([
 												'inline-flex min-h-9 max-w-full cursor-pointer items-center justify-center gap-2 rounded-full px-4 text-xs font-semibold transition focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#07577f]',
 												'bg-[#14532d] text-white hover:bg-[#166534]' => ! $reimbursement['document'],
@@ -97,35 +97,49 @@
 			const status = form.closest('tr').querySelector('[data-document-status]');
 			const hasSavedDocument = status.dataset.saved === 'true';
 			const defaultFileLabel = hasSavedDocument ? 'Selecciona el nuevo documento' : 'Adjunta documento de reembolso';
+			const defaultStatusText = status.textContent;
+			const defaultStatusClass = status.className;
 
 			changeButton?.addEventListener('click', () => {
 				changeButton.classList.add('hidden');
-				cancelButton.classList.remove('hidden');
 				fileLabel.classList.remove('hidden');
 				fileInput.click();
 			});
 
-			cancelButton?.addEventListener('click', () => {
+			const resetForm = () => {
 				fileInput.value = '';
 				fileName.textContent = defaultFileLabel;
-				fileLabel.classList.add('hidden');
+				fileLabel.classList.toggle('hidden', hasSavedDocument);
 				saveButton.classList.add('hidden');
 				cancelButton.classList.add('hidden');
-				changeButton.classList.remove('hidden');
-				status.textContent = 'Enviado a administradores';
-				status.className = 'inline-flex min-h-9 min-w-32 items-center justify-center rounded-full bg-[#e5e7eb] px-4 text-xs font-medium text-[#374151]';
-			});
+				changeButton?.classList.remove('hidden');
+				status.textContent = defaultStatusText;
+				status.className = defaultStatusClass;
+			};
+
+			cancelButton.addEventListener('click', resetForm);
 
 			fileInput.addEventListener('change', () => {
 				const file = fileInput.files?.[0];
 				if (!file) {
+					if (hasSavedDocument) {
+						resetForm();
+					}
+
 					return;
 				}
 
 				fileName.textContent = file.name;
+				cancelButton.classList.remove('hidden');
 				saveButton.classList.remove('hidden');
 				status.textContent = 'Listo para guardar';
 				status.className = 'inline-flex min-h-9 min-w-32 items-center justify-center rounded-full bg-[#14532d] px-4 text-xs font-medium text-white';
+			});
+
+			fileInput.addEventListener('cancel', () => {
+				if (hasSavedDocument && !fileInput.files?.length) {
+					resetForm();
+				}
 			});
 		});
 	</script>
