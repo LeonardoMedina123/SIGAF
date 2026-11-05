@@ -26,6 +26,10 @@ Route::middleware('auth')->group(function () {
         SystemReimbursementDocumentController::class,
         'store',
     ])->where('orderNumber', '[1-9]')->name('systems.reimbursements.documents.store');
+    Route::delete('/systems/reimbursements/{orderNumber}/document', [
+        SystemReimbursementDocumentController::class,
+        'destroy',
+    ])->where('orderNumber', '[1-9]')->name('systems.reimbursements.documents.destroy');
     Route::get('/systems/reimbursements/{orderNumber}/document', [
         SystemReimbursementDocumentController::class,
         'download',

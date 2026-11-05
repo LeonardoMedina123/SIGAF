@@ -37,6 +37,18 @@ class SystemReimbursementDocumentController extends Controller
         return redirect()->route('home')->with('success', 'El documento se guardó correctamente.');
     }
 
+    public function destroy(Request $request, int $orderNumber): RedirectResponse
+    {
+        $this->authorizeSystemsUser($request);
+
+        $document = SystemReimbursementDocument::query()
+            ->where('order_number', $orderNumber)
+            ->firstOrFail();
+        $document->delete();
+
+        return redirect()->route('home')->with('success', 'El documento se eliminó correctamente.');
+    }
+
     public function download(Request $request, int $orderNumber): StreamedResponse
     {
         $this->authorizeDocumentViewer($request);

@@ -38,7 +38,10 @@ class SystemReimbursementDocumentTest extends TestCase
             ->assertOk()
             ->assertSee('reembolso.pdf')
             ->assertSee('Enviado a administradores')
-            ->assertSee(route('systems.reimbursements.documents.download', 1), false);
+            ->assertSee(route('systems.reimbursements.documents.download', 1), false)
+            ->assertSee('Cancelar')
+            ->assertDontSee('Cambiar documento')
+            ->assertDontSee('Selecciona el nuevo documento');
 
         $this->get(route('systems.reimbursements.documents.download', 1))
             ->assertDownload('reembolso-1.pdf')
@@ -98,6 +101,32 @@ class SystemReimbursementDocumentTest extends TestCase
         ]);
     }
 
+    public function test_systems_users_can_cancel_a_saved_document_and_upload_another(): void
+    {
+        $this->seed(DepartmentSeeder::class);
+        $systemsUser = $this->createUserWithDepartment('systems');
+        SystemReimbursementDocument::query()->create([
+            'order_number' => 1,
+            'original_name' => 'reembolso.pdf',
+            'mime_type' => 'application/pdf',
+            'content' => 'PDF content',
+        ]);
+
+        $this->actingAs($systemsUser)
+            ->delete(route('systems.reimbursements.documents.destroy', 1))
+            ->assertRedirect(route('home'))
+            ->assertSessionHas('success', 'El documento se eliminó correctamente.');
+
+        $this->assertDatabaseMissing('system_reimbursement_documents', [
+            'order_number' => 1,
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('Adjunta documento de reembolso')
+            ->assertDontSee('reembolso.pdf');
+    }
+
     public function test_users_outside_systems_cannot_upload_or_download_documents(): void
     {
         $this->seed(DepartmentSeeder::class);
@@ -119,6 +148,9 @@ class SystemReimbursementDocumentTest extends TestCase
             ->assertForbidden();
 
         $this->get(route('systems.reimbursements.documents.download', 1))
+            ->assertForbidden();
+
+        $this->delete(route('systems.reimbursements.documents.destroy', 1))
             ->assertForbidden();
 
         $this->assertDatabaseCount('system_reimbursement_documents', 1);
@@ -170,6 +202,9 @@ class SystemReimbursementDocumentTest extends TestCase
             ->assertRedirect(route('login'));
 
         $this->get(route('systems.reimbursements.documents.download', 1))
+            ->assertRedirect(route('login'));
+
+        $this->delete(route('systems.reimbursements.documents.destroy', 1))
             ->assertRedirect(route('login'));
 
         $this->get(route('admin.system-reimbursements.index'))
