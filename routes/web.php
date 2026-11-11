@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\RequisitionDocumentArchiveController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierPurchaseOrderDocumentController;
 use App\Http\Controllers\SystemReimbursementDocumentController;
@@ -52,6 +53,10 @@ Route::middleware('auth')->group(function () {
         '/admin/purchase-orders/{purchaseOrder}/validate-payment',
         ValidatePurchaseOrderPaymentController::class,
     )->name('admin.purchase-orders.validate-payment');
+    Route::middleware(EnsureAdministrator::class)->get(
+        '/admin/requisitions/{requisition}/documents.zip',
+        [RequisitionDocumentArchiveController::class, 'download'],
+    )->name('admin.requisitions.documents.download');
     Route::middleware(EnsureAdministrator::class)->get(
         '/admin/system-reimbursements',
         [HomeController::class, 'systemReimbursements'],

@@ -110,16 +110,19 @@
 				</ul>
 			</div>
 		@endif
-		<section aria-label="Requisiciones" class="overflow-hidden rounded-[20px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
-			<table class="w-full table-fixed border-separate border-spacing-0 text-center">
+		<section aria-label="Requisiciones" class="overflow-x-auto rounded-[20px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
+			<table class="w-full {{ $canValidatePayments ? 'min-w-[1000px]' : '' }} table-fixed border-separate border-spacing-0 text-center">
 				<colgroup>
-					<col class="w-[19%]" />
-					<col class="w-[15%]" />
-					<col class="w-[8%]" />
-					<col class="w-[9%]" />
-					<col class="w-[7%]" />
-					<col class="w-[22%]" />
-					<col class="w-[20%]" />
+					<col class="{{ $canValidatePayments ? 'w-[17%]' : 'w-[19%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[13%]' : 'w-[15%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[7%]' : 'w-[8%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[8%]' : 'w-[9%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[6%]' : 'w-[7%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[20%]' : 'w-[22%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[18%]' : 'w-[20%]' }}" />
+					@if ($canValidatePayments)
+						<col class="w-[11%]" />
+					@endif
 				</colgroup>
 				<thead class="bg-[#07577f] text-white">
 					<tr>
@@ -141,9 +144,15 @@
 						<th scope="col" class="p-0 text-sm font-semibold">
 							<button type="button" data-filter-trigger="validacion-financiera" data-filter-title="Validación Recursos Financieros" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Validación Recursos Financieros</button>
 						</th>
-						<th scope="col" class="rounded-tr-[19px] p-0 text-sm font-semibold">
+						<th scope="col" @class([
+							'p-0 text-sm font-semibold',
+							'rounded-tr-[19px]' => ! $canValidatePayments,
+						])>
 							<button type="button" data-filter-trigger="complemento" data-filter-title="Complemento proveedor" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Complemento proveedor</button>
 						</th>
+						@if ($canValidatePayments)
+							<th scope="col" class="rounded-tr-[19px] px-2 py-2 text-[11px] font-semibold leading-tight md:px-3 md:py-3 md:text-xs">Descarga de archivos</th>
+						@endif
 					</tr>
 				</thead>
 				<tbody>
@@ -229,16 +238,25 @@
 									—
 								@endif
 							</td>
+							@if ($canValidatePayments)
+								<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+									@if ($requisition->uploadedDocuments->isNotEmpty() || $requisition->purchaseOrder?->uploadedDocuments->isNotEmpty())
+										<a href="{{ route('admin.requisitions.documents.download', $requisition) }}" aria-label="Descargar archivos de la requisición {{ $requisition->folio }}" class="inline-flex items-center justify-center rounded-full bg-[#07577f] px-3 py-1.5 font-semibold text-white transition hover:bg-[#064967] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">Descargar compendio</a>
+									@else
+										<span class="text-[#64748b]">Sin archivos</span>
+									@endif
+								</td>
+							@endif
 						</tr>
 					@empty
 						<tr>
-							<td colspan="7" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-xs text-[#60737d] md:text-sm">
+							<td colspan="{{ $canValidatePayments ? 8 : 7 }}" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-xs text-[#60737d] md:text-sm">
 								Aún no hay requisiciones registradas.
 							</td>
 						</tr>
 					@endforelse
 					<tr data-filter-empty hidden>
-						<td colspan="7" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-xs text-[#60737d] md:text-sm">
+						<td colspan="{{ $canValidatePayments ? 8 : 7 }}" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-xs text-[#60737d] md:text-sm">
 							No hay requisiciones que coincidan con los filtros.
 						</td>
 					</tr>
