@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\SystemReimbursementDocument;
 use App\Models\User;
+use App\Notifications\UserActivityNotification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SystemReimbursementDocumentController extends Controller
@@ -25,14 +29,28 @@ class SystemReimbursementDocumentController extends Controller
 
         $file = $validated['document'];
 
-        SystemReimbursementDocument::query()->updateOrCreate(
-            ['order_number' => $orderNumber],
-            [
-                'original_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType() ?? 'application/pdf',
-                'content' => $file->getContent(),
-            ],
-        );
+        DB::transaction(function () use ($file, $orderNumber): void {
+            SystemReimbursementDocument::query()->updateOrCreate(
+                ['order_number' => $orderNumber],
+                [
+                    'original_name' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getMimeType() ?? 'application/pdf',
+                    'content' => $file->getContent(),
+                ],
+            );
+
+            $administrators = User::query()
+                ->whereHas('department', function (Builder $query): void {
+                    $query->where('slug', 'administrator');
+                })
+                ->get();
+
+            Notification::send($administrators, new UserActivityNotification(
+                'system_reimbursement_uploaded',
+                'Documento de reembolso recibido',
+                'El Departamento de Sistemas adjuntó el documento de la orden '.$orderNumber.'.',
+            ));
+        });
 
         return redirect()->route('home')->with('success', 'El documento se guardó correctamente.');
     }

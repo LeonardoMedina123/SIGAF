@@ -21,6 +21,7 @@ class SystemReimbursementDocumentTest extends TestCase
         $this->seed(DepartmentSeeder::class);
         $firstUser = $this->createUserWithDepartment('systems');
         $secondUser = $this->createUserWithDepartment('systems');
+        $administrator = $this->createUserWithDepartment('administrator');
         $file = UploadedFile::fake()->create('reembolso.pdf', 20, 'application/pdf');
 
         $this->actingAs($firstUser)
@@ -31,6 +32,11 @@ class SystemReimbursementDocumentTest extends TestCase
         $document = SystemReimbursementDocument::query()->where('order_number', 1)->firstOrFail();
         $this->assertSame($file->getContent(), $document->content);
         $this->assertSame('reembolso.pdf', $document->original_name);
+        $this->assertSame(1, $administrator->unreadNotifications()->count());
+        $this->assertSame(
+            'system_reimbursement_uploaded',
+            $administrator->unreadNotifications()->firstOrFail()->data['event'],
+        );
         Storage::disk('local')->assertEmpty();
 
         $this->actingAs($secondUser)

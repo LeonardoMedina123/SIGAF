@@ -6,9 +6,12 @@ use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\UploadedDocument;
 use App\Models\User;
+use App\Notifications\UserActivityNotification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -36,6 +39,19 @@ class SupplierPurchaseOrderDocumentController extends Controller
             if (! $wasSaved) {
                 throw new RuntimeException('No fue posible registrar la factura y el XML.');
             }
+
+            $recipients = User::query()
+                ->whereKey($purchaseOrder->requisition()->value('user_id'))
+                ->orWhereHas('department', function (Builder $query): void {
+                    $query->whereIn('slug', ['administrator', 'financials']);
+                })
+                ->get();
+
+            Notification::send($recipients, new UserActivityNotification(
+                'invoice_uploaded',
+                'Factura y XML recibidos',
+                'El proveedor cargó la factura y el XML de la orden '.$purchaseOrder->folio.'.',
+            ));
         });
 
         return redirect()->route('home')->with('success', 'La factura y el XML se enviaron correctamente.');
@@ -64,6 +80,19 @@ class SupplierPurchaseOrderDocumentController extends Controller
             if (! $wasSaved) {
                 throw new RuntimeException('No fue posible registrar el complemento de pago.');
             }
+
+            $recipients = User::query()
+                ->whereKey($purchaseOrder->requisition()->value('user_id'))
+                ->orWhereHas('department', function (Builder $query): void {
+                    $query->whereIn('slug', ['administrator', 'financials']);
+                })
+                ->get();
+
+            Notification::send($recipients, new UserActivityNotification(
+                'payment_complement_uploaded',
+                'Complemento de pago recibido',
+                'El proveedor cargó el complemento de pago de la orden '.$purchaseOrder->folio.'.',
+            ));
         });
 
         return redirect()->route('home')->with('success', 'El complemento de pago se envió correctamente.');

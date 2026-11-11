@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierPurchaseOrderDocumentController;
@@ -19,6 +20,9 @@ Route::post('/login', [LoginController::class, 'store'])->name('authenticate');
 
 Route::middleware('auth')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.read');
     Route::get('/suppliers', [HomeController::class, 'suppliers'])->name('suppliers.index');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');

@@ -113,6 +113,10 @@ class ProcurementWorkflowTest extends TestCase
             'iva_percentage' => 16,
             'status' => 'Activo',
         ]);
+        $supplierUser = User::factory()->create([
+            'email' => $supplier->contact_email,
+            'department_id' => Department::where('slug', 'suppliers')->value('id'),
+        ]);
 
         $this->actingAs($user)
             ->post(route('orders.store'), [
@@ -185,16 +189,18 @@ class ProcurementWorkflowTest extends TestCase
         );
         Storage::disk('local')->assertEmpty();
 
-        $supplierUser = User::factory()->create([
-            'email' => $supplier->contact_email,
-            'department_id' => Department::where('slug', 'suppliers')->value('id'),
-        ]);
+        $this->assertSame(1, $supplierUser->unreadNotifications()->count());
+        $this->assertSame(
+            'purchase_order_created',
+            $supplierUser->unreadNotifications()->firstOrFail()->data['event'],
+        );
 
         $this->actingAs($supplierUser)
             ->get(route('home'))
             ->assertOk()
             ->assertSee('OC-2026-001')
-            ->assertSee('Adjunta factura y XML');
+            ->assertSee('Adjunta factura y XML')
+            ->assertSee('Nueva orden de compra');
         $this->get(route('supplier.purchase-orders.pdf', $purchaseOrder))
             ->assertDownload('oc-2026-001.pdf')
             ->assertStreamedContent($purchaseOrderPdf->getContent());
@@ -401,6 +407,9 @@ class ProcurementWorkflowTest extends TestCase
         $invoiceXml = UploadedFile::fake()->create('factura.xml', 1, 'text/xml');
         $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
         $creator = User::factory()->create();
+        $administrator = $this->createUserWithType('administrator', 'admin@example.com');
+        $financialUser = $this->createUserWithType('financials', 'finanzas@example.com');
+        $unrelatedUser = User::factory()->create();
         $supplier = $this->createSupplier('12', $supplierUser->email);
         $purchaseOrder = $this->createPurchaseOrderForSupplier($supplier, 'OC-2026-012', $creator);
 
@@ -426,6 +435,16 @@ class ProcurementWorkflowTest extends TestCase
             $purchaseOrder->uploadedDocuments()->where('kind', 'invoice_xml')->firstOrFail()->content,
         );
         Storage::disk('local')->assertEmpty();
+
+        foreach ([$creator, $administrator, $financialUser] as $recipient) {
+            $this->assertSame(1, $recipient->unreadNotifications()->count());
+            $this->assertSame(
+                'invoice_uploaded',
+                $recipient->unreadNotifications()->firstOrFail()->data['event'],
+            );
+        }
+        $this->assertSame(0, $supplierUser->unreadNotifications()->count());
+        $this->assertSame(0, $unrelatedUser->unreadNotifications()->count());
 
         $this->get(route('home'))
             ->assertOk()
@@ -570,6 +589,7 @@ class ProcurementWorkflowTest extends TestCase
             'kind' => 'invoice_pdf',
         ]);
         $this->assertDatabaseCount('uploaded_documents', 0);
+        $this->assertDatabaseCount('notifications', 0);
         Storage::disk('local')->assertEmpty();
     }
 
@@ -617,8 +637,10 @@ class ProcurementWorkflowTest extends TestCase
         Storage::fake('local');
         $administrator = $this->createUserWithType('administrator', 'admin@example.com');
         $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
+        $financialUser = $this->createUserWithType('financials', 'finanzas@example.com');
+        $creator = User::factory()->create();
         $supplier = $this->createSupplier('14', $supplierUser->email);
-        $purchaseOrder = $this->createPurchaseOrderForSupplier($supplier, 'OC-2026-014', User::factory()->create());
+        $purchaseOrder = $this->createPurchaseOrderForSupplier($supplier, 'OC-2026-014', $creator);
 
         $this->actingAs($administrator)
             ->get(route('home'))
@@ -633,6 +655,18 @@ class ProcurementWorkflowTest extends TestCase
         $purchaseOrder->refresh();
         $this->assertNotNull($purchaseOrder->payment_validated_at);
         $this->assertSame($administrator->id, $purchaseOrder->payment_validated_by);
+        $this->assertSame(1, $supplierUser->unreadNotifications()->count());
+        $this->assertSame(1, $creator->unreadNotifications()->count());
+        $this->assertSame(
+            'payment_validated',
+            $supplierUser->unreadNotifications()->firstOrFail()->data['event'],
+        );
+
+        $this->post(route('admin.purchase-orders.validate-payment', $purchaseOrder))
+            ->assertRedirect(route('home'));
+
+        $this->assertSame(1, $supplierUser->unreadNotifications()->count());
+        $this->assertSame(1, $creator->unreadNotifications()->count());
 
         $this->actingAs($supplierUser)
             ->get(route('home'))
@@ -654,6 +688,12 @@ class ProcurementWorkflowTest extends TestCase
             'kind' => 'payment_complement',
             'mime_type' => 'application/pdf',
         ]);
+        $this->assertSame(2, $creator->unreadNotifications()->count());
+        $this->assertTrue(
+            $creator->unreadNotifications()->get()->pluck('data.event')->contains('payment_complement_uploaded'),
+        );
+        $this->assertSame(1, $administrator->unreadNotifications()->count());
+        $this->assertSame(1, $financialUser->unreadNotifications()->count());
         Storage::disk('local')->assertEmpty();
 
         $this->get(route('home'))

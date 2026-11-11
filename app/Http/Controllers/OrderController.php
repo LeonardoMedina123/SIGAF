@@ -5,9 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\PurchaseOrder;
 use App\Models\Requisition;
 use App\Models\UploadedDocument;
+use App\Models\User;
+use App\Notifications\UserActivityNotification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
@@ -93,6 +98,20 @@ class OrderController extends Controller
                 'purchase_order_xml',
                 $validated['purchase_order_xml'],
             );
+
+            $supplierEmail = $purchaseOrder->supplier()->value('contact_email');
+            $supplierUsers = User::query()
+                ->whereRaw('LOWER(email) = ?', [Str::lower((string) $supplierEmail)])
+                ->whereHas('department', function (Builder $query): void {
+                    $query->where('slug', 'suppliers');
+                })
+                ->get();
+
+            Notification::send($supplierUsers, new UserActivityNotification(
+                'purchase_order_created',
+                'Nueva orden de compra',
+                'Recibiste la orden de compra '.$purchaseOrder->folio.'.',
+            ));
         });
 
         return redirect()->route('home')->with('success', 'La requisición y la orden de compra se guardaron correctamente.');
