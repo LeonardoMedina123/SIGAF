@@ -54,6 +54,10 @@ Route::middleware('auth')->group(function () {
         ValidatePurchaseOrderPaymentController::class,
     )->name('admin.purchase-orders.validate-payment');
     Route::middleware(EnsureAdministrator::class)->get(
+        '/admin/requisitions/documents/archive.zip',
+        [RequisitionDocumentArchiveController::class, 'downloadRange'],
+    )->name('admin.requisitions.documents.range');
+    Route::middleware(EnsureAdministrator::class)->get(
         '/admin/requisitions/{requisition}/documents.zip',
         [RequisitionDocumentArchiveController::class, 'download'],
     )->name('admin.requisitions.documents.download');

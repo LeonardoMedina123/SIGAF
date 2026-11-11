@@ -102,7 +102,11 @@
 		</div>
 		@if ($errors->any())
 			<div role="alert" class="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-				<p class="font-semibold">No se pudo guardar la información. Revisa los datos e inténtalo de nuevo.</p>
+				@if ($errors->hasAny(['from_date', 'to_date', 'group_by']))
+					<p class="font-semibold">No se pudo generar el archivo. Revisa el rango de fechas y la organización seleccionada.</p>
+				@else
+					<p class="font-semibold">No se pudo guardar la información. Revisa los datos e inténtalo de nuevo.</p>
+				@endif
 				<ul class="mt-1 list-inside list-disc">
 					@foreach ($errors->all() as $error)
 						<li>{{ $error }}</li>
@@ -151,7 +155,9 @@
 							<button type="button" data-filter-trigger="complemento" data-filter-title="Complemento proveedor" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Complemento proveedor</button>
 						</th>
 						@if ($canValidatePayments)
-							<th scope="col" class="rounded-tr-[19px] px-2 py-2 text-[11px] font-semibold leading-tight md:px-3 md:py-3 md:text-xs">Descarga de archivos</th>
+							<th scope="col" class="rounded-tr-[19px] p-0 text-sm font-semibold">
+								<button type="button" data-archive-dialog-open aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Descarga de archivos</button>
+							</th>
 						@endif
 					</tr>
 				</thead>
@@ -265,6 +271,44 @@
 		</section>
 
 	</main>
+
+	@if ($canValidatePayments)
+		<dialog id="document-archive-dialog" data-open-on-load="{{ $errors->hasAny(['from_date', 'to_date', 'group_by']) ? 'true' : 'false' }}" aria-labelledby="document-archive-title" class="m-auto w-[calc(100%-2rem)] max-w-[540px] rounded-2xl border-0 bg-white p-0 text-[#173f50] shadow-[0_16px_48px_rgba(0,0,0,0.24)] backdrop:bg-black/40">
+			<form action="{{ route('admin.requisitions.documents.range') }}" method="GET" class="grid gap-5 p-5 md:p-7">
+				<header class="flex items-start justify-between gap-4">
+					<div>
+						<h2 id="document-archive-title" class="text-xl font-semibold text-[#07577f]">Descargar archivos por fecha</h2>
+						<p class="mt-1 text-sm text-[#526c78]">Se incluirán los documentos de las órdenes de compra dentro del rango seleccionado.</p>
+					</div>
+					<button type="button" data-archive-dialog-close aria-label="Cerrar descarga" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#edf1f3] text-[#46545b] transition hover:bg-[#dce5e9]">
+						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+							<path d="m6 6 12 12M18 6 6 18" />
+						</svg>
+					</button>
+				</header>
+				<div class="grid gap-3 sm:grid-cols-2">
+					<label class="grid gap-1 text-sm font-medium">Desde
+						<input name="from_date" type="date" value="{{ old('from_date') }}" required class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b] focus:border-[#087aa7] focus:outline-none focus:ring-2 focus:ring-[#087aa7]/20" />
+					</label>
+					<label class="grid gap-1 text-sm font-medium">Hasta
+						<input name="to_date" type="date" value="{{ old('to_date') }}" required class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b] focus:border-[#087aa7] focus:outline-none focus:ring-2 focus:ring-[#087aa7]/20" />
+					</label>
+				</div>
+				<label class="grid gap-1 text-sm font-medium">Organizar por
+					<select name="group_by" required class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b] focus:border-[#087aa7] focus:outline-none focus:ring-2 focus:ring-[#087aa7]/20">
+						<option value="day" @selected(old('group_by', 'day') === 'day')>Día — fecha</option>
+						<option value="week" @selected(old('group_by') === 'week')>Semana — semana y día</option>
+						<option value="month" @selected(old('group_by') === 'month')>Mes — mes, semana y día</option>
+						<option value="year" @selected(old('group_by') === 'year')>Año — año, mes, semana y día</option>
+					</select>
+				</label>
+				<div class="flex flex-wrap justify-end gap-2">
+					<button type="button" data-archive-dialog-close class="rounded-full border border-[#82939a] px-4 py-2 text-sm font-semibold text-[#34464e] transition hover:bg-[#f3f6f7]">Cancelar</button>
+					<button type="submit" class="rounded-full bg-[#07577f] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#064967] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">Descargar ZIP</button>
+				</div>
+			</form>
+		</dialog>
+	@endif
 
 	<div id="filter-menu" role="dialog" aria-modal="false" aria-labelledby="filter-menu-title" class="fixed z-50 hidden w-[290px] max-w-[calc(100vw-24px)] overflow-y-auto rounded-[18px] bg-white p-3 text-[#171717] shadow-[0_5px_18px_rgba(0,0,0,0.24)]">
 		<div class="mb-2 flex h-5 items-center justify-between rounded-full bg-[#e7f5fc] px-2">

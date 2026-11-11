@@ -10,6 +10,42 @@ import { initializeHomeFilters } from './home-filters.js';
 
 initializeHomeFilters();
 
+const archiveDialog = document.querySelector('#document-archive-dialog');
+const archiveDialogOpenButton = document.querySelector('[data-archive-dialog-open]');
+
+if (archiveDialog instanceof HTMLDialogElement && archiveDialogOpenButton instanceof HTMLButtonElement) {
+	const updateArchiveDialogTriggerState = () => {
+		archiveDialogOpenButton.setAttribute('aria-expanded', String(archiveDialog.open));
+	};
+
+	if (archiveDialog.dataset.openOnLoad === 'true') {
+		archiveDialog.showModal();
+		updateArchiveDialogTriggerState();
+	}
+
+	archiveDialogOpenButton.addEventListener('click', () => {
+		archiveDialog.showModal();
+		updateArchiveDialogTriggerState();
+		archiveDialog.querySelector('input[name="from_date"]')?.focus();
+	});
+
+	archiveDialog.addEventListener('close', updateArchiveDialogTriggerState);
+
+	archiveDialog.querySelectorAll('[data-archive-dialog-close]').forEach((button) => {
+		button.addEventListener('click', () => archiveDialog.close());
+	});
+
+	const fromDateInput = archiveDialog.querySelector('input[name="from_date"]');
+	const toDateInput = archiveDialog.querySelector('input[name="to_date"]');
+
+	if (fromDateInput instanceof HTMLInputElement && toDateInput instanceof HTMLInputElement) {
+		toDateInput.min = fromDateInput.value;
+		fromDateInput.addEventListener('change', () => {
+			toDateInput.min = fromDateInput.value;
+		});
+	}
+}
+
 document.querySelectorAll('[data-notification-read-form]').forEach((form) => {
 	form.addEventListener('submit', async (event) => {
 		event.preventDefault();

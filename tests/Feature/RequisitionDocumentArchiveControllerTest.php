@@ -101,7 +101,118 @@ class RequisitionDocumentArchiveControllerTest extends TestCase
             ->get(route('home'))
             ->assertOk()
             ->assertSee('Descarga de archivos')
+            ->assertSee('data-archive-dialog-open', false)
             ->assertSee(route('admin.requisitions.documents.download', $requisition), false);
+    }
+
+    public function test_administrators_can_download_all_documents_in_the_order_date_range_with_each_hierarchy(): void
+    {
+        $this->seed(DepartmentSeeder::class);
+        $administrator = $this->createUserWithType('administrator');
+        $supplier = $this->createSupplier();
+        $includedRequisition = $this->createRequisition('REQ-2026-010');
+        $includedOrder = $this->createPurchaseOrder(
+            $includedRequisition,
+            $supplier,
+            'OC-2026-010',
+            '2026-10-19',
+        );
+        $excludedRequisition = $this->createRequisition('REQ-2026-011');
+        $excludedOrder = $this->createPurchaseOrder(
+            $excludedRequisition,
+            $supplier,
+            'OC-2026-011',
+            '2026-10-20',
+        );
+
+        UploadedDocument::replaceContentFor(
+            $includedRequisition,
+            'requisition_pdf',
+            'solicitud.pdf',
+            'application/pdf',
+            'requisition contents',
+        );
+        UploadedDocument::replaceContentFor(
+            $includedOrder,
+            'invoice_pdf',
+            'factura.pdf',
+            'application/pdf',
+            'invoice contents',
+        );
+        UploadedDocument::replaceContentFor(
+            $excludedOrder,
+            'invoice_pdf',
+            'fuera-de-rango.pdf',
+            'application/pdf',
+            'excluded contents',
+        );
+
+        $folders = [
+            'day' => '2026-10-19/REQ-2026-010',
+            'week' => 'semana-2026-43/2026-10-19/REQ-2026-010',
+            'month' => '2026-10/semana-2026-43/2026-10-19/REQ-2026-010',
+            'year' => '2026/10/semana-2026-43/2026-10-19/REQ-2026-010',
+        ];
+
+        foreach ($folders as $groupBy => $folder) {
+            $response = $this->actingAs($administrator)
+                ->get(route('admin.requisitions.documents.range', [
+                    'from_date' => '2026-10-19',
+                    'to_date' => '2026-10-19',
+                    'group_by' => $groupBy,
+                ]))
+                ->assertOk()
+                ->assertDownload('archivos-2026-10-19-a-2026-10-19.zip');
+
+            $this->assertSame([
+                $folder.'/requisicion/requisition-pdf-solicitud.pdf' => 'requisition contents',
+                $folder.'/orden-compra/invoice-pdf-factura.pdf' => 'invoice contents',
+            ], $this->extractArchiveEntries($response->streamedContent()));
+        }
+    }
+
+    public function test_range_download_rejects_an_end_date_before_the_start_date(): void
+    {
+        $this->seed(DepartmentSeeder::class);
+        $administrator = $this->createUserWithType('administrator');
+
+        $this->actingAs($administrator)
+            ->get(route('admin.requisitions.documents.range', [
+                'from_date' => '2026-10-20',
+                'to_date' => '2026-10-19',
+                'group_by' => 'day',
+            ]))
+            ->assertSessionHasErrors('to_date');
+    }
+
+    public function test_non_administrators_cannot_download_a_date_range_archive(): void
+    {
+        $this->seed(DepartmentSeeder::class);
+        $user = $this->createUserWithType('departments');
+
+        $this->actingAs($user)
+            ->get(route('admin.requisitions.documents.range', [
+                'from_date' => '2026-10-19',
+                'to_date' => '2026-10-19',
+                'group_by' => 'day',
+            ]))
+            ->assertForbidden();
+    }
+
+    public function test_range_download_returns_not_found_when_no_documents_match_the_dates(): void
+    {
+        $this->seed(DepartmentSeeder::class);
+        $administrator = $this->createUserWithType('administrator');
+        $requisition = $this->createRequisition('REQ-2026-012');
+        $this->createPurchaseOrder($requisition, $this->createSupplier());
+
+        $this->actingAs($administrator)
+            ->get(route('admin.requisitions.documents.range', [
+                'from_date' => '2026-10-19',
+                'to_date' => '2026-10-19',
+                'group_by' => 'day',
+            ]))
+            ->assertNotFound();
     }
 
     public function test_non_administrators_receive_forbidden_when_downloading_a_requisition_archive(): void
@@ -197,11 +308,15 @@ class RequisitionDocumentArchiveControllerTest extends TestCase
         ]);
     }
 
-    private function createPurchaseOrder(Requisition $requisition, Supplier $supplier): PurchaseOrder
-    {
+    private function createPurchaseOrder(
+        Requisition $requisition,
+        Supplier $supplier,
+        string $folio = 'OC-2026-001',
+        string $orderDate = '2026-10-19',
+    ): PurchaseOrder {
         return PurchaseOrder::create([
-            'folio' => 'OC-2026-001',
-            'order_date' => '2026-10-19',
+            'folio' => $folio,
+            'order_date' => $orderDate,
             'requisition_id' => $requisition->id,
             'supplier_id' => $supplier->id,
             'amount' => 1000,
