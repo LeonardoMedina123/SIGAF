@@ -57,4 +57,22 @@ class NotificationCenterTest extends TestCase
 
         $this->assertNull($notification->fresh()->read_at);
     }
+
+    public function test_async_mark_as_read_returns_the_updated_unread_count(): void
+    {
+        $user = User::factory()->create();
+        $user->notify(new UserActivityNotification(
+            'invoice_uploaded',
+            'Factura recibida',
+            'La factura de la orden OC-2026-102 fue recibida.',
+        ));
+        $notification = $user->notifications()->firstOrFail();
+
+        $this->actingAs($user)
+            ->postJson(route('notifications.read', $notification->id))
+            ->assertOk()
+            ->assertExactJson(['unread_count' => 0]);
+
+        $this->assertNotNull($notification->fresh()->read_at);
+    }
 }

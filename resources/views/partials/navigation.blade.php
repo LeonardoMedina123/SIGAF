@@ -34,7 +34,7 @@
 				</svg>
 				{{ auth()->user()->isSupplier() ? 'Centro de notificaciones' : 'Notificaciones' }}
 				@if ($unreadNotificationCount > 0)
-					<span class="ml-1 rounded-full bg-[#c94747] px-2 py-0.5 text-xs text-white">{{ $unreadNotificationCount }}</span>
+					<span data-unread-notification-count aria-live="polite" class="ml-1 rounded-full bg-[#c94747] px-2 py-0.5 text-xs text-white">{{ $unreadNotificationCount }}</span>
 				@endif
 				<span aria-hidden="true">▾</span>
 			</summary>
@@ -49,12 +49,12 @@
 								'rounded-lg border p-3',
 								'border-[#a8d7eb] bg-[#f4fbfe]' => $notification->read_at === null,
 								'border-[#e2e8ed] bg-[#f9fbfc]' => $notification->read_at !== null,
-							])>
+							]) data-notification-item data-notification-id="{{ $notification->id }}" data-notification-unread-classes="border-[#a8d7eb] bg-[#f4fbfe]" data-notification-read-classes="border-[#e2e8ed] bg-[#f9fbfc]">
 								<p class="font-semibold text-[#123f57]">{{ $notification->data['title'] ?? 'Notificación' }}</p>
 								<p class="mt-1 text-xs leading-5">{{ $notification->data['message'] ?? '' }}</p>
 								<p class="mt-1 text-xs text-[#647887]">{{ $notification->created_at?->format('d/m/Y H:i') }}</p>
 								@if ($notification->read_at === null)
-									<form action="{{ route('notifications.read', $notification->id) }}" method="POST" class="mt-2">
+									<form action="{{ route('notifications.read', $notification->id) }}" method="POST" class="mt-2" data-notification-read-form data-notification-id="{{ $notification->id }}" data-read-label-class="text-xs font-medium text-[#526777]">
 										@csrf
 										<button type="submit" class="text-xs font-semibold text-[#07529a] underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#07577f]">
 											Marcar como leída

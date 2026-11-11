@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -15,9 +16,19 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function markAsRead(Request $request, string $notification): RedirectResponse
+    public function markAsRead(Request $request, string $notification): JsonResponse|RedirectResponse
     {
-        $request->user()->notifications()->findOrFail($notification)->markAsRead();
+        $databaseNotification = $request->user()->notifications()->findOrFail($notification);
+
+        if ($databaseNotification->read_at === null) {
+            $databaseNotification->markAsRead();
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'unread_count' => $request->user()->unreadNotifications()->count(),
+            ]);
+        }
 
         return back()->with('success', 'La notificación se marcó como leída.');
     }

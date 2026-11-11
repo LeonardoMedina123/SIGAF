@@ -10,6 +10,106 @@ import { initializeHomeFilters } from './home-filters.js';
 
 initializeHomeFilters();
 
+document.querySelectorAll('[data-notification-read-form]').forEach((form) => {
+	form.addEventListener('submit', async (event) => {
+		event.preventDefault();
+
+		if (!(form instanceof HTMLFormElement) || form.dataset.submitting === 'true') {
+			return;
+		}
+
+		form.dataset.submitting = 'true';
+		form.parentElement?.querySelector('[data-notification-error]')?.remove();
+
+		const notificationId = form.dataset.notificationId;
+		const items = [...document.querySelectorAll('[data-notification-item]')]
+			.filter((item) => item.dataset.notificationId === notificationId);
+		const snapshots = items.map((item) => {
+			const readForm = item.querySelector('[data-notification-read-form]');
+			const readLabel = document.createElement('span');
+			const className = item.className;
+
+			readLabel.className = readForm?.dataset.readLabelClass ?? '';
+			readLabel.textContent = 'Leída';
+			readLabel.setAttribute('role', 'status');
+			readLabel.tabIndex = -1;
+
+			if (readForm) {
+				readForm.replaceWith(readLabel);
+			}
+
+			const unreadClasses = item.dataset.notificationUnreadClasses?.split(' ').filter(Boolean) ?? [];
+			const readClasses = item.dataset.notificationReadClasses?.split(' ').filter(Boolean) ?? [];
+
+			if (unreadClasses.length > 0) {
+				item.classList.remove(...unreadClasses);
+			}
+			if (readClasses.length > 0) {
+				item.classList.add(...readClasses);
+			}
+
+			return {
+				item,
+				readForm,
+				readLabel,
+				className,
+			};
+		});
+		const unreadBadge = document.querySelector('[data-unread-notification-count]');
+		const previousUnreadCount = unreadBadge ? Number(unreadBadge.textContent) : null;
+
+		if (unreadBadge && previousUnreadCount !== null) {
+			unreadBadge.textContent = String(Math.max(0, previousUnreadCount - 1));
+			unreadBadge.classList.toggle('hidden', previousUnreadCount <= 1);
+		}
+		snapshots.find((snapshot) => snapshot.readForm === form)?.readLabel.focus();
+
+		try {
+			const response = await fetch(form.action, {
+				method: form.method,
+				body: new FormData(form),
+				headers: {
+					Accept: 'application/json',
+					'X-Requested-With': 'XMLHttpRequest',
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error('No fue posible guardar el estado de la notificación.');
+			}
+
+			const result = await response.json();
+			if (unreadBadge && Number.isInteger(result.unread_count)) {
+				unreadBadge.textContent = String(result.unread_count);
+				unreadBadge.classList.toggle('hidden', result.unread_count === 0);
+			}
+		} catch {
+			for (const snapshot of snapshots) {
+				if (snapshot.readForm && snapshot.readLabel.isConnected) {
+					snapshot.readLabel.replaceWith(snapshot.readForm);
+				}
+
+				snapshot.item.className = snapshot.className;
+			}
+
+			if (unreadBadge && previousUnreadCount !== null) {
+				unreadBadge.textContent = String(previousUnreadCount);
+				unreadBadge.classList.remove('hidden');
+			}
+
+			const errorMessage = document.createElement('p');
+			errorMessage.dataset.notificationError = '';
+			errorMessage.setAttribute('role', 'alert');
+			errorMessage.className = 'mt-2 text-xs text-[#8b3030]';
+			errorMessage.textContent = 'No se pudo marcar como leída. Inténtalo de nuevo.';
+			form.insertAdjacentElement('afterend', errorMessage);
+			form.querySelector('button')?.focus();
+		} finally {
+			delete form.dataset.submitting;
+		}
+	});
+});
+
 const orderForm = document.querySelector('#order-wizard-form');
 const requisitionStep = orderForm?.querySelector('[data-order-step]');
 const requisitionPdf = orderForm?.elements.namedItem('requisition_pdf');

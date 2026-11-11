@@ -28,7 +28,7 @@
 					'rounded-2xl border p-5 shadow-sm',
 					'border-[#a8d7eb] bg-white' => $notification->read_at === null,
 					'border-[#d7e1e8] bg-[#f9fbfc]' => $notification->read_at !== null,
-				])>
+				]) data-notification-item data-notification-id="{{ $notification->id }}" data-notification-unread-classes="border-[#a8d7eb] bg-white" data-notification-read-classes="border-[#d7e1e8] bg-[#f9fbfc]">
 					<div class="flex flex-wrap items-start justify-between gap-3">
 						<div class="flex min-w-0 flex-col gap-1">
 							<h2 class="font-semibold text-[#123f57]">{{ $notification->data['title'] ?? 'Notificación' }}</h2>
@@ -37,7 +37,7 @@
 						</div>
 
 						@if ($notification->read_at === null)
-							<form action="{{ route('notifications.read', $notification->id) }}" method="POST">
+							<form action="{{ route('notifications.read', $notification->id) }}" method="POST" data-notification-read-form data-notification-id="{{ $notification->id }}" data-read-label-class="rounded-full bg-[#e8eef2] px-3 py-1 text-xs font-medium text-[#526777]">
 								@csrf
 								<button type="submit" class="rounded-lg border border-[#07577f] px-3 py-2 text-xs font-semibold text-[#07577f] transition hover:bg-[#edf7fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
 									Marcar como leída
