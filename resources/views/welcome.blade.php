@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('favicom.png') }}">
     <title>SIGAF</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -20,20 +21,7 @@
                 <img src="{{ asset('logo_ITA.png') }}" alt="Instituto Tecnológico de Aguascalientes" class="h-60 w-60 object-contain md:h-33 md:w-66" />
             </div>
 
-            <div class="flex items-center justify-end gap-2 text-white drop-shadow-md">
-                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#7a1f5b]/80 px-1 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.5)] md:h-14 md:w-14">
-                    <div class="flex h-full w-full items-end justify-center gap-[3px]">
-                        <span class="block h-1/4 w-[5px] rounded-t bg-white/90"></span>
-                        <span class="block h-2/5 w-[5px] rounded-t bg-white/90"></span>
-                        <span class="block h-3/5 w-[5px] rounded-t bg-white/90"></span>
-                        <span class="block h-full w-[5px] rounded-t bg-white/90"></span>
-                    </div>
-                </div>
-                <div class="flex flex-col leading-[0.9] text-center md:text-left">
-                    <span class="text-[0.9rem] font-black tracking-[0.08em] text-white md:text-[1.5rem]">SIGAF</span>
-                    <span class="text-[0.38rem] font-black uppercase tracking-[0.08em] text-white md:text-[0.52rem]">Sistema de gestión de<br />Archivos Financieros</span>
-                </div>
-            </div>
+            <img src="{{ asset('logo_SIGAF.png') }}" alt="SIGAF, Sistema de Gestión de Archivos Financieros" class="h-auto w-32 object-contain drop-shadow-md md:w-56" />
         </header>
 
         <main class="relative z-10 flex min-h-[calc(100vh-120px)] items-center justify-between gap-6 px-4 pb-8 md:px-8">
