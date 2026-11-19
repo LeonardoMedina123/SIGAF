@@ -40,4 +40,8 @@ return [
         'password' => env('SYSTEMS_DEPARTMENT_USER_PASSWORD'),
     ],
 
+    'support' => [
+        'phone' => env('SUPPORT_PHONE', '+52 449 424 7211'),
+    ],
+
 ];

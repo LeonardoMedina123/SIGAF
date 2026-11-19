@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
@@ -21,6 +22,10 @@ Route::post('/login', [LoginController::class, 'store'])->name('authenticate');
 
 Route::middleware('auth')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/help', [HelpController::class, 'index'])->name('help.index');
+    Route::post('/help/messages', [HelpController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('help.messages.store');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
         ->name('notifications.read');

@@ -83,11 +83,14 @@
 				<p class="font-semibold text-[#123f57]">Ayuda</p>
 				<p class="mt-1">
 					@if (auth()->user()->isSupplier())
-						Consulta tus órdenes de compra y revisa las indicaciones de carga de documentos. Para asistencia, contacta al administrador del sistema.
+						Consulta tus órdenes de compra y revisa las indicaciones de carga de documentos.
 					@else
-						Usa la barra para ir al inicio o consultar el catálogo de proveedores. Para asistencia, contacta al administrador del sistema.
+						Usa la barra para ir al inicio o consultar el catálogo de proveedores.
 					@endif
 				</p>
+				@if (! auth()->user()->isAdministrator())
+					<a href="{{ route('help.index') }}" class="mt-3 inline-flex font-semibold text-[#07529a] underline underline-offset-2">Contactar al administrador</a>
+				@endif
 			</div>
 		</details>
 
