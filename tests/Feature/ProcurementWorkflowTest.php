@@ -419,6 +419,9 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSee('OC-2026-010')
             ->assertDontSee('OC-2026-011')
             ->assertSee('Adjunta factura y XML')
+            ->assertSee('data-order-amount="1000.00"', false)
+            ->assertSee('data-supplier-rfc="ABC010203A10"', false)
+            ->assertSee('Verifica visualmente que la factura PDF')
             ->assertSee('Pendiente de validación del pago')
             ->assertDontSee('Vista de ejemplo')
             ->assertDontSee('2515486');
@@ -428,7 +431,6 @@ class ProcurementWorkflowTest extends TestCase
     {
         Storage::fake('local');
         $invoicePdf = UploadedFile::fake()->create('factura.pdf', 10, 'application/pdf');
-        $invoiceXml = UploadedFile::fake()->create('factura.xml', 1, 'text/xml');
         $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
         $creator = User::factory()->create();
         $administrator = $this->createUserWithType('administrator', 'admin@example.com');
@@ -436,6 +438,7 @@ class ProcurementWorkflowTest extends TestCase
         $unrelatedUser = User::factory()->create();
         $supplier = $this->createSupplier('12', $supplierUser->email);
         $purchaseOrder = $this->createPurchaseOrderForSupplier($supplier, 'OC-2026-012', $creator);
+        $invoiceXml = $this->createInvoiceXml($purchaseOrder);
 
         $this->actingAs($supplierUser)
             ->from(route('home'))
@@ -475,12 +478,102 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSee('Factura y XML recibidos');
     }
 
+    public function test_supplier_invoice_upload_rejects_an_xml_with_a_different_supplier_rfc(): void
+    {
+        Storage::fake('local');
+        $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
+        $supplier = $this->createSupplier('21', $supplierUser->email);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-021',
+            User::factory()->create(),
+        );
+
+        $this->actingAs($supplierUser)
+            ->from(route('home'))
+            ->post(route('supplier.purchase-orders.invoices.store', $purchaseOrder), [
+                'invoice_pdf' => UploadedFile::fake()->create('factura.pdf', 10, 'application/pdf'),
+                'invoice_xml' => $this->createInvoiceXml($purchaseOrder, rfc: 'XYZ010203AA1'),
+                'review_confirmed' => '1',
+            ])
+            ->assertRedirect(route('home'))
+            ->assertSessionHasErrors('invoice_xml');
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('El RFC emisor del XML no coincide con el RFC registrado del proveedor.');
+
+        $this->assertDatabaseCount('uploaded_documents', 0);
+        $this->assertDatabaseCount('notifications', 0);
+        Storage::disk('local')->assertEmpty();
+    }
+
+    public function test_supplier_invoice_upload_rejects_an_xml_with_a_different_total(): void
+    {
+        Storage::fake('local');
+        $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
+        $supplier = $this->createSupplier('22', $supplierUser->email);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-022',
+            User::factory()->create(),
+        );
+
+        $this->actingAs($supplierUser)
+            ->from(route('home'))
+            ->post(route('supplier.purchase-orders.invoices.store', $purchaseOrder), [
+                'invoice_pdf' => UploadedFile::fake()->create('factura.pdf', 10, 'application/pdf'),
+                'invoice_xml' => $this->createInvoiceXml($purchaseOrder, amount: '1000.01'),
+                'review_confirmed' => '1',
+            ])
+            ->assertRedirect(route('home'))
+            ->assertSessionHasErrors('invoice_xml');
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('El importe total del XML no coincide con el importe de la orden de compra.');
+
+        $this->assertDatabaseCount('uploaded_documents', 0);
+        $this->assertDatabaseCount('notifications', 0);
+        Storage::disk('local')->assertEmpty();
+    }
+
+    public function test_supplier_invoice_upload_rejects_malformed_cfdi_xml(): void
+    {
+        Storage::fake('local');
+        $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
+        $supplier = $this->createSupplier('23', $supplierUser->email);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-023',
+            User::factory()->create(),
+        );
+
+        $this->actingAs($supplierUser)
+            ->from(route('home'))
+            ->post(route('supplier.purchase-orders.invoices.store', $purchaseOrder), [
+                'invoice_pdf' => UploadedFile::fake()->create('factura.pdf', 10, 'application/pdf'),
+                'invoice_xml' => UploadedFile::fake()->createWithContent('factura.xml', '<not-cfdi/>')
+                    ->mimeType('text/xml'),
+                'review_confirmed' => '1',
+            ])
+            ->assertRedirect(route('home'))
+            ->assertSessionHasErrors('invoice_xml');
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('El archivo no contiene un XML CFDI válido.');
+
+        $this->assertDatabaseCount('uploaded_documents', 0);
+        $this->assertDatabaseCount('notifications', 0);
+        Storage::disk('local')->assertEmpty();
+    }
+
     public function test_internal_users_can_view_and_download_supplier_documents(): void
     {
         Storage::fake('local');
         $purchaseOrderPdf = UploadedFile::fake()->create('orden-compra.pdf', 10, 'application/pdf');
         $invoicePdf = UploadedFile::fake()->create('factura.pdf', 10, 'application/pdf');
-        $invoiceXml = UploadedFile::fake()->create('factura.xml', 1, 'text/xml');
         $paymentComplement = UploadedFile::fake()->create('complemento.pdf', 10, 'application/pdf');
         $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
         $administrator = $this->createUserWithType('administrator', 'admin@example.com');
@@ -496,7 +589,7 @@ class ProcurementWorkflowTest extends TestCase
         $this->actingAs($supplierUser)
             ->post(route('supplier.purchase-orders.invoices.store', $purchaseOrder), [
                 'invoice_pdf' => $invoicePdf,
-                'invoice_xml' => $invoiceXml,
+                'invoice_xml' => $this->createInvoiceXml($purchaseOrder),
                 'review_confirmed' => '1',
             ])
             ->assertRedirect(route('home'))
@@ -860,5 +953,21 @@ class ProcurementWorkflowTest extends TestCase
             'pdf_path' => 'purchase-orders/'.$folio.'.pdf',
             'xml_path' => 'purchase-orders/'.$folio.'.xml',
         ]);
+    }
+
+    private function createInvoiceXml(
+        PurchaseOrder $purchaseOrder,
+        ?string $amount = null,
+        ?string $rfc = null,
+    ): UploadedFile {
+        $content = sprintf(
+            '<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Total="%s">'
+            .'<cfdi:Emisor Rfc="%s"/>'
+            .'</cfdi:Comprobante>',
+            $amount ?? $purchaseOrder->amount,
+            $rfc ?? $purchaseOrder->supplier->rfc,
+        );
+
+        return UploadedFile::fake()->createWithContent('factura.xml', $content)->mimeType('text/xml');
     }
 }

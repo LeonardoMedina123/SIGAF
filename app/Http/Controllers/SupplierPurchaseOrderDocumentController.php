@@ -7,12 +7,17 @@ use App\Models\Supplier;
 use App\Models\UploadedDocument;
 use App\Models\User;
 use App\Notifications\UserActivityNotification;
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -27,6 +32,8 @@ class SupplierPurchaseOrderDocumentController extends Controller
             'invoice_xml' => ['required', 'file', 'mimes:xml', 'max:10240'],
             'review_confirmed' => ['accepted'],
         ]);
+
+        $this->validateInvoiceXmlMatchesPurchaseOrder($validated['invoice_xml'], $purchaseOrder);
 
         DB::transaction(function () use ($validated, $purchaseOrder): void {
             UploadedDocument::replaceFor($purchaseOrder, 'invoice_pdf', $validated['invoice_pdf']);
@@ -55,6 +62,81 @@ class SupplierPurchaseOrderDocumentController extends Controller
         });
 
         return redirect()->route('home')->with('success', 'La factura y el XML se enviaron correctamente.');
+    }
+
+    private function validateInvoiceXmlMatchesPurchaseOrder(
+        UploadedFile $invoiceXml,
+        PurchaseOrder $purchaseOrder,
+    ): void {
+        $document = new DOMDocument;
+        $previousLibxmlErrorSetting = libxml_use_internal_errors(true);
+
+        try {
+            $isValidXml = $document->loadXML(
+                $invoiceXml->getContent(),
+                LIBXML_NONET | LIBXML_NOBLANKS,
+            );
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previousLibxmlErrorSetting);
+        }
+
+        $root = $document->documentElement;
+
+        if (
+            ! $isValidXml
+            || $root === null
+            || $root->localName !== 'Comprobante'
+            || ! in_array($root->namespaceURI, [
+                'http://www.sat.gob.mx/cfd/3',
+                'http://www.sat.gob.mx/cfd/4',
+            ], true)
+        ) {
+            throw ValidationException::withMessages([
+                'invoice_xml' => 'El archivo no contiene un XML CFDI válido.',
+            ]);
+        }
+
+        $xpath = new DOMXPath($document);
+        $xpath->registerNamespace('cfdi', $root->namespaceURI);
+        $issuer = $xpath->query('/cfdi:Comprobante/cfdi:Emisor')->item(0);
+
+        if (! $issuer instanceof DOMElement) {
+            throw ValidationException::withMessages([
+                'invoice_xml' => 'El XML CFDI no incluye los datos del emisor.',
+            ]);
+        }
+
+        $errors = [];
+        $expectedRfc = mb_strtoupper(trim((string) $purchaseOrder->supplier->rfc));
+        $invoiceRfc = mb_strtoupper(trim($issuer->getAttribute('Rfc')));
+
+        if ($invoiceRfc === '' || ! hash_equals($expectedRfc, $invoiceRfc)) {
+            $errors[] = 'El RFC emisor del XML no coincide con el RFC registrado del proveedor.';
+        }
+
+        $expectedAmount = $this->amountInCents((string) $purchaseOrder->amount);
+        $invoiceAmount = $this->amountInCents($root->getAttribute('Total'));
+
+        if ($invoiceAmount === null || $expectedAmount === null || $invoiceAmount !== $expectedAmount) {
+            $errors[] = 'El importe total del XML no coincide con el importe de la orden de compra.';
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages([
+                'invoice_xml' => $errors,
+            ]);
+        }
+    }
+
+    private function amountInCents(string $amount): ?string
+    {
+        if (! preg_match('/\A(\d{1,12})(?:\.(\d{1,2}))?\z/', trim($amount), $matches)) {
+            return null;
+        }
+
+        return str_pad($matches[1], 12, '0', STR_PAD_LEFT)
+            .str_pad($matches[2] ?? '', 2, '0');
     }
 
     public function storePaymentComplement(Request $request, PurchaseOrder $purchaseOrder): RedirectResponse
