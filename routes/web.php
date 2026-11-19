@@ -30,7 +30,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
         ->name('notifications.read');
     Route::get('/suppliers', [HomeController::class, 'suppliers'])->name('suppliers.index');
+    Route::get('/orders/{requisition}/edit', [OrderController::class, 'edit'])->name('orders.edit');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::put('/orders/{requisition}', [OrderController::class, 'update'])->name('orders.update');
     Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
     Route::post('/systems/reimbursements/{orderNumber}/document', [
         SystemReimbursementDocumentController::class,

@@ -115,6 +115,7 @@
 				</ul>
 			</div>
 		@endif
+		<p id="order-edit-error" role="alert" class="hidden mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"></p>
 		<section aria-label="Requisiciones" class="overflow-x-auto rounded-[20px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
 			<table class="w-full {{ $canValidatePayments ? 'min-w-[1000px]' : '' }} table-fixed border-separate border-spacing-0 text-center">
 				<colgroup>
@@ -186,7 +187,13 @@
 							data-filter-complement-status="{{ $requisition->purchaseOrder?->hasDocument('payment_complement') ? 'Recibido' : ($requisition->purchaseOrder?->payment_validated_at !== null ? 'Pendiente' : 'Sin validar') }}"
 							class="text-center text-xs text-[#263b46] odd:bg-white even:bg-[#f5f9fb]"
 						>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->folio }}</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+								@if ($requisition->purchaseOrder !== null)
+									<button type="button" data-edit-order data-edit-url="{{ route('orders.edit', $requisition) }}" data-update-url="{{ route('orders.update', $requisition) }}" aria-label="Editar requisición {{ $requisition->folio }}" class="font-semibold text-[#07577f] underline decoration-1 underline-offset-2 hover:text-[#064967] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">{{ $requisition->folio }}</button>
+								@else
+									{{ $requisition->folio }}
+								@endif
+							</td>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
 								@if ($requisition->purchaseOrder !== null)
 									<div class="flex flex-col items-center gap-1">
@@ -392,6 +399,7 @@
 
 			<form id="order-wizard-form" action="{{ route('orders.store') }}" method="POST" enctype="multipart/form-data" class="px-4 pb-5 pt-4 md:px-8 md:pb-7" novalidate>
 				@csrf
+				<input type="hidden" name="_method" value="PUT" disabled />
 				<fieldset data-order-step class="grid gap-5 rounded-[14px] bg-[#b7dcef] p-4 text-[#07577f] md:grid-cols-[1.15fr_0.85fr] md:gap-8 md:p-6">
 					<legend class="sr-only">Paso 1: Requisición</legend>
 					<div class="space-y-3">
@@ -412,9 +420,10 @@
 						</div>
 					</div>
 					<div class="grid content-start gap-2 self-start text-[#173f50]">
-						<label for="requisition-pdf" class="text-sm font-semibold">PDF de requisición <span class="text-[#8a2f2f]">*</span></label>
+						<label for="requisition-pdf" class="text-sm font-semibold">PDF de requisición <span data-required-document="requisition_pdf" class="text-[#8a2f2f]">*</span></label>
 						<input id="requisition-pdf" name="requisition_pdf" type="file" required accept="application/pdf,.pdf" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm file:text-[#171717] hover:file:bg-[#9ba4a8]" />
 						<p class="text-xs text-[#315a6b]">Este archivo se adjunta por separado y no forma parte del pegado de datos. Máximo 10 MB.</p>
+						<p data-existing-document="requisition_pdf" class="hidden text-xs text-[#315a6b]"></p>
 						<div id="requisition-pdf-preview-box" class="hidden overflow-hidden rounded border border-[#68777d] bg-[#e7eef1]">
 							<p id="requisition-pdf-preview-name" class="truncate bg-[#56646b] px-3 py-1.5 text-xs font-semibold text-white"></p>
 							<iframe id="requisition-pdf-preview" class="h-[340px] w-full bg-white" title="Vista previa del PDF de requisición"></iframe>
@@ -475,6 +484,7 @@
 					<div class="grid gap-3 rounded-xl bg-white p-4 sm:grid-cols-2">
 						<h3 class="text-lg font-semibold sm:col-span-2">Documentos de la orden de compra</h3>
 						<label class="grid gap-1 text-sm">PDF de orden de compra <input name="purchase_order_pdf" type="file" required accept="application/pdf,.pdf" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm file:text-[#171717]" /></label>
+						<p data-existing-document="purchase_order_pdf" class="hidden text-xs text-[#315a6b]"></p>
 					</div>
 					<div id="order-summary" class="grid gap-x-6 gap-y-3 rounded-xl bg-white p-4 text-sm sm:grid-cols-2"></div>
 					<label class="flex items-start gap-3 rounded-xl border border-[#8ebdd1] p-4 text-sm text-[#173f50]"><input name="review_confirmed" type="checkbox" required class="mt-0.5 h-4 w-4 accent-[#00b96b]" /><span>Confirmo que los datos capturados son correctos.</span></label>
@@ -493,9 +503,43 @@
 		const createOrderButton = document.querySelector('#create-order-button');
 		const orderDialog = document.querySelector('#order-dialog');
 		const orderForm = document.querySelector('#order-wizard-form');
+		const orderTitle = document.querySelector('#order-title');
+		const orderEditError = document.querySelector('#order-edit-error');
+		const storeOrderAction = orderForm.action;
+		const methodOverride = orderForm.elements.namedItem('_method');
 		const supplierSelect = orderForm.elements.namedItem('supplier_id');
 		const requisitionFolio = orderForm.elements.namedItem('requisition_folio');
 		const requisitionAmount = orderForm.elements.namedItem('requisition_amount');
+		const requisitionPdfInput = orderForm.elements.namedItem('requisition_pdf');
+		const purchaseOrderPdfInput = orderForm.elements.namedItem('purchase_order_pdf');
+		const requisitionPdfNote = document.querySelector('[data-existing-document="requisition_pdf"]');
+		const purchaseOrderPdfNote = document.querySelector('[data-existing-document="purchase_order_pdf"]');
+		const requisitionPdfRequiredMark = document.querySelector('[data-required-document="requisition_pdf"]');
+		const initialOrderTitle = orderTitle.textContent;
+		const editableOrderFields = [
+			'requisition_folio',
+			'requisition_created_on',
+			'requisition_requested_on',
+			'requisition_amount',
+			'item_number',
+			'requisition_sp',
+			'requisition_ppp',
+			'requisition_sup',
+			'requisition_dir',
+			'requisition_process',
+			'requisition_rf',
+			'supplier_id',
+			'quote_email',
+			'delivery_location',
+			'receiver',
+			'receiver_phone',
+			'purchase_order_folio',
+			'purchase_order_date',
+			'purchase_order_partida',
+			'purchase_order_iva_included',
+			'purchase_order_rms',
+			'purchase_order_rf',
+		];
 		const purchaseOrderReviewFields = document.querySelectorAll('[data-purchase-order-review]');
 		function updatePurchaseOrderReview() {
 			const selectedSupplier = supplierSelect.selectedOptions[0];
@@ -523,6 +567,7 @@
 		const nextButton = document.querySelector('#order-next');
 		const orderActions = document.querySelector('#order-actions');
 		let activeOrderStep = 0;
+		let isEditingOrder = false;
 
 		function renderOrderStep() {
 			orderSteps.forEach((step, index) => {
@@ -541,7 +586,9 @@
 			});
 			orderProgress.style.width = `${(activeOrderStep / (orderSteps.length - 1)) * 100}%`;
 			previousButton.classList.toggle('invisible', activeOrderStep === 0);
-			nextButton.textContent = activeOrderStep === orderSteps.length - 1 ? 'Finalizar captura' : 'Siguiente';
+			nextButton.textContent = activeOrderStep === orderSteps.length - 1
+				? (isEditingOrder ? 'Guardar cambios' : 'Finalizar captura')
+				: 'Siguiente';
 			if (activeOrderStep === orderSteps.length - 1) {
 				updateOrderSummary();
 			}
@@ -568,15 +615,95 @@
 			}));
 		}
 
+		function resetOrderForm() {
+			orderForm.reset();
+			orderForm.action = storeOrderAction;
+			methodOverride.disabled = true;
+			orderTitle.textContent = initialOrderTitle;
+			requisitionPdfInput.required = true;
+			purchaseOrderPdfInput.required = true;
+			requisitionPdfRequiredMark.hidden = false;
+			requisitionPdfNote.classList.add('hidden');
+			purchaseOrderPdfNote.classList.add('hidden');
+			requisitionPdfNote.textContent = '';
+			purchaseOrderPdfNote.textContent = '';
+			isEditingOrder = false;
+			orderEditError.classList.add('hidden');
+			orderEditError.textContent = '';
+		}
+
+		function setExistingDocument(input, note, requiredMark, originalName) {
+			const hasDocument = Boolean(originalName);
+			input.required = !hasDocument;
+			note.textContent = hasDocument
+				? `Archivo actual: ${originalName}. Selecciona otro si deseas reemplazarlo.`
+				: 'No hay archivo guardado. Adjunta un PDF para continuar.';
+			note.classList.remove('hidden');
+			if (requiredMark) {
+				requiredMark.hidden = hasDocument;
+			}
+		}
+
+		async function openOrderForEditing(button) {
+			button.disabled = true;
+			orderEditError.classList.add('hidden');
+			orderEditError.textContent = '';
+
+			try {
+				const response = await fetch(button.dataset.editUrl, {
+					headers: {
+						Accept: 'application/json',
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+				});
+				if (!response.ok) {
+					throw new Error('No fue posible cargar la requisición para editar.');
+				}
+
+				const values = await response.json();
+				resetOrderForm();
+				editableOrderFields.forEach((name) => {
+					orderForm.elements.namedItem(name).value = values[name] ?? '';
+				});
+				orderForm.action = button.dataset.updateUrl;
+				methodOverride.disabled = false;
+				orderTitle.textContent = 'Editar requisición y orden de compra';
+				isEditingOrder = true;
+				setExistingDocument(
+					requisitionPdfInput,
+					requisitionPdfNote,
+					requisitionPdfRequiredMark,
+					values.requisition_pdf_name,
+				);
+				setExistingDocument(
+					purchaseOrderPdfInput,
+					purchaseOrderPdfNote,
+					null,
+					values.purchase_order_pdf_name,
+				);
+				activeOrderStep = 0;
+				updatePurchaseOrderReview();
+				orderDialog.classList.remove('hidden');
+				renderOrderStep();
+				orderSteps[0].querySelector('input').focus();
+			} catch {
+				orderEditError.textContent = 'No se pudo cargar la requisición para editar. Inténtalo de nuevo.';
+				orderEditError.classList.remove('hidden');
+			} finally {
+				button.disabled = false;
+			}
+		}
+
 		function closeOrderDialog() {
 			orderDialog.classList.add('hidden');
-			orderForm.reset();
+			resetOrderForm();
 			activeOrderStep = 0;
 			renderOrderStep();
 			createOrderButton.focus();
 		}
 
 		createOrderButton.addEventListener('click', () => {
+			resetOrderForm();
 			orderDialog.classList.remove('hidden');
 			activeOrderStep = 0;
 			updatePurchaseOrderReview();
@@ -584,6 +711,9 @@
 			orderSteps[0].querySelector('input').focus();
 		});
 		orderDialog.querySelectorAll('[data-order-close]').forEach((button) => button.addEventListener('click', closeOrderDialog));
+		document.querySelectorAll('[data-edit-order]').forEach((button) => {
+			button.addEventListener('click', () => openOrderForEditing(button));
+		});
 		orderDialog.addEventListener('click', (event) => {
 			if (event.target === orderDialog) {
 				closeOrderDialog();

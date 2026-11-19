@@ -200,6 +200,125 @@ class ProcurementWorkflowTest extends TestCase
             ->assertStreamedContent($purchaseOrderPdf->getContent());
     }
 
+    public function test_authenticated_user_can_edit_a_requisition_and_its_order_from_the_folio(): void
+    {
+        $user = User::factory()->create();
+        $supplier = $this->createSupplier('97', 'proveedor-edicion@example.com');
+        $purchaseOrder = $this->createPurchaseOrderForSupplier($supplier, 'OC-2026-097', $user);
+        $requisition = $purchaseOrder->requisition;
+        UploadedDocument::replaceContentFor(
+            $requisition,
+            'requisition_pdf',
+            'requisicion-original.pdf',
+            'application/pdf',
+            'Contenido PDF de requisición',
+        );
+        UploadedDocument::replaceContentFor(
+            $purchaseOrder,
+            'purchase_order_pdf',
+            'orden-original.pdf',
+            'application/pdf',
+            'Contenido PDF de orden',
+        );
+
+        $this->actingAs($user)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-edit-order', false)
+            ->assertSee(route('orders.edit', $requisition), false)
+            ->assertSee(route('orders.update', $requisition), false);
+
+        $this->getJson(route('orders.edit', $requisition))
+            ->assertOk()
+            ->assertJsonPath('requisition_folio', $requisition->folio)
+            ->assertJsonPath('supplier_id', $supplier->id)
+            ->assertJsonPath('requisition_pdf_name', 'requisicion-original.pdf')
+            ->assertJsonPath('purchase_order_pdf_name', 'orden-original.pdf');
+
+        $this->put(route('orders.update', $requisition), [
+            'requisition_folio' => $requisition->folio,
+            'requisition_created_on' => '2026-10-20',
+            'requisition_requested_on' => '2026-10-21',
+            'requisition_amount' => '2350.50',
+            'item_number' => '33902',
+            'requisition_sp' => 'SP editado',
+            'requisition_ppp' => 'PPP editado',
+            'requisition_sup' => 'SUP editado',
+            'requisition_dir' => 'DIR editado',
+            'requisition_process' => 'Proceso editado',
+            'requisition_rf' => 'RF editado',
+            'supplier_id' => $supplier->id,
+            'quote_email' => $supplier->contact_email,
+            'delivery_location' => 'Almacén actualizado',
+            'receiver' => 'Nueva persona receptora',
+            'receiver_phone' => '5550000001',
+            'review_confirmed' => 'on',
+            'purchase_order_folio' => $purchaseOrder->folio,
+            'purchase_order_date' => '2026-10-22',
+            'purchase_order_partida' => '33902',
+            'purchase_order_iva_included' => '0',
+            'purchase_order_rms' => '21701',
+            'purchase_order_rf' => 'No',
+        ])
+            ->assertRedirect(route('home'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('requisitions', [
+            'id' => $requisition->id,
+            'partida' => '33902',
+            'sp' => 'SP editado',
+            'ppp' => 'PPP editado',
+            'sup' => 'SUP editado',
+            'dir' => 'DIR editado',
+            'process' => 'Proceso editado',
+            'rf' => 'RF editado',
+        ]);
+        $requisition->refresh();
+        $this->assertSame('2026-10-20', $requisition->created_on->format('Y-m-d'));
+        $this->assertSame('2026-10-21', $requisition->requested_on->format('Y-m-d'));
+        $this->assertSame('2350.50', $requisition->amount);
+        $this->assertDatabaseHas('purchase_orders', [
+            'id' => $purchaseOrder->id,
+            'partida' => '33902',
+            'iva_included' => false,
+            'delivery_location' => 'Almacén actualizado',
+            'receiver' => 'Nueva persona receptora',
+            'receiver_phone' => '5550000001',
+            'rms' => '21701',
+            'rf' => 'No',
+        ]);
+        $purchaseOrder->refresh();
+        $this->assertSame('2026-10-22', $purchaseOrder->order_date->format('Y-m-d'));
+        $this->assertSame('2350.50', $purchaseOrder->amount);
+        $this->assertSame(
+            'Contenido PDF de requisición',
+            $requisition->uploadedDocuments()->where('kind', 'requisition_pdf')->firstOrFail()->content,
+        );
+        $this->assertSame(
+            'Contenido PDF de orden',
+            $purchaseOrder->uploadedDocuments()->where('kind', 'purchase_order_pdf')->firstOrFail()->content,
+        );
+    }
+
+    public function test_supplier_cannot_edit_an_internal_requisition_or_order(): void
+    {
+        $supplierUser = $this->createUserWithType('suppliers', 'proveedor-edicion@example.com');
+        $supplier = $this->createSupplier('96', $supplierUser->email);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-096',
+            User::factory()->create(),
+        );
+        $requisition = $purchaseOrder->requisition;
+
+        $this->actingAs($supplierUser)
+            ->get(route('orders.edit', $requisition))
+            ->assertForbidden();
+
+        $this->put(route('orders.update', $requisition), [])
+            ->assertForbidden();
+    }
+
     public function test_home_and_supplier_catalog_are_separate_screens(): void
     {
         $supplier = Supplier::create([
