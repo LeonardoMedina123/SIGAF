@@ -52,7 +52,7 @@
 										@if ($purchaseOrder->hasDocument('invoice_pdf') && $purchaseOrder->hasDocument('invoice_xml'))
 											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#e8f8f0] px-4 text-center text-xs font-medium text-[#145538]">Factura y XML recibidos</span>
 										@else
-											<button type="button" data-open-invoice-dialog data-order-folio="{{ $purchaseOrder->folio }}" data-invoice-url="{{ route('supplier.purchase-orders.invoices.store', $purchaseOrder) }}" data-pdf-url="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#22a06b] px-4 text-xs font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
+											<button type="button" data-open-invoice-dialog data-order-folio="{{ $purchaseOrder->folio }}" data-order-amount="{{ $purchaseOrder->amount }}" data-supplier-rfc="{{ $purchaseOrder->supplier->rfc }}" data-invoice-url="{{ route('supplier.purchase-orders.invoices.store', $purchaseOrder) }}" data-pdf-url="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#22a06b] px-4 text-xs font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
 												<span aria-hidden="true" class="text-xl font-light leading-none">+</span>
 												<span>Adjunta factura y XML</span>
 											</button>
@@ -135,12 +135,14 @@
 
 				<div class="mt-6 rounded-[36px] bg-[#e1e1e1] px-5 py-4 text-sm leading-relaxed text-[#202020] sm:px-7">
 					<p>Antes de enviar estos documentos, le solicitamos revisar que sean los correctos.</p>
+					<p class="mt-2">El sistema compara el importe total y el RFC emisor del XML con la orden y el proveedor. Verifica visualmente que la factura PDF muestre los mismos datos que el XML.</p>
 					<p class="mt-2">El complemento de pago estará disponible en esta pantalla cuando administración valide el pago.</p>
 					<p class="mt-2">Agradecemos su atención.</p>
 					<label class="mt-3 flex cursor-pointer items-start gap-2 font-medium">
 						<input type="checkbox" name="review_confirmed" value="1" required class="mt-1 h-4 w-4 shrink-0 accent-[#08d985]" data-confirm-invoice>
-						<span>He leído y confirmo la información anterior.</span>
+						<span>Confirmo que revisé que la factura PDF corresponda al XML y a esta orden de compra.</span>
 					</label>
+					<p data-invoice-validation role="alert" tabindex="-1" hidden class="mt-3 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"></p>
 					<div class="mt-2 flex justify-center">
 						<button type="submit" data-invoice-submit disabled class="cursor-not-allowed rounded-full bg-[#b5b5b5] px-5 py-1 text-base font-semibold text-[#555] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f] disabled:cursor-not-allowed enabled:cursor-pointer enabled:bg-[#08d985] enabled:text-[#073a28] enabled:hover:bg-[#00c976]">ENVIAR</button>
 					</div>
@@ -200,12 +202,14 @@
 		const xmlFile = document.querySelector('[data-xml-file]');
 		const confirmInvoice = document.querySelector('[data-confirm-invoice]');
 		const invoiceSubmit = document.querySelector('[data-invoice-submit]');
+		const invoiceValidation = document.querySelector('[data-invoice-validation]');
 		const paymentDialog = document.querySelector('#payment-dialog');
 		const paymentForm = document.querySelector('[data-payment-form]');
 		const paymentFile = document.querySelector('[data-payment-file]');
 		const confirmPayment = document.querySelector('[data-confirm-payment]');
 		const paymentSubmit = document.querySelector('[data-payment-submit]');
 		let currentInvoiceOrderFolio = null;
+		let currentInvoiceOrderDetails = null;
 		let currentPaymentOrderFolio = null;
 		const updateInvoiceSubmitState = () => {
 			invoiceSubmit.disabled = !confirmInvoice.checked || !invoiceFile.files?.length || !xmlFile.files?.length;
@@ -232,11 +236,17 @@
 
 				invoiceForm.action = button.dataset.invoiceUrl;
 				document.querySelector('[data-dialog-order-folio]').textContent = orderFolio;
+				currentInvoiceOrderDetails = {
+					amount: button.dataset.orderAmount,
+					supplierRfc: button.dataset.supplierRfc,
+				};
 				document.querySelectorAll('[data-dialog-pdf]').forEach((link) => {
 					link.href = button.dataset.pdfUrl;
 				});
 				if (currentInvoiceOrderFolio !== orderFolio) {
 					invoiceForm.reset();
+					invoiceValidation.textContent = '';
+					invoiceValidation.hidden = true;
 					updateUploadControl(invoiceFile, '[data-invoice-file-label]', '[data-invoice-file-name]', 'Adjunta Factura', 'Modificar factura');
 					updateUploadControl(xmlFile, '[data-xml-file-label]', '[data-xml-file-name]', 'Adjunta archivo XML', 'Modificar XML');
 					currentInvoiceOrderFolio = orderFolio;
@@ -290,8 +300,72 @@
 			updateInvoiceSubmitState();
 		});
 		xmlFile.addEventListener('change', () => {
+			invoiceValidation.textContent = '';
+			invoiceValidation.hidden = true;
 			updateUploadControl(xmlFile, '[data-xml-file-label]', '[data-xml-file-name]', 'Adjunta archivo XML', 'Modificar XML');
 			updateInvoiceSubmitState();
+		});
+
+		invoiceForm.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			invoiceSubmit.disabled = true;
+			invoiceValidation.textContent = '';
+			invoiceValidation.hidden = true;
+
+			let xmlContents;
+
+			try {
+				xmlContents = await xmlFile.files[0].text();
+			} catch {
+				invoiceValidation.textContent = 'No fue posible leer el XML. Selecciona el archivo nuevamente.';
+				invoiceValidation.hidden = false;
+				updateInvoiceSubmitState();
+				return;
+			}
+
+			const errors = [];
+			const xmlDocument = new DOMParser().parseFromString(xmlContents, 'application/xml');
+			const root = xmlDocument.documentElement;
+			const isCfdi = root?.localName === 'Comprobante'
+				&& /^http:\/\/www\.sat\.gob\.mx\/cfd\/[34]$/.test(root.namespaceURI);
+
+			if (!isCfdi || xmlDocument.querySelector('parsererror')) {
+				errors.push('El archivo no contiene un XML CFDI válido.');
+			} else {
+				const issuer = Array.from(root.children).find((element) => (
+					element.localName === 'Emisor' && element.namespaceURI === root.namespaceURI
+				));
+				const normalizeAmount = (value) => {
+					const match = String(value ?? '').trim().match(/^(\d{1,12})(?:\.(\d{1,2}))?$/);
+
+					if (!match) {
+						return null;
+					}
+
+					return `${match[1].replace(/^0+(?=\d)/, '')}.${(match[2] ?? '').padEnd(2, '0')}`;
+				};
+				const invoiceRfc = issuer?.getAttribute('Rfc')?.trim().toUpperCase();
+				const expectedRfc = currentInvoiceOrderDetails?.supplierRfc?.trim().toUpperCase();
+				const invoiceAmount = normalizeAmount(root.getAttribute('Total'));
+				const expectedAmount = normalizeAmount(currentInvoiceOrderDetails?.amount);
+
+				if (!invoiceRfc || invoiceRfc !== expectedRfc) {
+					errors.push('El RFC emisor del XML no coincide con el RFC registrado del proveedor.');
+				}
+				if (!invoiceAmount || invoiceAmount !== expectedAmount) {
+					errors.push('El importe total del XML no coincide con el importe de la orden de compra.');
+				}
+			}
+
+			if (errors.length > 0) {
+				invoiceValidation.textContent = `No se enviaron los documentos. ${errors.join(' ')}`;
+				invoiceValidation.hidden = false;
+				invoiceValidation.focus();
+				updateInvoiceSubmitState();
+				return;
+			}
+
+			HTMLFormElement.prototype.submit.call(invoiceForm);
 		});
 
 		confirmInvoice.addEventListener('change', updateInvoiceSubmitState);
