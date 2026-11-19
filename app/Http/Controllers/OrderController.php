@@ -28,6 +28,7 @@ class OrderController extends Controller
                 ...$this->requisitionAttributes($validated),
                 'pdf_path' => null,
                 'user_id' => $request->user()->id,
+                'last_modified_by' => $request->user()->id,
             ]);
 
             $purchaseOrder = PurchaseOrder::create([
@@ -103,8 +104,11 @@ class OrderController extends Controller
         $purchaseOrder = $requisition->purchaseOrder()->firstOrFail();
         $validated = $request->validate($this->validationRules($requisition, $purchaseOrder));
 
-        DB::transaction(function () use ($requisition, $purchaseOrder, $validated): void {
-            $requisition->update($this->requisitionAttributes($validated));
+        DB::transaction(function () use ($request, $requisition, $purchaseOrder, $validated): void {
+            $requisition->update([
+                ...$this->requisitionAttributes($validated),
+                'last_modified_by' => $request->user()->id,
+            ]);
             $purchaseOrderAttributes = $this->purchaseOrderAttributes($validated);
 
             if ($purchaseOrder->rf !== $purchaseOrderAttributes['rf']) {

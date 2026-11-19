@@ -150,6 +150,7 @@ class ProcurementWorkflowTest extends TestCase
         $purchaseOrder = PurchaseOrder::where('folio', 'OC-2026-001')->firstOrFail();
 
         $this->assertSame($user->id, $requisition->user_id);
+        $this->assertSame($user->id, $requisition->last_modified_by);
         $this->assertSame($requisition->id, $purchaseOrder->requisition_id);
         $this->assertSame($supplier->id, $purchaseOrder->supplier_id);
         $this->assertNull($purchaseOrder->partida);
@@ -203,13 +204,14 @@ class ProcurementWorkflowTest extends TestCase
 
     public function test_authenticated_user_can_edit_a_requisition_and_its_order_from_the_folio(): void
     {
-        $user = User::factory()->create();
+        $creator = User::factory()->create();
+        $editor = User::factory()->create(['name' => 'Editor de requisición']);
         $supplier = $this->createSupplier('97', 'proveedor-edicion@example.com');
-        $purchaseOrder = $this->createPurchaseOrderForSupplier($supplier, 'OC-2026-097', $user);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier($supplier, 'OC-2026-097', $creator);
         $purchaseOrder->forceFill([
             'rf' => 'Si',
             'financial_resources_validated_at' => now(),
-            'financial_resources_validated_by' => $user->id,
+            'financial_resources_validated_by' => $creator->id,
         ])->save();
         $requisition = $purchaseOrder->requisition;
         UploadedDocument::replaceContentFor(
@@ -227,7 +229,7 @@ class ProcurementWorkflowTest extends TestCase
             'Contenido PDF de orden',
         );
 
-        $this->actingAs($user)
+        $this->actingAs($editor)
             ->get(route('home'))
             ->assertOk()
             ->assertSee('data-edit-order', false)
@@ -278,6 +280,7 @@ class ProcurementWorkflowTest extends TestCase
             'dir' => 'DIR editado',
             'process' => 'Proceso editado',
             'rf' => 'RF editado',
+            'last_modified_by' => $editor->id,
         ]);
         $requisition->refresh();
         $this->assertSame('2026-10-20', $requisition->created_on->format('Y-m-d'));
@@ -308,6 +311,31 @@ class ProcurementWorkflowTest extends TestCase
             'Contenido PDF de orden',
             $purchaseOrder->uploadedDocuments()->where('kind', 'purchase_order_pdf')->firstOrFail()->content,
         );
+
+        foreach ([
+            $this->createUserWithType('administrator', 'admin-last-editor@example.com'),
+            $this->createUserWithType('departments', 'user-last-editor@example.com'),
+        ] as $viewer) {
+            $this->actingAs($viewer)
+                ->get(route('home'))
+                ->assertOk()
+                ->assertSee('Último cambio por')
+                ->assertSee('Editor de requisición');
+        }
+    }
+
+    public function test_home_shows_when_a_historical_last_editor_is_unavailable(): void
+    {
+        $this->createPurchaseOrderForSupplier(
+            $this->createSupplier('98', 'proveedor-historico@example.com'),
+            'OC-2026-098',
+            User::factory()->create(),
+        );
+
+        $this->actingAs($this->createUserWithType('administrator', 'admin-historico@example.com'))
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('No disponible');
     }
 
     public function test_supplier_cannot_edit_an_internal_requisition_or_order(): void

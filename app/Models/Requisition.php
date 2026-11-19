@@ -26,6 +26,7 @@ class Requisition extends Model
         'rf',
         'pdf_path',
         'user_id',
+        'last_modified_by',
     ];
 
     protected function casts(): array
@@ -40,6 +41,11 @@ class Requisition extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function lastModifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'last_modified_by');
     }
 
     public function purchaseOrder(): HasOne

@@ -35,6 +35,7 @@ class HomeController extends Controller
         return view('home', [
             'requisitions' => Requisition::with([
                 'uploadedDocuments:id,requisition_id,kind',
+                'lastModifiedBy:id,name',
                 'purchaseOrder.supplier',
                 'purchaseOrder.uploadedDocuments:id,purchase_order_id,kind,original_name,created_at',
             ])->latest()->get(),

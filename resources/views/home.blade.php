@@ -117,23 +117,27 @@
 		@endif
 		<p id="order-edit-error" role="alert" class="hidden mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"></p>
 		<section aria-label="Requisiciones" class="overflow-x-auto rounded-[20px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
-			<table class="w-full {{ $canValidatePayments ? 'min-w-[1000px]' : '' }} table-fixed border-separate border-spacing-0 text-center">
+			<table class="w-full min-w-[1000px] table-fixed border-separate border-spacing-0 text-center">
 				<colgroup>
-					<col class="{{ $canValidatePayments ? 'w-[17%]' : 'w-[19%]' }}" />
 					<col class="{{ $canValidatePayments ? 'w-[13%]' : 'w-[15%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[12%]' : 'w-[14%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[11%]' : 'w-[13%]' }}" />
+					<col class="w-[7%]" />
 					<col class="{{ $canValidatePayments ? 'w-[7%]' : 'w-[8%]' }}" />
-					<col class="{{ $canValidatePayments ? 'w-[8%]' : 'w-[9%]' }}" />
-					<col class="{{ $canValidatePayments ? 'w-[6%]' : 'w-[7%]' }}" />
-					<col class="{{ $canValidatePayments ? 'w-[20%]' : 'w-[22%]' }}" />
-					<col class="{{ $canValidatePayments ? 'w-[18%]' : 'w-[20%]' }}" />
+					<col class="w-[6%]" />
+					<col class="{{ $canValidatePayments ? 'w-[17%]' : 'w-[19%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[17%]' : 'w-[18%]' }}" />
 					@if ($canValidatePayments)
-						<col class="w-[11%]" />
+						<col class="w-[10%]" />
 					@endif
 				</colgroup>
 				<thead class="bg-[#07577f] text-white">
 					<tr>
 						<th scope="col" class="rounded-tl-[19px] p-0 text-sm font-semibold">
 							<button type="button" data-filter-trigger="requisicion" data-filter-title="Requisición" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Requisición</button>
+						</th>
+						<th scope="col" class="p-0 text-sm font-semibold">
+							<button type="button" data-filter-trigger="ultimo-editor" data-filter-title="Último cambio por" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Último cambio por</button>
 						</th>
 						<th scope="col" class="p-0 text-sm font-semibold">
 							<button type="button" data-filter-trigger="orden-compra" data-filter-title="Orden de compra" aria-haspopup="dialog" aria-expanded="false" class="flex w-full items-center justify-center whitespace-normal break-words px-1.5 py-2 text-center text-[11px] leading-tight transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/80 md:px-2 md:py-3 md:text-xs">Orden de compra</button>
@@ -172,6 +176,7 @@
 							data-filter-requisition-amount="{{ $requisition->amount }}"
 							data-filter-requisition-created-on="{{ $requisition->created_on?->toDateString() }}"
 							data-filter-requisition-requested-on="{{ $requisition->requested_on?->toDateString() }}"
+							data-filter-last-editor="{{ $requisition->lastModifiedBy?->name }}"
 							data-filter-order-folio="{{ $requisition->purchaseOrder?->folio }}"
 							data-filter-order-supplier="{{ $requisition->purchaseOrder?->supplier?->name }}"
 							data-filter-order-amount="{{ $requisition->purchaseOrder?->amount }}"
@@ -194,6 +199,9 @@
 								@else
 									{{ $requisition->folio }}
 								@endif
+							</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+								{{ $requisition->lastModifiedBy?->name ?? 'No disponible' }}
 							</td>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
 								@if ($requisition->purchaseOrder !== null)
@@ -283,13 +291,13 @@
 						</tr>
 					@empty
 						<tr>
-							<td colspan="{{ $canValidatePayments ? 8 : 7 }}" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-xs text-[#60737d] md:text-sm">
+							<td colspan="{{ $canValidatePayments ? 9 : 8 }}" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-xs text-[#60737d] md:text-sm">
 								Aún no hay requisiciones registradas.
 							</td>
 						</tr>
 					@endforelse
 					<tr data-filter-empty hidden>
-						<td colspan="{{ $canValidatePayments ? 8 : 7 }}" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-xs text-[#60737d] md:text-sm">
+						<td colspan="{{ $canValidatePayments ? 9 : 8 }}" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-xs text-[#60737d] md:text-sm">
 							No hay requisiciones que coincidan con los filtros.
 						</td>
 					</tr>
@@ -359,6 +367,9 @@
 		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Monto:</span><span class="flex min-w-0 gap-1"><select data-filter-operator-for="requisition-amount" aria-label="Operador de monto" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input data-filter-field="requisition-amount" data-filter-type="number" type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
 		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Creación:</span><input data-filter-field="requisition-created-on" data-filter-type="date" type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
 		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Solicitud:</span><input data-filter-field="requisition-requested-on" data-filter-type="date" type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+	</template>
+	<template id="filter-ultimo-editor">
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Nombre:</span><input data-filter-field="last-editor" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
 	</template>
 	<template id="filter-orden-compra">
 		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input data-filter-field="order-folio" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
