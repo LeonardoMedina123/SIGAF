@@ -183,6 +183,7 @@
 							data-filter-payment-status="{{ $requisition->purchaseOrder?->payment_validated_at !== null ? 'Pagado' : ($requisition->purchaseOrder === null ? '' : 'Pendiente') }}"
 							data-filter-payment-date="{{ $requisition->purchaseOrder?->payment_validated_at?->toDateString() }}"
 							data-filter-finance-value="{{ $requisition->purchaseOrder?->rf }}"
+							data-filter-finance-status="{{ $requisition->purchaseOrder === null ? '' : ($requisition->purchaseOrder->financial_resources_validated_at !== null ? 'Validado' : 'Pendiente') }}"
 							data-filter-complement-rfc="{{ $requisition->purchaseOrder?->supplier?->rfc }}"
 							data-filter-complement-status="{{ $requisition->purchaseOrder?->hasDocument('payment_complement') ? 'Recibido' : ($requisition->purchaseOrder?->payment_validated_at !== null ? 'Pendiente' : 'Sin validar') }}"
 							class="text-center text-xs text-[#263b46] odd:bg-white even:bg-[#f5f9fb]"
@@ -242,7 +243,25 @@
 									<span>Pendiente de validación</span>
 								@endif
 							</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">{{ $requisition->purchaseOrder?->rf ?? '—' }}</td>
+							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+								@if ($requisition->purchaseOrder === null)
+									—
+								@else
+									<div class="flex flex-col items-center gap-1">
+										<span>RF: {{ $requisition->purchaseOrder->rf ?? '—' }}</span>
+										@if ($requisition->purchaseOrder->financial_resources_validated_at !== null)
+											<span data-financial-resources-status="validated" class="font-semibold text-[#145538]">Validado</span>
+										@elseif ($canValidateFinancialResources)
+											<form action="{{ route('purchase-orders.validate-financial-resources', $requisition->purchaseOrder) }}" method="POST">
+												@csrf
+												<button type="submit" class="rounded-full bg-[#22a06b] px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f] md:px-3 md:text-xs">Validar</button>
+											</form>
+										@else
+											<span data-financial-resources-status="pending" class="text-[#64748b]">Pendiente</span>
+										@endif
+									</div>
+								@endif
+							</td>
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
 								@if ($requisition->purchaseOrder?->hasDocument('payment_complement'))
 									<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'payment-complement']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Descargar complemento</a>
@@ -361,6 +380,7 @@
 	</template>
 	<template id="filter-validacion-financiera">
 		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>RF:</span><input data-filter-field="finance-value" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Estado:</span><select data-filter-field="finance-status" data-filter-type="select" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30"><option value="">Todos</option><option value="Pendiente">Pendiente</option><option value="Validado">Validado</option></select></label>
 	</template>
 	<template id="filter-complemento">
 		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>RFC:</span><input data-filter-field="complement-rfc" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>

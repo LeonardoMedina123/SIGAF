@@ -33,6 +33,8 @@ class PurchaseOrder extends Model
         'payment_complement_path',
         'payment_validated_at',
         'payment_validated_by',
+        'financial_resources_validated_at',
+        'financial_resources_validated_by',
     ];
 
     protected function casts(): array
@@ -43,6 +45,7 @@ class PurchaseOrder extends Model
             'iva_percentage' => 'decimal:2',
             'iva_included' => 'boolean',
             'payment_validated_at' => 'datetime',
+            'financial_resources_validated_at' => 'datetime',
         ];
     }
 

@@ -105,7 +105,14 @@ class OrderController extends Controller
 
         DB::transaction(function () use ($requisition, $purchaseOrder, $validated): void {
             $requisition->update($this->requisitionAttributes($validated));
-            $purchaseOrder->update($this->purchaseOrderAttributes($validated));
+            $purchaseOrderAttributes = $this->purchaseOrderAttributes($validated);
+
+            if ($purchaseOrder->rf !== $purchaseOrderAttributes['rf']) {
+                $purchaseOrderAttributes['financial_resources_validated_at'] = null;
+                $purchaseOrderAttributes['financial_resources_validated_by'] = null;
+            }
+
+            $purchaseOrder->update($purchaseOrderAttributes);
             $this->replaceUploadedDocuments($requisition, $purchaseOrder, $validated);
         });
 

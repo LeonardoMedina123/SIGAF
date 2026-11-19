@@ -10,6 +10,7 @@ use App\Http\Controllers\RequisitionDocumentArchiveController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierPurchaseOrderDocumentController;
 use App\Http\Controllers\SystemReimbursementDocumentController;
+use App\Http\Controllers\ValidatePurchaseOrderFinancialResourcesController;
 use App\Http\Controllers\ValidatePurchaseOrderPaymentController;
 use App\Http\Middleware\EnsureAdministrator;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +51,10 @@ Route::middleware('auth')->group(function () {
         ->name('supplier.purchase-orders.invoices.store');
     Route::post('/supplier/purchase-orders/{purchaseOrder}/payment-complement', [SupplierPurchaseOrderDocumentController::class, 'storePaymentComplement'])
         ->name('supplier.purchase-orders.payment-complement.store');
+    Route::post(
+        '/purchase-orders/{purchaseOrder}/validate-financial-resources',
+        ValidatePurchaseOrderFinancialResourcesController::class,
+    )->name('purchase-orders.validate-financial-resources');
     Route::get('/supplier/purchase-orders/{purchaseOrder}/pdf', [SupplierPurchaseOrderDocumentController::class, 'downloadPurchaseOrder'])
         ->name('supplier.purchase-orders.pdf');
     Route::get('/purchase-orders/{purchaseOrder}/documents/{document}', [

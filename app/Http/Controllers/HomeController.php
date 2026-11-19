@@ -40,6 +40,7 @@ class HomeController extends Controller
             ])->latest()->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'canValidatePayments' => auth()->user()->isAdministrator(),
+            'canValidateFinancialResources' => auth()->user()->isFinancialsDepartment(),
         ]);
     }
 

@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ProcurementWorkflowTest extends TestCase
@@ -205,6 +206,11 @@ class ProcurementWorkflowTest extends TestCase
         $user = User::factory()->create();
         $supplier = $this->createSupplier('97', 'proveedor-edicion@example.com');
         $purchaseOrder = $this->createPurchaseOrderForSupplier($supplier, 'OC-2026-097', $user);
+        $purchaseOrder->forceFill([
+            'rf' => 'Si',
+            'financial_resources_validated_at' => now(),
+            'financial_resources_validated_by' => $user->id,
+        ])->save();
         $requisition = $purchaseOrder->requisition;
         UploadedDocument::replaceContentFor(
             $requisition,
@@ -286,8 +292,12 @@ class ProcurementWorkflowTest extends TestCase
             'receiver_phone' => '5550000001',
             'rms' => '21701',
             'rf' => 'No',
+            'financial_resources_validated_at' => null,
+            'financial_resources_validated_by' => null,
         ]);
         $purchaseOrder->refresh();
+        $this->assertNull($purchaseOrder->financial_resources_validated_at);
+        $this->assertNull($purchaseOrder->financial_resources_validated_by);
         $this->assertSame('2026-10-22', $purchaseOrder->order_date->format('Y-m-d'));
         $this->assertSame('2350.50', $purchaseOrder->amount);
         $this->assertSame(
@@ -983,6 +993,73 @@ class ProcurementWorkflowTest extends TestCase
         $this->get(route('purchase-orders.documents.download', [$purchaseOrder, 'payment-complement']))
             ->assertDownload('oc-2026-022-complemento-pago.pdf')
             ->assertStreamedContent($paymentComplement->getContent());
+    }
+
+    public function test_financial_user_can_validate_resources_and_other_roles_see_the_saved_status(): void
+    {
+        $financialUser = $this->createUserWithType('financials', 'finanzas@example.com');
+        $administrator = $this->createUserWithType('administrator', 'admin@example.com');
+        $viewer = $this->createUserWithType('departments', 'usuario@example.com');
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $this->createSupplier('24', 'proveedor@example.com'),
+            'OC-2026-024',
+            User::factory()->create(),
+        );
+
+        $this->actingAs($financialUser)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('Validar')
+            ->assertSee('data-filter-finance-status="Pendiente"', false);
+
+        $this->from(route('home'))
+            ->post(route('purchase-orders.validate-financial-resources', $purchaseOrder))
+            ->assertRedirect(route('home'))
+            ->assertSessionHas(
+                'success',
+                'Los recursos financieros de la orden OC-2026-024 quedaron validados.',
+            );
+
+        $validatedPurchaseOrder = $purchaseOrder->fresh();
+        $this->assertNotNull($validatedPurchaseOrder->financial_resources_validated_at);
+        $this->assertSame($financialUser->id, $validatedPurchaseOrder->financial_resources_validated_by);
+
+        foreach ([$administrator, $viewer] as $user) {
+            $this->actingAs($user)
+                ->get(route('home'))
+                ->assertOk()
+                ->assertSee('Validado')
+                ->assertSee('data-financial-resources-status="validated"', false)
+                ->assertSee('data-filter-finance-status="Validado"', false);
+        }
+    }
+
+    #[DataProvider('usersWithoutFinancialValidationAccess')]
+    public function test_users_outside_financials_cannot_validate_purchase_order_resources(
+        string $department,
+        string $email,
+    ): void {
+        $user = $this->createUserWithType($department, $email);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $this->createSupplier('25', 'proveedor@example.com'),
+            'OC-2026-025',
+            User::factory()->create(),
+        );
+
+        $this->actingAs($user)
+            ->post(route('purchase-orders.validate-financial-resources', $purchaseOrder))
+            ->assertForbidden();
+
+        $this->assertNull($purchaseOrder->fresh()->financial_resources_validated_at);
+        $this->assertNull($purchaseOrder->fresh()->financial_resources_validated_by);
+    }
+
+    public static function usersWithoutFinancialValidationAccess(): array
+    {
+        return [
+            'administrator' => ['administrator', 'admin@example.com'],
+            'regular user' => ['departments', 'usuario@example.com'],
+        ];
     }
 
     public function test_non_administrator_cannot_validate_a_purchase_order_payment(): void

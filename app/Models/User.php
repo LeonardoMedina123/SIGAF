@@ -57,4 +57,9 @@ class User extends Authenticatable
     {
         return $this->department?->slug === 'systems';
     }
+
+    public function isFinancialsDepartment(): bool
+    {
+        return $this->department?->slug === 'financials';
+    }
 }
