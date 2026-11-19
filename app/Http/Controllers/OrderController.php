@@ -22,7 +22,7 @@ class OrderController extends Controller
             'requisition_folio' => ['required', 'string', 'max:100', 'unique:requisitions,folio'],
             'requisition_created_on' => ['required', 'date'],
             'requisition_requested_on' => ['required', 'date'],
-            'requisition_amount' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
+            'requisition_amount' => ['required', 'numeric', 'min:0.01', 'decimal:0,2'],
             'item_number' => ['required', 'string', 'max:100'],
             'requisition_sp' => ['nullable', 'string', 'max:255'],
             'requisition_ppp' => ['nullable', 'string', 'max:255'],
@@ -33,7 +33,6 @@ class OrderController extends Controller
             'requisition_pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
             'supplier_id' => ['required', 'exists:suppliers,id'],
             'quote_email' => ['required', 'email', 'max:255'],
-            'quote_amount' => ['required', 'numeric', 'min:0.01', 'decimal:0,2'],
             'delivery_location' => ['required', 'string', 'max:1000'],
             'receiver' => ['required', 'string', 'max:255'],
             'receiver_phone' => ['required', 'string', 'max:30'],
@@ -45,7 +44,7 @@ class OrderController extends Controller
             'purchase_order_rms' => ['nullable', 'string', 'max:255'],
             'purchase_order_rf' => ['nullable', 'string', 'max:255'],
             'purchase_order_pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
-            'purchase_order_xml' => ['required', 'file', 'mimes:xml', 'max:10240'],
+            'purchase_order_xml' => ['nullable', 'file', 'mimes:xml', 'max:10240'],
         ]);
 
         DB::transaction(function () use ($validated, $request): void {
@@ -70,7 +69,7 @@ class OrderController extends Controller
                 'order_date' => $validated['purchase_order_date'],
                 'requisition_id' => $requisition->id,
                 'supplier_id' => $validated['supplier_id'],
-                'amount' => $validated['quote_amount'],
+                'amount' => $validated['requisition_amount'],
                 'partida' => $validated['purchase_order_partida'] ?? null,
                 'iva_included' => $validated['purchase_order_iva_included'] ?? null,
                 'rms' => $validated['purchase_order_rms'] ?? null,
@@ -93,11 +92,13 @@ class OrderController extends Controller
                 'purchase_order_pdf',
                 $validated['purchase_order_pdf'],
             );
-            UploadedDocument::replaceFor(
-                $purchaseOrder,
-                'purchase_order_xml',
-                $validated['purchase_order_xml'],
-            );
+            if (isset($validated['purchase_order_xml'])) {
+                UploadedDocument::replaceFor(
+                    $purchaseOrder,
+                    'purchase_order_xml',
+                    $validated['purchase_order_xml'],
+                );
+            }
 
             $supplierEmail = $purchaseOrder->supplier()->value('contact_email');
             $supplierUsers = User::query()

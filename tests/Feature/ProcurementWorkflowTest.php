@@ -30,16 +30,10 @@ class ProcurementWorkflowTest extends TestCase
                 'tax_regime' => '601',
                 'cfdi_use' => 'G03',
                 'contact_email' => 'compras@bbva.example',
-                'curp' => '',
                 'address' => 'Av. Paseo de la Reforma',
                 'city' => 'Ciudad de México',
-                'phone' => '5550000000',
-                'representative' => 'Contacto BBVA',
-                'cellphone' => '5550000001',
                 'economic_activity' => 'Servicios financieros',
-                'iva_percentage' => '16',
                 'status' => 'Activo',
-                'it_capture' => 'CRODE de Chihuahua',
             ])
             ->assertRedirect(route('suppliers.index'))
             ->assertSessionHas('success');
@@ -53,6 +47,9 @@ class ProcurementWorkflowTest extends TestCase
             'cfdi_use' => 'G03',
             'contact_email' => 'compras@bbva.example',
             'iva_percentage' => '16.00',
+            'representative' => null,
+            'phone' => null,
+            'cellphone' => null,
         ]);
 
         $supplierUser = User::where('email', 'compras@bbva.example')->firstOrFail();
@@ -100,7 +97,6 @@ class ProcurementWorkflowTest extends TestCase
         Storage::fake('local');
         $requisitionPdf = UploadedFile::fake()->create('requisition.pdf', 20, 'application/pdf');
         $purchaseOrderPdf = UploadedFile::fake()->create('purchase-order.pdf', 20, 'application/pdf');
-        $purchaseOrderXml = UploadedFile::fake()->create('purchase-order.xml', 1, 'text/xml');
         $user = User::factory()->create();
         $supplier = Supplier::create([
             'number' => '3',
@@ -134,7 +130,6 @@ class ProcurementWorkflowTest extends TestCase
                 'requisition_pdf' => $requisitionPdf,
                 'supplier_id' => $supplier->id,
                 'quote_email' => 'compras@bbva.example',
-                'quote_amount' => '4872.07',
                 'delivery_location' => 'CRODE de Chihuahua',
                 'receiver' => 'Persona receptora',
                 'receiver_phone' => '5550000000',
@@ -146,7 +141,6 @@ class ProcurementWorkflowTest extends TestCase
                 'purchase_order_rms' => '21601',
                 'purchase_order_rf' => 'Si',
                 'purchase_order_pdf' => $purchaseOrderPdf,
-                'purchase_order_xml' => $purchaseOrderXml,
             ])
             ->assertRedirect(route('home'))
             ->assertSessionHas('success');
@@ -159,7 +153,7 @@ class ProcurementWorkflowTest extends TestCase
         $this->assertSame($supplier->id, $purchaseOrder->supplier_id);
         $this->assertNull($purchaseOrder->partida);
         $this->assertNull($purchaseOrder->iva_included);
-        $this->assertSame('4872.07', $purchaseOrder->amount);
+        $this->assertSame('3650.37', $purchaseOrder->amount);
         $this->assertSame('21601', $purchaseOrder->rms);
         $this->assertSame('Si', $purchaseOrder->rf);
         $this->assertSame('3650.37', $requisition->amount);
@@ -170,6 +164,10 @@ class ProcurementWorkflowTest extends TestCase
         $this->assertNull($requisition->pdf_path);
         $this->assertNull($purchaseOrder->pdf_path);
         $this->assertNull($purchaseOrder->xml_path);
+        $this->assertDatabaseMissing('uploaded_documents', [
+            'purchase_order_id' => $purchaseOrder->id,
+            'kind' => 'purchase_order_xml',
+        ]);
 
         $this->assertSame(
             $requisitionPdf->getContent(),
@@ -182,10 +180,6 @@ class ProcurementWorkflowTest extends TestCase
         $this->assertSame(
             $purchaseOrderPdf->getContent(),
             $purchaseOrder->uploadedDocuments()->where('kind', 'purchase_order_pdf')->firstOrFail()->content,
-        );
-        $this->assertSame(
-            $purchaseOrderXml->getContent(),
-            $purchaseOrder->uploadedDocuments()->where('kind', 'purchase_order_xml')->firstOrFail()->content,
         );
         Storage::disk('local')->assertEmpty();
 
@@ -233,23 +227,28 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSee('value="'.$supplier->id.'"', false)
             ->assertSee('data-purchase-order-paste', false)
             ->assertSee('Pega la fila copiada en este orden', false)
-            ->assertSee('name="purchase_order_supplier"', false)
-            ->assertSee('id="purchase-order-supplier-help"', false)
-            ->assertSee('Escribe o pega el nombre del proveedor seleccionado.', false)
+            ->assertSee('name="supplier_id"', false)
+            ->assertSee('data-purchase-order-review="supplier_name"', false)
+            ->assertSee('data-purchase-order-review="requisition_amount"', false)
+            ->assertDontSee('name="purchase_order_supplier"', false)
             ->assertSee('name="purchase_order_iva_included"', false)
             ->assertSee('name="requisition_folio"', false)
-            ->assertSee('name="quote_amount"', false)
+            ->assertSee('name="requisition_amount"', false)
+            ->assertDontSee('name="quote_amount"', false)
             ->assertSee('name="purchase_order_pdf"', false)
-            ->assertSee('name="purchase_order_xml"', false);
+            ->assertDontSee('name="purchase_order_xml"', false);
 
         $content = $response->getContent();
+        $this->assertSame(5, substr_count($content, '<button type="button" data-step-trigger'));
+        $this->assertSame(1, substr_count($content, 'aria-label="Ir al paso 5: Confirmación"'));
+
         $previousPosition = -1;
         foreach ([
             'name="purchase_order_folio"',
             'name="purchase_order_date"',
-            'name="purchase_order_supplier"',
+            'data-purchase-order-review="supplier_name"',
             'data-purchase-order-review="requisition_folio"',
-            'data-purchase-order-review="quote_amount"',
+            'data-purchase-order-review="requisition_amount"',
             'name="purchase_order_partida"',
             'name="purchase_order_iva_included"',
             'name="purchase_order_rms"',
@@ -269,7 +268,31 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSee('BBVA México');
     }
 
-    public function test_supplier_catalog_requires_and_saves_fiscal_and_contact_details(): void
+    public function test_supplier_form_omits_duplicate_and_removed_fields(): void
+    {
+        $response = $this->actingAs(User::factory()->create())
+            ->get(route('suppliers.index'))
+            ->assertOk();
+
+        $content = $response->getContent();
+
+        foreach (['<input name="number"', '<input name="name"'] as $fieldName) {
+            $this->assertSame(1, substr_count($content, $fieldName));
+        }
+
+        foreach ([
+            '<input name="representative"',
+            '<input name="phone"',
+            '<input name="cellphone"',
+            '<input name="curp"',
+            '<input name="iva_percentage"',
+            '<input name="it_capture"',
+        ] as $removedFieldName) {
+            $this->assertSame(0, substr_count($content, $removedFieldName));
+        }
+    }
+
+    public function test_supplier_can_be_created_without_removed_contact_and_tax_fields(): void
     {
         $this->actingAs(User::factory()->create())
             ->post(route('suppliers.store'), [
@@ -279,9 +302,7 @@ class ProcurementWorkflowTest extends TestCase
                 'person_type' => 'fisica',
                 'tax_regime' => '612',
                 'cfdi_use' => 'G03',
-                'representative' => 'Ana Contacto',
                 'contact_email' => 'ana@example.com',
-                'iva_percentage' => '16',
                 'status' => 'Activo',
             ])
             ->assertRedirect(route('suppliers.index'))
@@ -293,8 +314,11 @@ class ProcurementWorkflowTest extends TestCase
             'person_type' => 'fisica',
             'tax_regime' => '612',
             'cfdi_use' => 'G03',
-            'representative' => 'Ana Contacto',
             'contact_email' => 'ana@example.com',
+            'representative' => null,
+            'phone' => null,
+            'cellphone' => null,
+            'iva_percentage' => '16.00',
         ]);
     }
 

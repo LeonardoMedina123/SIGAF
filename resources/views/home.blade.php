@@ -382,11 +382,11 @@
 			<div class="px-4 pt-5 md:px-8 md:pt-6">
 				<ol id="order-stepper" class="relative grid grid-cols-5 gap-1" aria-label="Progreso de la orden">
 					<div class="absolute left-[8%] right-[8%] top-4 h-1 rounded-full bg-[#d8dfe2]" aria-hidden="true"><div id="order-progress" class="h-full w-0 rounded-full bg-[#00c978] transition-[width] duration-300"></div></div>
-					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center" aria-current="step"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#aab1b5] text-sm font-semibold text-white ring-2 ring-[#aab1b5]">1</span><span class="text-[10px] leading-tight text-[#3f4a50] md:text-xs">Requisición</span></li>
-					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">2</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Cotización</span></li>
-					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">3</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Entrega</span></li>
-					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">4</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Validación</span></li>
-					<li data-step-indicator class="relative flex min-w-0 flex-col items-center gap-1.5 text-center"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">5</span><span class="text-[10px] leading-tight text-[#697277] md:text-xs">Confirmación</span></li>
+					<li data-step-indicator class="relative min-w-0 text-center" aria-current="step"><button type="button" data-step-trigger aria-label="Ir al paso 1: Requisición" class="relative z-10 flex w-full flex-col items-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#aab1b5] text-sm font-semibold text-white ring-2 ring-[#aab1b5]">1</span><span data-step-label class="text-[10px] leading-tight text-[#3f4a50] md:text-xs">Requisición</span></button></li>
+					<li data-step-indicator class="relative min-w-0 text-center"><button type="button" data-step-trigger aria-label="Ir al paso 2: Cotización" class="relative z-10 flex w-full flex-col items-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">2</span><span data-step-label class="text-[10px] leading-tight text-[#697277] md:text-xs">Cotización</span></button></li>
+					<li data-step-indicator class="relative min-w-0 text-center"><button type="button" data-step-trigger aria-label="Ir al paso 3: Entrega" class="relative z-10 flex w-full flex-col items-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">3</span><span data-step-label class="text-[10px] leading-tight text-[#697277] md:text-xs">Entrega</span></button></li>
+					<li data-step-indicator class="relative min-w-0 text-center"><button type="button" data-step-trigger aria-label="Ir al paso 4: Validación" class="relative z-10 flex w-full flex-col items-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">4</span><span data-step-label class="text-[10px] leading-tight text-[#697277] md:text-xs">Validación</span></button></li>
+					<li data-step-indicator class="relative min-w-0 text-center"><button type="button" data-step-trigger aria-label="Ir al paso 5: Confirmación" class="relative z-10 flex w-full flex-col items-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]"><span data-step-circle class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]">5</span><span data-step-label class="text-[10px] leading-tight text-[#697277] md:text-xs">Confirmación</span></button></li>
 				</ol>
 			</div>
 
@@ -401,7 +401,7 @@
 							<label class="grid gap-1 text-sm">Folio <input name="requisition_folio" type="text" required maxlength="100" autocomplete="off" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">Fecha de creación <input name="requisition_created_on" type="date" value="{{ now()->format('Y-m-d') }}" required class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">Fecha de solicitud <input name="requisition_requested_on" type="date" value="{{ now()->format('Y-m-d') }}" required class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
-							<label class="grid gap-1 text-sm">Importe de requisición <input name="requisition_amount" type="number" required min="0" step="0.01" inputmode="decimal" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
+							<label class="grid gap-1 text-sm">Importe de requisición <input name="requisition_amount" type="number" required min="0.01" step="0.01" inputmode="decimal" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">Partida <input name="item_number" type="text" required autocomplete="off" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">SP <input name="requisition_sp" type="text" maxlength="255" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
 							<label class="grid gap-1 text-sm">PPP <input name="requisition_ppp" type="text" maxlength="255" class="h-10 w-full rounded-full border border-transparent bg-white px-4 text-sm text-[#17252b] outline-none focus:border-[#087aa7] focus:ring-2 focus:ring-[#087aa7]/20" /></label>
@@ -434,7 +434,6 @@
 						</select>
 					</label>
 					<label class="grid gap-1 text-sm">Correo de contacto <input name="quote_email" type="email" required class="h-10 rounded-full border-0 bg-white px-4 text-sm text-[#17252b] outline-none focus:ring-2 focus:ring-[#087aa7]/30" /></label>
-					<label class="grid gap-1 text-sm">Importe cotizado <input name="quote_amount" type="number" required min="0.01" step="0.01" class="h-10 rounded-full border-0 bg-white px-4 text-sm text-[#17252b] outline-none focus:ring-2 focus:ring-[#087aa7]/30" /></label>
 				</fieldset>
 
 				<fieldset data-order-step hidden class="grid gap-4 rounded-[14px] bg-[#b7dcef] p-4 text-[#07577f] md:grid-cols-2 md:p-6">
@@ -459,9 +458,9 @@
 						<p class="text-xs text-[#315a6b] sm:col-span-2 lg:col-span-3">Pega la fila copiada en este orden desde el campo Folio: Folio, Fecha, Proveedor, Requisición, Importe, Partida, I.V.A., RMS y RF. Los espacios vacíos también se conservan.</p>
 						<label class="grid gap-1 text-sm">Folio <input name="purchase_order_folio" type="text" required maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">Fecha <input name="purchase_order_date" type="date" required value="{{ now()->format('Y-m-d') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
-						<label class="grid gap-1 text-sm">Proveedor <input name="purchase_order_supplier" type="text" required autocomplete="off" aria-describedby="purchase-order-supplier-help" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /><span id="purchase-order-supplier-help" class="text-xs text-[#315a6b]">Escribe o pega el nombre del proveedor seleccionado.</span></label>
+						<label class="grid gap-1 text-sm">Proveedor <output data-purchase-order-review="supplier_name" class="flex h-10 items-center overflow-hidden rounded-lg border border-[#ccd8de] bg-[#f5f8f9] px-3 text-ellipsis whitespace-nowrap text-[#17252b]">—</output></label>
 						<label class="grid gap-1 text-sm">Requisición <output data-purchase-order-review="requisition_folio" class="flex h-10 items-center overflow-hidden rounded-lg border border-[#ccd8de] bg-[#f5f8f9] px-3 text-ellipsis whitespace-nowrap text-[#17252b]">—</output></label>
-						<label class="grid gap-1 text-sm">Importe <output data-purchase-order-review="quote_amount" class="flex h-10 items-center overflow-hidden rounded-lg border border-[#ccd8de] bg-[#f5f8f9] px-3 text-ellipsis whitespace-nowrap text-[#17252b]">—</output></label>
+						<label class="grid gap-1 text-sm">Importe <output data-purchase-order-review="requisition_amount" class="flex h-10 items-center overflow-hidden rounded-lg border border-[#ccd8de] bg-[#f5f8f9] px-3 text-ellipsis whitespace-nowrap text-[#17252b]">—</output></label>
 						<label class="grid gap-1 text-sm">Partida <input name="purchase_order_partida" type="text" maxlength="100" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 						<label class="grid gap-1 text-sm">I.V.A.
 							<select name="purchase_order_iva_included" class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
@@ -476,7 +475,6 @@
 					<div class="grid gap-3 rounded-xl bg-white p-4 sm:grid-cols-2">
 						<h3 class="text-lg font-semibold sm:col-span-2">Documentos de la orden de compra</h3>
 						<label class="grid gap-1 text-sm">PDF de orden de compra <input name="purchase_order_pdf" type="file" required accept="application/pdf,.pdf" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm file:text-[#171717]" /></label>
-						<label class="grid gap-1 text-sm">XML de orden de compra <input name="purchase_order_xml" type="file" required accept="application/xml,text/xml,.xml" class="block w-full cursor-pointer text-xs text-[#164d65] file:mr-2 file:rounded-full file:border-0 file:bg-[#aab1b5] file:px-4 file:py-2 file:text-sm text-[#171717]" /></label>
 					</div>
 					<div id="order-summary" class="grid gap-x-6 gap-y-3 rounded-xl bg-white p-4 text-sm sm:grid-cols-2"></div>
 					<label class="flex items-start gap-3 rounded-xl border border-[#8ebdd1] p-4 text-sm text-[#173f50]"><input name="review_confirmed" type="checkbox" required class="mt-0.5 h-4 w-4 accent-[#00b96b]" /><span>Confirmo que los datos capturados son correctos.</span></label>
@@ -496,14 +494,15 @@
 		const orderDialog = document.querySelector('#order-dialog');
 		const orderForm = document.querySelector('#order-wizard-form');
 		const supplierSelect = orderForm.elements.namedItem('supplier_id');
-		const purchaseOrderSupplier = orderForm.elements.namedItem('purchase_order_supplier');
 		const requisitionFolio = orderForm.elements.namedItem('requisition_folio');
-		const quoteAmount = orderForm.elements.namedItem('quote_amount');
+		const requisitionAmount = orderForm.elements.namedItem('requisition_amount');
 		const purchaseOrderReviewFields = document.querySelectorAll('[data-purchase-order-review]');
 		function updatePurchaseOrderReview() {
+			const selectedSupplier = supplierSelect.selectedOptions[0];
 			const reviewValues = {
 				requisition_folio: requisitionFolio.value,
-				quote_amount: quoteAmount.value,
+				supplier_name: selectedSupplier?.dataset.name,
+				requisition_amount: requisitionAmount.value,
 			};
 			purchaseOrderReviewFields.forEach((field) => {
 				field.textContent = reviewValues[field.dataset.purchaseOrderReview] || '—';
@@ -512,24 +511,10 @@
 		supplierSelect.addEventListener('change', () => {
 			const selectedOption = supplierSelect.selectedOptions[0];
 			orderForm.elements.namedItem('quote_email').value = selectedOption?.dataset.email ?? '';
+			updatePurchaseOrderReview();
 		});
-		function normalizeSupplierText(value) {
-			return value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-		}
-		purchaseOrderSupplier.addEventListener('input', () => {
-			const normalizedSupplier = normalizeSupplierText(purchaseOrderSupplier.value);
-			const matchingOption = [...supplierSelect.options].find((option) => (
-				normalizeSupplierText(option.textContent) === normalizedSupplier
-				|| (option.dataset.name && normalizeSupplierText(option.dataset.name) === normalizedSupplier)
-				|| (option.dataset.rfc && normalizeSupplierText(option.dataset.rfc) === normalizedSupplier)
-			));
-			supplierSelect.value = matchingOption?.value ?? '';
-			purchaseOrderSupplier.setCustomValidity(purchaseOrderSupplier.value && !matchingOption ? 'Escribe el nombre o RFC de un proveedor del catálogo.' : '');
-			orderForm.elements.namedItem('quote_email').value = matchingOption?.dataset.email ?? '';
-		});
-		orderForm.addEventListener('reset', () => purchaseOrderSupplier.setCustomValidity(''));
 		requisitionFolio.addEventListener('input', updatePurchaseOrderReview);
-		quoteAmount.addEventListener('input', updatePurchaseOrderReview);
+		requisitionAmount.addEventListener('input', updatePurchaseOrderReview);
 		updatePurchaseOrderReview();
 		const orderSteps = [...document.querySelectorAll('[data-order-step]')];
 		const stepIndicators = [...document.querySelectorAll('[data-step-indicator]')];
@@ -551,8 +536,8 @@
 					: index === activeOrderStep
 						? 'flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#aab1b5] text-sm font-semibold text-white ring-2 ring-[#aab1b5]'
 						: 'flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#e2e5e7] bg-[#e2e5e7] text-sm font-semibold text-[#5e666a]';
-				circle.textContent = complete ? '\u2713' : String(index + 1);
-				stepIndicators[index].lastElementChild.className = `text-[10px] leading-tight md:text-xs ${index <= activeOrderStep ? 'text-[#3f4a50]' : 'text-[#697277]'}`;
+				circle.textContent = String(index + 1);
+				stepIndicators[index].querySelector('[data-step-label]').className = `text-[10px] leading-tight md:text-xs ${index <= activeOrderStep ? 'text-[#3f4a50]' : 'text-[#697277]'}`;
 			});
 			orderProgress.style.width = `${(activeOrderStep / (orderSteps.length - 1)) * 100}%`;
 			previousButton.classList.toggle('invisible', activeOrderStep === 0);
@@ -565,35 +550,22 @@
 		function updateOrderSummary() {
 			const summary = document.querySelector('#order-summary');
 			const fields = [
-				['Folio', 'purchase_order_folio'],
-				['Fecha', 'purchase_order_date'],
-				['Proveedor', 'purchase_order_supplier'],
-				['Requisición', 'requisition_folio'],
-				['Importe', 'quote_amount'],
-				['Partida', 'purchase_order_partida'],
-				['I.V.A.', 'purchase_order_iva_included'],
-				['RMS', 'purchase_order_rms'],
-				['RF', 'purchase_order_rf'],
+				['Folio', orderForm.elements.namedItem('purchase_order_folio').value],
+				['Fecha', orderForm.elements.namedItem('purchase_order_date').value],
+				['Proveedor', supplierSelect.selectedOptions[0]?.dataset.name],
+				['Requisición', requisitionFolio.value],
+				['Importe', requisitionAmount.value],
+				['Partida', orderForm.elements.namedItem('purchase_order_partida').value],
+				['I.V.A.', orderForm.elements.namedItem('purchase_order_iva_included').selectedOptions[0]?.textContent],
+				['RMS', orderForm.elements.namedItem('purchase_order_rms').value],
+				['RF', orderForm.elements.namedItem('purchase_order_rf').value],
 			];
-			summary.replaceChildren(...fields.map(([label, name]) => {
+			summary.replaceChildren(...fields.map(([label, value]) => {
 				const item = document.createElement('p');
-				const field = orderForm.elements.namedItem(name);
-				const value = field instanceof HTMLSelectElement
-					? field.selectedOptions[0]?.textContent || '—'
-					: field.value || '—';
-				item.textContent = `${label}: ${value}`;
+				item.textContent = `${label}: ${value || '—'}`;
 				item.className = 'break-words text-[#173f50]';
 				return item;
 			}));
-		}
-
-		function validateCurrentStep() {
-			const invalidField = orderSteps[activeOrderStep].querySelector(':invalid');
-			if (invalidField) {
-				invalidField.reportValidity();
-				return false;
-			}
-			return true;
 		}
 
 		function closeOrderDialog() {
@@ -628,10 +600,28 @@
 				renderOrderStep();
 			}
 		});
-		nextButton.addEventListener('click', () => {
-			if (!validateCurrentStep()) {
+		stepIndicators.forEach((indicator, index) => {
+			indicator.querySelector('[data-step-trigger]').addEventListener('click', () => {
+				activeOrderStep = index;
+				renderOrderStep();
+			});
+		});
+		orderForm.addEventListener('submit', (event) => {
+			const invalidField = orderForm.querySelector(':invalid');
+			if (!invalidField) {
 				return;
 			}
+
+			event.preventDefault();
+			const invalidStep = orderSteps.findIndex((step) => step.contains(invalidField));
+			if (invalidStep !== -1 && invalidStep !== activeOrderStep) {
+				activeOrderStep = invalidStep;
+				renderOrderStep();
+			}
+			invalidField.focus();
+			invalidField.reportValidity();
+		});
+		nextButton.addEventListener('click', () => {
 			if (activeOrderStep === orderSteps.length - 1) {
 				orderForm.requestSubmit();
 				return;

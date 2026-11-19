@@ -45,9 +45,9 @@ describe('purchaseOrderPasteFields', () => {
 		assert.deepEqual(purchaseOrderPasteFields, [
 			'purchase_order_folio',
 			'purchase_order_date',
-			'purchase_order_supplier',
+			'supplier_id',
 			'requisition_folio',
-			'quote_amount',
+			'requisition_amount',
 			'purchase_order_partida',
 			'purchase_order_iva_included',
 			'purchase_order_rms',

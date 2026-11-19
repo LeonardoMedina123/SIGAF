@@ -28,17 +28,11 @@ class SupplierController extends Controller
             'person_type' => ['required', Rule::in(array_keys(Supplier::PERSON_TYPES))],
             'tax_regime' => ['required', Rule::in(array_keys(Supplier::TAX_REGIMES))],
             'cfdi_use' => ['required', Rule::in(array_keys(Supplier::CFDI_USES))],
-            'representative' => ['required', 'string', 'max:255'],
             'contact_email' => ['required', 'email', 'max:255'],
-            'curp' => ['nullable', 'string', 'size:18'],
             'address' => ['nullable', 'string', 'max:1000'],
             'city' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'cellphone' => ['nullable', 'string', 'max:30'],
             'economic_activity' => ['nullable', 'string', 'max:255'],
-            'iva_percentage' => ['required', 'numeric', 'between:0,100'],
             'status' => ['required', 'string', 'max:100'],
-            'it_capture' => ['nullable', 'string', 'max:255'],
         ]);
 
         DB::transaction(function () use ($validated): void {
