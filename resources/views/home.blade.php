@@ -98,9 +98,17 @@
 	<main class="px-3 pb-24 md:px-4">
 		<div class="mb-3 flex items-center justify-between gap-3">
 			@if (session('success'))
-				<p role="status" class="rounded-lg bg-[#e8f8f0] px-4 py-2 text-sm font-medium text-[#145538]">{{ session('success') }}</p>
+				<div role="status" class="flex flex-wrap items-center gap-3 rounded-lg bg-[#e8f8f0] px-4 py-2 text-sm font-medium text-[#145538]">
+					<span>{{ session('success') }}</span>
+					@if (session('whatsapp_url'))
+						<a href="{{ session('whatsapp_url') }}" target="_blank" rel="noopener noreferrer" class="rounded-full bg-[#128c7e] px-4 py-2 font-semibold text-white hover:bg-[#0f766e]">Abrir WhatsApp para enviar</a>
+					@endif
+				</div>
 			@endif
 		</div>
+		@if (session('warning'))
+			<p role="alert" class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{{ session('warning') }}</p>
+		@endif
 		@if ($errors->any())
 			<div role="alert" class="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
 				@if ($errors->hasAny(['from_date', 'to_date', 'group_by']))

@@ -205,10 +205,43 @@ class SupplierPurchaseOrderDocumentController extends Controller
         $field = $validated['document'] === 'invoice'
             ? 'invoice_edit_enabled'
             : 'payment_complement_edit_enabled';
+        $documentKind = $validated['document'] === 'invoice'
+            ? 'invoice_pdf'
+            : 'payment_complement';
 
+        abort_unless($purchaseOrder->hasDocument($documentKind), 404);
         $purchaseOrder->forceFill([$field => true])->saveOrFail();
 
-        return back()->with('success', 'Se habilitó la modificación del documento solicitado.');
+        $supplier = $purchaseOrder->supplier;
+        $phoneDigits = preg_replace('/\D+/', '', (string) $supplier->number);
+
+        if ($phoneDigits === '') {
+            return back()
+                ->with('success', 'Se habilitó la modificación del documento solicitado.')
+                ->with('warning', 'El campo Número del proveedor no contiene un teléfono; no se pudo preparar el aviso de WhatsApp.');
+        }
+
+        if (strlen($phoneDigits) === 10) {
+            $phoneDigits = '52'.$phoneDigits;
+        }
+
+        if (strlen($phoneDigits) < 10 || strlen($phoneDigits) > 15) {
+            return back()
+                ->with('success', 'Se habilitó la modificación del documento solicitado.')
+                ->with('warning', 'El campo Número del proveedor no tiene un formato válido para WhatsApp.');
+        }
+
+        $documentName = $validated['document'] === 'invoice'
+            ? 'la factura PDF y el XML'
+            : 'el complemento de pago';
+        $message = 'Hola, '.$supplier->name.'. Se solicita cambiar '.$documentName
+            .' de la orden de compra '.$purchaseOrder->folio
+            .'. Ingresa al portal SIGAF para reemplazar los documentos.';
+        $whatsAppUrl = 'https://wa.me/'.$phoneDigits.'?text='.rawurlencode($message);
+
+        return back()
+            ->with('success', 'Se habilitó la modificación. Abre WhatsApp y confirma el envío del aviso al proveedor.')
+            ->with('whatsapp_url', $whatsAppUrl);
     }
 
     public function downloadPurchaseOrder(Request $request, PurchaseOrder $purchaseOrder): StreamedResponse

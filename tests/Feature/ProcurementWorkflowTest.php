@@ -843,12 +843,27 @@ class ProcurementWorkflowTest extends TestCase
             'text/xml',
             $this->createInvoiceXml($purchaseOrder)->getContent(),
         );
+        $supplier->forceFill([
+            'number' => '(449) 123-4567',
+            'phone' => '(449) 765-4321',
+            'cellphone' => '(449) 765-4321',
+        ])->save();
 
         $this->actingAs($internalUser)
             ->post(route('purchase-orders.enable-document-edit', $purchaseOrder), [
                 'document' => 'invoice',
             ])
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHas(
+                'whatsapp_url',
+                'https://wa.me/524491234567?text='.rawurlencode(
+                    'Hola, Proveedor 27. Se solicita cambiar la factura PDF y el XML de la orden de compra OC-2026-027. Ingresa al portal SIGAF para reemplazar los documentos.',
+                ),
+            );
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('Abrir WhatsApp para enviar');
 
         $this->assertTrue($purchaseOrder->fresh()->invoice_edit_enabled);
 
@@ -867,6 +882,41 @@ class ProcurementWorkflowTest extends TestCase
             'factura-nueva.pdf',
             $purchaseOrder->uploadedDocuments()->where('kind', 'invoice_pdf')->firstOrFail()->original_name,
         );
+    }
+
+    public function test_document_change_notice_uses_supplier_number_field(): void
+    {
+        $internalUser = $this->createUserWithType('departments', 'usuario@example.com');
+        $supplier = $this->createSupplier('29', 'proveedor-telefono@example.com');
+        $supplier->forceFill([
+            'number' => '52 449-555-0101',
+            'cellphone' => '449-000-0000',
+            'phone' => '449-111-1111',
+        ])->save();
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-029',
+            User::factory()->create(),
+        );
+        UploadedDocument::replaceContentFor(
+            $purchaseOrder,
+            'payment_complement',
+            'complemento.pdf',
+            'application/pdf',
+            'complemento',
+        );
+
+        $this->actingAs($internalUser)
+            ->post(route('purchase-orders.enable-document-edit', $purchaseOrder), [
+                'document' => 'payment-complement',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas(
+                'whatsapp_url',
+                'https://wa.me/524495550101?text='.rawurlencode(
+                    'Hola, Proveedor 29. Se solicita cambiar el complemento de pago de la orden de compra OC-2026-029. Ingresa al portal SIGAF para reemplazar los documentos.',
+                ),
+            );
     }
 
     public function test_supplier_cannot_replace_payment_complement_without_permission(): void
