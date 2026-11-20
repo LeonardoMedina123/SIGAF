@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::put('/orders/{requisition}', [OrderController::class, 'update'])->name('orders.update');
     Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
+    Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
     Route::post('/systems/reimbursements/{orderNumber}/document', [
         SystemReimbursementDocumentController::class,
         'store',

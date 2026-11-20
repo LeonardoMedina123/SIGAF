@@ -64,6 +64,146 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSee('Aún no hay órdenes de compra para este proveedor.');
     }
 
+    public function test_authenticated_user_can_edit_supplier_details(): void
+    {
+        $supplier = Supplier::create([
+            'number' => '3',
+            'name' => 'Proveedor original',
+            'rfc' => 'ABC010203AB1',
+            'person_type' => 'moral',
+            'tax_regime' => '601',
+            'cfdi_use' => 'G03',
+            'contact_email' => 'original@example.com',
+            'curp' => 'ABCD010203HCHXYZ01',
+            'address' => 'Dirección original',
+            'city' => 'Chihuahua',
+            'phone' => '5550000000',
+            'representative' => 'Contacto original',
+            'cellphone' => '5550000001',
+            'economic_activity' => 'Actividad original',
+            'iva_percentage' => 16,
+            'status' => 'Activo',
+            'it_capture' => 'Capturista original',
+        ]);
+
+        $this->actingAs(User::factory()->create())
+            ->put(route('suppliers.update', $supplier), [
+                'number' => '3',
+                'name' => 'Proveedor actualizado',
+                'rfc' => 'abc010203ab1',
+                'person_type' => 'fisica',
+                'tax_regime' => '612',
+                'cfdi_use' => 'G01',
+                'contact_email' => 'actualizado@example.com',
+                'curp' => 'EFGH010203HCHXYZ02',
+                'address' => 'Dirección actualizada',
+                'city' => 'Delicias',
+                'phone' => '5551110000',
+                'representative' => 'Contacto actualizado',
+                'cellphone' => '5551110001',
+                'economic_activity' => 'Actividad actualizada',
+                'iva_percentage' => '8',
+                'status' => 'Inactivo',
+                'it_capture' => 'Capturista actualizado',
+            ])
+            ->assertRedirect(route('suppliers.index'))
+            ->assertSessionHas('success', 'El proveedor se actualizó correctamente.');
+
+        $this->assertDatabaseHas('suppliers', [
+            'id' => $supplier->id,
+            'number' => '3',
+            'name' => 'Proveedor actualizado',
+            'rfc' => 'ABC010203AB1',
+            'person_type' => 'fisica',
+            'tax_regime' => '612',
+            'cfdi_use' => 'G01',
+            'contact_email' => 'actualizado@example.com',
+            'curp' => 'EFGH010203HCHXYZ02',
+            'address' => 'Dirección actualizada',
+            'city' => 'Delicias',
+            'phone' => '5551110000',
+            'representative' => 'Contacto actualizado',
+            'cellphone' => '5551110001',
+            'economic_activity' => 'Actividad actualizada',
+            'iva_percentage' => '8.00',
+            'status' => 'Inactivo',
+            'it_capture' => 'Capturista actualizado',
+        ]);
+    }
+
+    public function test_supplier_edit_rejects_number_or_rfc_used_by_another_supplier(): void
+    {
+        $supplier = Supplier::create([
+            'number' => '3',
+            'name' => 'Proveedor original',
+            'rfc' => 'ABC010203AB1',
+            'person_type' => 'moral',
+            'tax_regime' => '601',
+            'cfdi_use' => 'G03',
+            'contact_email' => 'original@example.com',
+            'status' => 'Activo',
+        ]);
+        Supplier::create([
+            'number' => '4',
+            'name' => 'Otro proveedor',
+            'rfc' => 'DEF010203AB1',
+            'person_type' => 'moral',
+            'tax_regime' => '601',
+            'cfdi_use' => 'G03',
+            'contact_email' => 'otro@example.com',
+            'status' => 'Activo',
+        ]);
+
+        $this->from(route('suppliers.index'))
+            ->actingAs(User::factory()->create())
+            ->put(route('suppliers.update', $supplier), [
+                'number' => '4',
+                'name' => 'Proveedor cambiado',
+                'rfc' => 'DEF010203AB1',
+                'person_type' => 'moral',
+                'tax_regime' => '601',
+                'cfdi_use' => 'G03',
+                'contact_email' => 'original@example.com',
+                'status' => 'Activo',
+            ])
+            ->assertRedirect(route('suppliers.index'))
+            ->assertSessionHasErrors(['number', 'rfc']);
+
+        $this->assertDatabaseHas('suppliers', [
+            'id' => $supplier->id,
+            'number' => '3',
+            'name' => 'Proveedor original',
+            'rfc' => 'ABC010203AB1',
+        ]);
+    }
+
+    public function test_supplier_catalog_hides_contact_columns_from_the_table(): void
+    {
+        Supplier::create([
+            'number' => '3',
+            'name' => 'Proveedor de prueba',
+            'rfc' => 'ABC010203AB1',
+            'person_type' => 'moral',
+            'tax_regime' => '601',
+            'cfdi_use' => 'G03',
+            'contact_email' => 'proveedor@example.com',
+            'status' => 'Activo',
+        ]);
+
+        $response = $this->actingAs(User::factory()->create())
+            ->get(route('suppliers.index'))
+            ->assertOk()
+            ->assertSee('Editar a Proveedor de prueba');
+
+        preg_match('/<thead\\b[^>]*>.*?<\\/thead>/s', $response->getContent(), $tableHeader);
+
+        $this->assertStringNotContainsString('C.U.R.P.', $tableHeader[0]);
+        $this->assertStringNotContainsString('Teléfono 1', $tableHeader[0]);
+        $this->assertStringNotContainsString('Nombre de contacto', $tableHeader[0]);
+        $this->assertStringNotContainsString('Celular', $tableHeader[0]);
+        $this->assertStringNotContainsString('IT Captura', $tableHeader[0]);
+    }
+
     public function test_creating_supplier_does_not_change_an_existing_account(): void
     {
         $existingUser = User::factory()->create([
@@ -432,9 +572,15 @@ class ProcurementWorkflowTest extends TestCase
             ->assertOk();
 
         $content = $response->getContent();
+        preg_match(
+            '/<form action="'.preg_quote(route('suppliers.store'), '/').'".*?<\/form>/s',
+            $content,
+            $supplierForm,
+        );
+        $this->assertCount(1, $supplierForm);
 
         foreach (['<input name="number"', '<input name="name"'] as $fieldName) {
-            $this->assertSame(1, substr_count($content, $fieldName));
+            $this->assertSame(1, substr_count($supplierForm[0], $fieldName));
         }
 
         foreach ([
@@ -445,7 +591,7 @@ class ProcurementWorkflowTest extends TestCase
             '<input name="iva_percentage"',
             '<input name="it_capture"',
         ] as $removedFieldName) {
-            $this->assertSame(0, substr_count($content, $removedFieldName));
+            $this->assertSame(0, substr_count($supplierForm[0], $removedFieldName));
         }
     }
 

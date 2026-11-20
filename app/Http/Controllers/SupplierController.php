@@ -15,25 +15,7 @@ class SupplierController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
-        $rfc = $request->input('rfc');
-
-        if (is_string($rfc)) {
-            $request->merge(['rfc' => strtoupper($rfc)]);
-        }
-
-        $validated = $request->validate([
-            'number' => ['required', 'string', 'max:50', 'unique:suppliers,number'],
-            'name' => ['required', 'string', 'max:255'],
-            'rfc' => ['bail', 'required', 'string', 'regex:/^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/iu', 'unique:suppliers,rfc'],
-            'person_type' => ['required', Rule::in(array_keys(Supplier::PERSON_TYPES))],
-            'tax_regime' => ['required', Rule::in(array_keys(Supplier::TAX_REGIMES))],
-            'cfdi_use' => ['required', Rule::in(array_keys(Supplier::CFDI_USES))],
-            'contact_email' => ['required', 'email', 'max:255'],
-            'address' => ['nullable', 'string', 'max:1000'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'economic_activity' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', 'string', 'max:100'],
-        ]);
+        $validated = $this->validatedSupplierData($request);
 
         DB::transaction(function () use ($validated): void {
             Supplier::create($validated);
@@ -61,5 +43,59 @@ class SupplierController extends Controller
             'success',
             'El proveedor se agregó correctamente. Si el correo no tenía cuenta, se creó el acceso al portal de proveedor con la contraseña temporal 12345.',
         );
+    }
+
+    public function update(Request $request, Supplier $supplier): RedirectResponse
+    {
+        $supplier->update($this->validatedSupplierData($request, $supplier));
+
+        return redirect()->route('suppliers.index')->with('success', 'El proveedor se actualizó correctamente.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedSupplierData(Request $request, ?Supplier $supplier = null): array
+    {
+        $rfc = $request->input('rfc');
+
+        if (is_string($rfc)) {
+            $request->merge(['rfc' => strtoupper($rfc)]);
+        }
+
+        $numberRule = Rule::unique('suppliers', 'number');
+        $rfcRule = Rule::unique('suppliers', 'rfc');
+
+        if ($supplier !== null) {
+            $numberRule->ignore($supplier->getKey());
+            $rfcRule->ignore($supplier->getKey());
+        }
+
+        $rules = [
+            'number' => ['required', 'string', 'max:50', $numberRule],
+            'name' => ['required', 'string', 'max:255'],
+            'rfc' => ['bail', 'required', 'string', 'regex:/^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/iu', $rfcRule],
+            'person_type' => ['required', Rule::in(array_keys(Supplier::PERSON_TYPES))],
+            'tax_regime' => ['required', Rule::in(array_keys(Supplier::TAX_REGIMES))],
+            'cfdi_use' => ['required', Rule::in(array_keys(Supplier::CFDI_USES))],
+            'contact_email' => ['required', 'email', 'max:255'],
+            'address' => ['nullable', 'string', 'max:1000'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'economic_activity' => ['nullable', 'string', 'max:255'],
+            'status' => ['required', 'string', 'max:100'],
+        ];
+
+        if ($supplier !== null) {
+            $rules += [
+                'curp' => ['nullable', 'string', 'max:18'],
+                'phone' => ['nullable', 'string', 'max:30'],
+                'representative' => ['nullable', 'string', 'max:255'],
+                'cellphone' => ['nullable', 'string', 'max:30'],
+                'iva_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
+                'it_capture' => ['nullable', 'string', 'max:255'],
+            ];
+        }
+
+        return $request->validate($rules);
     }
 }
