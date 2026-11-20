@@ -35,6 +35,8 @@ class PurchaseOrder extends Model
         'payment_validated_by',
         'financial_resources_validated_at',
         'financial_resources_validated_by',
+        'invoice_edit_enabled',
+        'payment_complement_edit_enabled',
     ];
 
     protected function casts(): array
@@ -46,6 +48,8 @@ class PurchaseOrder extends Model
             'iva_included' => 'boolean',
             'payment_validated_at' => 'datetime',
             'financial_resources_validated_at' => 'datetime',
+            'invoice_edit_enabled' => 'boolean',
+            'payment_complement_edit_enabled' => 'boolean',
         ];
     }
 

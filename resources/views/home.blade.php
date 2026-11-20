@@ -229,6 +229,17 @@
 										@if (! $requisition->purchaseOrder->hasDocument('invoice_pdf') && ! $requisition->purchaseOrder->hasDocument('invoice_xml'))
 											<span>Pendiente de factura</span>
 										@endif
+										@if ($requisition->purchaseOrder->hasDocument('invoice_pdf') && $requisition->purchaseOrder->hasDocument('invoice_xml'))
+											@if ($requisition->purchaseOrder->invoice_edit_enabled)
+												<span class="mt-1 text-[10px] font-semibold text-[#145538]">Modificación habilitada</span>
+											@else
+												<form action="{{ route('purchase-orders.enable-document-edit', $requisition->purchaseOrder) }}" method="POST" class="mt-1">
+													@csrf
+													<input type="hidden" name="document" value="invoice">
+													<button type="submit" class="rounded-full bg-[#07577f] px-2 py-1 text-[10px] font-semibold text-white hover:bg-[#064967]">Habilitar modificación</button>
+												</form>
+											@endif
+										@endif
 									</div>
 								@else
 									—
@@ -273,6 +284,15 @@
 							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
 								@if ($requisition->purchaseOrder?->hasDocument('payment_complement'))
 									<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'payment-complement']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Descargar complemento</a>
+									@if ($requisition->purchaseOrder->payment_complement_edit_enabled)
+										<span class="mt-1 block text-[10px] font-semibold text-[#145538]">Modificación habilitada</span>
+									@else
+										<form action="{{ route('purchase-orders.enable-document-edit', $requisition->purchaseOrder) }}" method="POST" class="mt-1">
+											@csrf
+											<input type="hidden" name="document" value="payment-complement">
+											<button type="submit" class="rounded-full bg-[#07577f] px-2 py-1 text-[10px] font-semibold text-white hover:bg-[#064967]">Habilitar modificación</button>
+										</form>
+									@endif
 								@elseif ($requisition->purchaseOrder?->payment_validated_at !== null)
 									<span>Pendiente de complemento</span>
 								@else

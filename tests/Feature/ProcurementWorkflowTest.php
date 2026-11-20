@@ -635,6 +635,127 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSee('Factura y XML recibidos');
     }
 
+    public function test_supplier_cannot_replace_uploaded_invoice_without_internal_permission(): void
+    {
+        $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
+        $supplier = $this->createSupplier('26', $supplierUser->email);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-026',
+            User::factory()->create(),
+        );
+        UploadedDocument::replaceContentFor(
+            $purchaseOrder,
+            'invoice_pdf',
+            'factura-original.pdf',
+            'application/pdf',
+            'pdf-original',
+        );
+        UploadedDocument::replaceContentFor(
+            $purchaseOrder,
+            'invoice_xml',
+            'factura-original.xml',
+            'text/xml',
+            $this->createInvoiceXml($purchaseOrder)->getContent(),
+        );
+
+        $this->actingAs($supplierUser)
+            ->post(route('supplier.purchase-orders.invoices.store', $purchaseOrder), [
+                'invoice_pdf' => UploadedFile::fake()->create('factura-nueva.pdf', 10, 'application/pdf'),
+                'invoice_xml' => $this->createInvoiceXml($purchaseOrder),
+                'review_confirmed' => '1',
+            ])
+            ->assertForbidden();
+
+        $this->assertSame(
+            'pdf-original',
+            $purchaseOrder->uploadedDocuments()->where('kind', 'invoice_pdf')->firstOrFail()->content,
+        );
+    }
+
+    public function test_internal_user_can_enable_and_supplier_can_replace_invoice_once(): void
+    {
+        $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
+        $internalUser = $this->createUserWithType('departments', 'usuario@example.com');
+        $supplier = $this->createSupplier('27', $supplierUser->email);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-027',
+            User::factory()->create(),
+        );
+        UploadedDocument::replaceContentFor(
+            $purchaseOrder,
+            'invoice_pdf',
+            'factura-original.pdf',
+            'application/pdf',
+            'pdf-original',
+        );
+        UploadedDocument::replaceContentFor(
+            $purchaseOrder,
+            'invoice_xml',
+            'factura-original.xml',
+            'text/xml',
+            $this->createInvoiceXml($purchaseOrder)->getContent(),
+        );
+
+        $this->actingAs($internalUser)
+            ->post(route('purchase-orders.enable-document-edit', $purchaseOrder), [
+                'document' => 'invoice',
+            ])
+            ->assertRedirect();
+
+        $this->assertTrue($purchaseOrder->fresh()->invoice_edit_enabled);
+
+        $this->actingAs($supplierUser)
+            ->post(route('supplier.purchase-orders.invoices.store', $purchaseOrder), [
+                'invoice_pdf' => UploadedFile::fake()->create('factura-nueva.pdf', 10, 'application/pdf'),
+                'invoice_xml' => $this->createInvoiceXml($purchaseOrder),
+                'review_confirmed' => '1',
+            ])
+            ->assertRedirect(route('home'))
+            ->assertSessionHas('success');
+
+        $purchaseOrder->refresh();
+        $this->assertFalse($purchaseOrder->invoice_edit_enabled);
+        $this->assertSame(
+            'factura-nueva.pdf',
+            $purchaseOrder->uploadedDocuments()->where('kind', 'invoice_pdf')->firstOrFail()->original_name,
+        );
+    }
+
+    public function test_supplier_cannot_replace_payment_complement_without_permission(): void
+    {
+        $supplierUser = $this->createUserWithType('suppliers', 'proveedor@example.com');
+        $supplier = $this->createSupplier('28', $supplierUser->email);
+        $purchaseOrder = $this->createPurchaseOrderForSupplier(
+            $supplier,
+            'OC-2026-028',
+            User::factory()->create(),
+        );
+        $purchaseOrder->forceFill([
+            'payment_validated_at' => now(),
+        ])->save();
+        UploadedDocument::replaceContentFor(
+            $purchaseOrder,
+            'payment_complement',
+            'complemento-original.pdf',
+            'application/pdf',
+            'complemento-original',
+        );
+
+        $this->actingAs($supplierUser)
+            ->post(route('supplier.purchase-orders.payment-complement.store', $purchaseOrder), [
+                'payment_complement' => UploadedFile::fake()->create('complemento-nuevo.pdf', 10, 'application/pdf'),
+                'review_confirmed' => '1',
+            ])
+            ->assertForbidden();
+
+        $this->assertSame(
+            'complemento-original',
+            $purchaseOrder->uploadedDocuments()->where('kind', 'payment_complement')->firstOrFail()->content,
+        );
+    }
+
     public function test_supplier_invoice_upload_rejects_an_xml_with_a_different_supplier_rfc(): void
     {
         Storage::fake('local');

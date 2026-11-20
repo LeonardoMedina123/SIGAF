@@ -26,6 +26,12 @@ class SupplierPurchaseOrderDocumentController extends Controller
     public function storeInvoice(Request $request, PurchaseOrder $purchaseOrder): RedirectResponse
     {
         $this->authorizeSupplierOrder($request, $purchaseOrder);
+        $hasUploadedInvoice = $purchaseOrder->hasDocument('invoice_pdf')
+            || $purchaseOrder->hasDocument('invoice_xml');
+        abort_unless(
+            ! $hasUploadedInvoice || $purchaseOrder->invoice_edit_enabled,
+            403,
+        );
 
         $validated = $request->validate([
             'invoice_pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
@@ -41,6 +47,7 @@ class SupplierPurchaseOrderDocumentController extends Controller
             $wasSaved = $purchaseOrder->forceFill([
                 'invoice_pdf_path' => null,
                 'invoice_xml_path' => null,
+                'invoice_edit_enabled' => false,
             ])->save();
 
             if (! $wasSaved) {
@@ -143,6 +150,11 @@ class SupplierPurchaseOrderDocumentController extends Controller
     {
         $this->authorizeSupplierOrder($request, $purchaseOrder);
         abort_unless($purchaseOrder->payment_validated_at !== null, 403);
+        abort_unless(
+            ! $purchaseOrder->hasDocument('payment_complement')
+            || $purchaseOrder->payment_complement_edit_enabled,
+            403,
+        );
 
         $validated = $request->validate([
             'payment_complement' => ['required', 'file', 'mimes:pdf', 'max:10240'],
@@ -157,6 +169,7 @@ class SupplierPurchaseOrderDocumentController extends Controller
             );
             $wasSaved = $purchaseOrder->forceFill([
                 'payment_complement_path' => null,
+                'payment_complement_edit_enabled' => false,
             ])->save();
 
             if (! $wasSaved) {
@@ -178,6 +191,24 @@ class SupplierPurchaseOrderDocumentController extends Controller
         });
 
         return redirect()->route('home')->with('success', 'El complemento de pago se envió correctamente.');
+    }
+
+    public function enableDocumentEdit(Request $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user instanceof User && ! $user->isSupplier(), 403);
+
+        $validated = $request->validate([
+            'document' => ['required', 'string', 'in:invoice,payment-complement'],
+        ]);
+
+        $field = $validated['document'] === 'invoice'
+            ? 'invoice_edit_enabled'
+            : 'payment_complement_edit_enabled';
+
+        $purchaseOrder->forceFill([$field => true])->saveOrFail();
+
+        return back()->with('success', 'Se habilitó la modificación del documento solicitado.');
     }
 
     public function downloadPurchaseOrder(Request $request, PurchaseOrder $purchaseOrder): StreamedResponse

@@ -51,6 +51,8 @@ Route::middleware('auth')->group(function () {
         ->name('supplier.purchase-orders.invoices.store');
     Route::post('/supplier/purchase-orders/{purchaseOrder}/payment-complement', [SupplierPurchaseOrderDocumentController::class, 'storePaymentComplement'])
         ->name('supplier.purchase-orders.payment-complement.store');
+    Route::post('/purchase-orders/{purchaseOrder}/enable-document-edit', [SupplierPurchaseOrderDocumentController::class, 'enableDocumentEdit'])
+        ->name('purchase-orders.enable-document-edit');
     Route::post(
         '/purchase-orders/{purchaseOrder}/validate-financial-resources',
         ValidatePurchaseOrderFinancialResourcesController::class,

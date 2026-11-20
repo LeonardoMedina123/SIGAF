@@ -51,6 +51,11 @@
 									<td class="border-t border-[#b7b7b7] px-5 py-2 md:px-8">
 										@if ($purchaseOrder->hasDocument('invoice_pdf') && $purchaseOrder->hasDocument('invoice_xml'))
 											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#e8f8f0] px-4 text-center text-xs font-medium text-[#145538]">Factura y XML recibidos</span>
+											@if ($purchaseOrder->invoice_edit_enabled)
+												<button type="button" data-open-invoice-dialog data-order-folio="{{ $purchaseOrder->folio }}" data-order-amount="{{ $purchaseOrder->amount }}" data-supplier-rfc="{{ $purchaseOrder->supplier->rfc }}" data-invoice-url="{{ route('supplier.purchase-orders.invoices.store', $purchaseOrder) }}" data-pdf-url="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" class="mt-2 inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#07577f] px-4 text-xs font-semibold text-white transition hover:bg-[#064967] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
+													Modificar factura y XML
+												</button>
+											@endif
 										@else
 											<button type="button" data-open-invoice-dialog data-order-folio="{{ $purchaseOrder->folio }}" data-order-amount="{{ $purchaseOrder->amount }}" data-supplier-rfc="{{ $purchaseOrder->supplier->rfc }}" data-invoice-url="{{ route('supplier.purchase-orders.invoices.store', $purchaseOrder) }}" data-pdf-url="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" class="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#22a06b] px-4 text-xs font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
 												<span aria-hidden="true" class="text-xl font-light leading-none">+</span>
@@ -63,6 +68,11 @@
 											<span class="text-xs text-[#64748b]">Pendiente de validación del pago</span>
 										@elseif ($purchaseOrder->hasDocument('payment_complement'))
 											<span class="inline-flex min-h-9 items-center justify-center rounded-full bg-[#e8f8f0] px-4 text-center text-xs font-medium text-[#145538]">Complemento recibido</span>
+											@if ($purchaseOrder->payment_complement_edit_enabled)
+												<button type="button" data-open-payment-dialog data-order-folio="{{ $purchaseOrder->folio }}" data-payment-url="{{ route('supplier.purchase-orders.payment-complement.store', $purchaseOrder) }}" data-pdf-url="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" class="mt-2 inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#07577f] px-4 text-xs font-semibold text-white transition hover:bg-[#064967] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">
+													Modificar complemento
+												</button>
+											@endif
 										@else
 											@if ($purchaseOrder->payment_complement_path !== null)
 												<p role="status" class="mb-2 max-w-56 text-xs text-[#9b2c2c]">El complemento anterior no está disponible. Vuelve a adjuntarlo.</p>
