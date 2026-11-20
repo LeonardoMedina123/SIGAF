@@ -497,6 +497,29 @@ class ProcurementWorkflowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_home_requisition_filter_uses_creator_account_department(): void
+    {
+        $department = Department::where('slug', 'departments')->firstOrFail();
+        $creator = User::factory()->create(['department_id' => $department->id]);
+        Requisition::create([
+            'folio' => 'REQ-DEPARTMENT-001',
+            'created_on' => '2026-10-19',
+            'requested_on' => '2026-10-19',
+            'amount' => 1000,
+            'partida' => '33901',
+            'pdf_path' => 'requisitions/department-test.pdf',
+            'user_id' => $creator->id,
+        ]);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-filter-requisition-department="Departamentos"', false)
+            ->assertSee('data-filter-field="requisition-department"', false)
+            ->assertSee('<option value="Departamentos">Departamentos</option>', false)
+            ->assertSee('<option value="Compras">Compras</option>', false);
+    }
+
     public function test_home_and_supplier_catalog_are_separate_screens(): void
     {
         $supplier = Supplier::create([

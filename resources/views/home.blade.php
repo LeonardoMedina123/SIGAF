@@ -180,6 +180,7 @@
 						<tr
 							data-filter-row
 							data-filter-requisition-folio="{{ $requisition->folio }}"
+							data-filter-requisition-department="{{ $requisition->user?->department?->name }}"
 							data-filter-requisition-partida="{{ $requisition->partida }}"
 							data-filter-requisition-amount="{{ $requisition->amount }}"
 							data-filter-requisition-created-on="{{ $requisition->created_on?->toDateString() }}"
@@ -391,6 +392,15 @@
 
 	<template id="filter-requisicion">
 		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Folio:</span><input data-filter-field="requisition-folio" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
+		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs">
+			<span>Departamento:</span>
+			<select data-filter-field="requisition-department" data-filter-type="select" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30">
+				<option value="">Todos</option>
+				@foreach ($requisitionDepartments as $department)
+					<option value="{{ $department }}">{{ $department }}</option>
+				@endforeach
+			</select>
+		</label>
 		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Partida:</span><input data-filter-field="requisition-partida" type="text" placeholder="Escribe aquí" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>
 		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Monto:</span><span class="flex min-w-0 gap-1"><select data-filter-operator-for="requisition-amount" aria-label="Operador de monto" class="h-7 rounded-full border-0 bg-[#e5e5e5] px-2 text-[10px] outline-none"><option>=</option><option>&gt;</option><option>&lt;</option></select><input data-filter-field="requisition-amount" data-filter-type="number" type="number" placeholder="$" class="h-7 min-w-0 flex-1 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none placeholder:italic focus:ring-2 focus:ring-[#0c8bca]/30" /></span></label>
 		<label class="grid grid-cols-[74px_1fr] items-center gap-2 text-xs"><span>Creación:</span><input data-filter-field="requisition-created-on" data-filter-type="date" type="date" class="h-7 min-w-0 rounded-full border-0 bg-[#e5e5e5] px-3 text-[10px] outline-none focus:ring-2 focus:ring-[#0c8bca]/30" /></label>

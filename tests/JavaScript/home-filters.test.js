@@ -30,4 +30,20 @@ describe('matchesFilterValues', () => {
 			{ field: 'requisition-amount', operator: '=', type: 'number', value: '0' },
 		]), false);
 	});
+
+	it('matches the creator department while applying the requisition folio filter', () => {
+		const filters = [
+			{ field: 'requisition-folio', operator: 'contains', type: 'text', value: 'REQ-2026' },
+			{ field: 'requisition-department', operator: 'contains', type: 'select', value: 'Departamentos' },
+		];
+
+		assert.equal(matchesFilterValues({
+			'requisition-folio': 'REQ-2026-001',
+			'requisition-department': 'Departamentos',
+		}, filters), true);
+		assert.equal(matchesFilterValues({
+			'requisition-folio': 'REQ-2026-001',
+			'requisition-department': 'Compras',
+		}, filters), false);
+	});
 });

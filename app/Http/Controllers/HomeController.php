@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\Requisition;
 use App\Models\Supplier;
 use App\Models\SystemReimbursementDocument;
@@ -32,13 +33,17 @@ class HomeController extends Controller
             ]);
         }
 
+        $requisitions = Requisition::with([
+            'uploadedDocuments:id,requisition_id,kind',
+            'lastModifiedBy:id,name',
+            'user.department',
+            'purchaseOrder.supplier',
+            'purchaseOrder.uploadedDocuments:id,purchase_order_id,kind,original_name,created_at',
+        ])->latest()->get();
+
         return view('home', [
-            'requisitions' => Requisition::with([
-                'uploadedDocuments:id,requisition_id,kind',
-                'lastModifiedBy:id,name',
-                'purchaseOrder.supplier',
-                'purchaseOrder.uploadedDocuments:id,purchase_order_id,kind,original_name,created_at',
-            ])->latest()->get(),
+            'requisitions' => $requisitions,
+            'requisitionDepartments' => Department::query()->orderBy('name')->pluck('name'),
             'suppliers' => Supplier::orderBy('name')->get(),
             'canValidatePayments' => auth()->user()->isAdministrator(),
             'canValidateFinancialResources' => auth()->user()->isFinancialsDepartment(),
