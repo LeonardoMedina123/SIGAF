@@ -254,6 +254,26 @@ class SupplierPurchaseOrderDocumentController extends Controller
         return $this->downloadUploadedDocument($document, Str::slug($purchaseOrder->folio).'.pdf');
     }
 
+    public function previewPurchaseOrder(Request $request, PurchaseOrder $purchaseOrder): StreamedResponse
+    {
+        $this->authorizeSupplierOrder($request, $purchaseOrder);
+
+        $document = $this->findDocument($purchaseOrder, 'purchase_order_pdf');
+        abort_if($document === null, 404);
+
+        return response()->stream(
+            static function () use ($document): void {
+                echo $document->content;
+            },
+            200,
+            [
+                'Content-Type' => $document->mime_type,
+                'Content-Disposition' => 'inline; filename="'.Str::slug($purchaseOrder->folio).'.pdf"',
+                'X-Content-Type-Options' => 'nosniff',
+            ],
+        );
+    }
+
     public function downloadInternalDocument(
         Request $request,
         PurchaseOrder $purchaseOrder,

@@ -60,6 +60,8 @@ Route::middleware('auth')->group(function () {
     )->name('purchase-orders.validate-financial-resources');
     Route::get('/supplier/purchase-orders/{purchaseOrder}/pdf', [SupplierPurchaseOrderDocumentController::class, 'downloadPurchaseOrder'])
         ->name('supplier.purchase-orders.pdf');
+    Route::get('/supplier/purchase-orders/{purchaseOrder}/pdf-preview', [SupplierPurchaseOrderDocumentController::class, 'previewPurchaseOrder'])
+        ->name('supplier.purchase-orders.pdf-preview');
     Route::get('/purchase-orders/{purchaseOrder}/documents/{document}', [
         SupplierPurchaseOrderDocumentController::class,
         'downloadInternalDocument',

@@ -44,9 +44,9 @@ class ProcurementWorkflowTest extends TestCase
             'number' => '3',
             'name' => 'BBVA México',
             'rfc' => 'BBA830831LJ2',
-            'person_type' => 'moral',
-            'tax_regime' => '601',
-            'cfdi_use' => 'G03',
+            'person_type' => null,
+            'tax_regime' => null,
+            'cfdi_use' => null,
             'contact_email' => 'compras@bbva.example',
             'iva_percentage' => '16.00',
             'representative' => null,
@@ -92,7 +92,7 @@ class ProcurementWorkflowTest extends TestCase
                 'number' => '3',
                 'name' => 'Proveedor actualizado',
                 'rfc' => 'abc010203ab1',
-                'person_type' => 'fisica',
+                'person_type' => 'moral',
                 'tax_regime' => '612',
                 'cfdi_use' => 'G01',
                 'contact_email' => 'actualizado@example.com',
@@ -115,9 +115,9 @@ class ProcurementWorkflowTest extends TestCase
             'number' => '3',
             'name' => 'Proveedor actualizado',
             'rfc' => 'ABC010203AB1',
-            'person_type' => 'fisica',
-            'tax_regime' => '612',
-            'cfdi_use' => 'G01',
+            'person_type' => 'moral',
+            'tax_regime' => '601',
+            'cfdi_use' => 'G03',
             'contact_email' => 'actualizado@example.com',
             'curp' => 'EFGH010203HCHXYZ02',
             'address' => 'Dirección actualizada',
@@ -656,9 +656,9 @@ class ProcurementWorkflowTest extends TestCase
         $this->assertDatabaseHas('suppliers', [
             'number' => '4',
             'rfc' => 'ABC010203AB1',
-            'person_type' => 'fisica',
-            'tax_regime' => '612',
-            'cfdi_use' => 'G03',
+            'person_type' => null,
+            'tax_regime' => null,
+            'cfdi_use' => null,
             'contact_email' => 'ana@example.com',
             'representative' => null,
             'phone' => null,
@@ -767,6 +767,10 @@ class ProcurementWorkflowTest extends TestCase
             ->assertOk()
             ->assertSee('OC-2026-010')
             ->assertDontSee('OC-2026-011')
+            ->assertSee('id="order-detail-dialog"', false)
+            ->assertSee('data-open-order-dialog', false)
+            ->assertSee('Datos de la orden de compra', false)
+            ->assertSee('Descargar PDF', false)
             ->assertSee('Adjunta factura y XML')
             ->assertSee('data-order-amount="1000.00"', false)
             ->assertSee('data-supplier-rfc="ABC010203A10"', false)
@@ -1484,6 +1488,11 @@ class ProcurementWorkflowTest extends TestCase
             ->get(route('supplier.purchase-orders.pdf', $purchaseOrder))
             ->assertDownload('oc-2026-016.pdf')
             ->assertStreamedContent($purchaseOrderPdf->getContent());
+
+        $this->get(route('supplier.purchase-orders.pdf-preview', $purchaseOrder))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('Content-Disposition', 'inline; filename="oc-2026-016.pdf"');
 
         $this->get(route('supplier.purchase-orders.pdf', $otherPurchaseOrder))
             ->assertNotFound();

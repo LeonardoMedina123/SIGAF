@@ -46,7 +46,37 @@
 							@forelse ($purchaseOrders as $purchaseOrder)
 								<tr class="text-sm text-[#202020] odd:bg-white even:bg-[#fbfbfb]">
 									<td class="border-t border-[#b7b7b7] px-5 py-3 md:px-8">
-										<a href="{{ route('supplier.purchase-orders.pdf', $purchaseOrder) }}" target="_blank" rel="noopener" class="whitespace-nowrap font-medium text-[#07529a] underline decoration-1 underline-offset-2">{{ $purchaseOrder->folio }}</a>
+										<button type="button"
+											data-open-order-dialog
+											data-order-id="{{ $purchaseOrder->id }}"
+											data-order-json="{{ json_encode([
+												'Folio' => $purchaseOrder->folio,
+												'Fecha de la orden' => $purchaseOrder->order_date?->format('d/m/Y') ?? '—',
+												'Requisición' => $purchaseOrder->requisition?->folio ?? '—',
+												'Fecha de creación' => $purchaseOrder->requisition?->created_on?->format('d/m/Y') ?? '—',
+												'Fecha de solicitud' => $purchaseOrder->requisition?->requested_on?->format('d/m/Y') ?? '—',
+												'Importe' => '$'.number_format((float) $purchaseOrder->amount, 2),
+												'Partida' => $purchaseOrder->partida ?? '—',
+												'I.V.A.' => number_format((float) $purchaseOrder->iva_percentage, 2).' %',
+												'I.V.A. incluido' => $purchaseOrder->iva_included === null ? '—' : ($purchaseOrder->iva_included ? 'Sí' : 'No'),
+												'RMS' => $purchaseOrder->rms ?? '—',
+												'RF' => $purchaseOrder->rf ?? '—',
+												'Proveedor' => $purchaseOrder->supplier->name ?? '—',
+												'R.F.C.' => $purchaseOrder->supplier->rfc ?? '—',
+												'Correo de contacto' => $purchaseOrder->contact_email ?? $purchaseOrder->supplier->contact_email ?? '—',
+												'Lugar de entrega' => $purchaseOrder->delivery_location ?? '—',
+												'Receptor' => $purchaseOrder->receiver ?? '—',
+												'Teléfono del receptor' => $purchaseOrder->receiver_phone ?? '—',
+												'S.P.' => $purchaseOrder->requisition?->sp ?? '—',
+												'P.P.P.' => $purchaseOrder->requisition?->ppp ?? '—',
+												'Sup.' => $purchaseOrder->requisition?->sup ?? '—',
+												'Dir.' => $purchaseOrder->requisition?->dir ?? '—',
+												'Proceso' => $purchaseOrder->requisition?->process ?? '—',
+												'R.F. requisición' => $purchaseOrder->requisition?->rf ?? '—',
+											], JSON_HEX_APOS | JSON_HEX_QUOT) }}"
+											data-pdf-preview="{{ $purchaseOrder->hasDocument('purchase_order_pdf') ? route('supplier.purchase-orders.pdf-preview', $purchaseOrder) : '' }}"
+											data-pdf-download="{{ $purchaseOrder->hasDocument('purchase_order_pdf') ? route('supplier.purchase-orders.pdf', $purchaseOrder) : '' }}"
+											class="cursor-pointer whitespace-nowrap font-medium text-[#07529a] underline decoration-1 underline-offset-2">{{ $purchaseOrder->folio }}</button>
 									</td>
 									<td class="border-t border-[#b7b7b7] px-5 py-2 md:px-8">
 										@if ($purchaseOrder->hasDocument('invoice_pdf') && $purchaseOrder->hasDocument('invoice_xml'))
@@ -99,6 +129,32 @@
 
 		</div>
 	</main>
+
+	<dialog id="order-detail-dialog" aria-labelledby="order-detail-title" class="m-auto h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-[1100px] overflow-hidden rounded-[24px] border-0 bg-white p-0 text-[#202020] shadow-[0_16px_48px_rgba(0,0,0,0.24)] backdrop:bg-black/45">
+		<div class="flex h-full flex-col">
+			<header class="flex shrink-0 items-center justify-between border-b border-[#d5e3e9] px-5 py-4 md:px-7">
+				<div>
+					<p class="text-xs font-semibold uppercase tracking-[0.12em] text-[#087aa7]">Detalle de la orden</p>
+					<h2 id="order-detail-title" class="mt-1 text-xl font-semibold text-[#123f57]">Orden de compra <span data-order-detail-folio></span></h2>
+				</div>
+				<button type="button" data-close-order-dialog aria-label="Cerrar ventana" class="flex h-9 w-9 items-center justify-center rounded-full bg-[#edf1f3] text-2xl leading-none text-[#46545b] transition hover:bg-[#dce5e9]">
+					&times;
+				</button>
+			</header>
+
+			<div class="grid min-h-0 flex-1 overflow-hidden md:grid-cols-[360px_1fr]">
+				<div class="overflow-y-auto border-b border-[#d5e3e9] bg-[#f7fafb] p-5 md:border-b-0 md:border-r">
+					<h3 class="text-sm font-semibold text-[#07577f]">Datos de la orden de compra</h3>
+					<dl data-order-details class="mt-3 grid gap-2 text-sm"></dl>
+					<a data-order-pdf-download href="#" download class="mt-5 inline-flex min-h-10 items-center justify-center rounded-full bg-[#07577f] px-5 text-sm font-semibold text-white transition hover:bg-[#064967]">Descargar PDF</a>
+				</div>
+				<div class="min-h-[420px] bg-[#e8edf0] md:min-h-0">
+					<iframe data-order-pdf-preview title="Vista previa del PDF de la orden de compra" class="h-full min-h-[420px] w-full border-0 md:min-h-0"></iframe>
+					<p data-order-pdf-empty class="hidden p-8 text-center text-sm text-[#64748b]">Esta orden aún no tiene documento PDF.</p>
+				</div>
+			</div>
+		</div>
+	</dialog>
 
 	<dialog id="invoice-dialog" aria-labelledby="invoice-dialog-title" class="m-auto w-[calc(100%-2rem)] max-w-[880px] overflow-visible rounded-[48px] border-0 bg-[#d7f1ff] p-0 text-[#07577f] shadow-[0_16px_48px_rgba(0,0,0,0.24)] backdrop:bg-black/35">
 		<div class="relative rounded-[48px] px-6 py-7 sm:px-10 sm:py-8 md:px-12 md:py-8">
@@ -206,6 +262,64 @@
 	</dialog>
 
 	<script>
+		const orderDetailDialog = document.querySelector('#order-detail-dialog');
+		const orderDetailList = document.querySelector('[data-order-details]');
+		const orderPdfPreview = document.querySelector('[data-order-pdf-preview]');
+		const orderPdfDownload = document.querySelector('[data-order-pdf-download]');
+		const orderPdfEmpty = document.querySelector('[data-order-pdf-empty]');
+
+		document.querySelectorAll('[data-open-order-dialog]').forEach((button) => {
+			button.addEventListener('click', () => {
+				const details = JSON.parse(button.dataset.orderJson);
+				document.querySelector('[data-order-detail-folio]').textContent = details.Folio;
+				orderDetailList.replaceChildren();
+
+				Object.entries(details).forEach(([label, value]) => {
+					const wrapper = document.createElement('div');
+					wrapper.className = 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-3 border-b border-[#e2eaee] pb-2';
+
+					const term = document.createElement('dt');
+					term.className = 'font-medium text-[#60737d]';
+					term.textContent = label;
+
+					const definition = document.createElement('dd');
+					definition.className = 'break-words font-semibold text-[#202020]';
+					definition.textContent = value;
+
+					wrapper.append(term, definition);
+					orderDetailList.append(wrapper);
+				});
+
+				const previewUrl = button.dataset.pdfPreview;
+				const downloadUrl = button.dataset.pdfDownload;
+				const hasPdf = Boolean(previewUrl && downloadUrl);
+				orderPdfPreview.classList.toggle('hidden', !hasPdf);
+				orderPdfEmpty.classList.toggle('hidden', hasPdf);
+				orderPdfDownload.classList.toggle('hidden', !hasPdf);
+
+				if (hasPdf) {
+					orderPdfPreview.src = previewUrl;
+					orderPdfDownload.href = downloadUrl;
+					orderPdfDownload.download = `${details.Folio}.pdf`;
+				} else {
+					orderPdfPreview.removeAttribute('src');
+					orderPdfDownload.removeAttribute('href');
+				}
+
+				orderDetailDialog.showModal();
+			});
+		});
+
+		document.querySelector('[data-close-order-dialog]').addEventListener('click', () => {
+			orderDetailDialog.close();
+		});
+
+		orderDetailDialog.addEventListener('click', (event) => {
+			if (event.target === orderDetailDialog) {
+				orderDetailDialog.close();
+			}
+		});
+
 		const invoiceDialog = document.querySelector('#invoice-dialog');
 		const invoiceForm = document.querySelector('[data-invoice-form]');
 		const invoiceFile = document.querySelector('[data-invoice-file]');

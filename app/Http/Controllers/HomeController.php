@@ -20,7 +20,8 @@ class HomeController extends Controller
 
             return view('suppliers.portal', [
                 'purchaseOrders' => $supplier?->purchaseOrders()
-                    ->with('supplier:id,rfc')
+                    ->with('supplier:id,rfc,name,contact_email')
+                    ->with('requisition')
                     ->with('uploadedDocuments:id,purchase_order_id,kind')
                     ->latest('order_date')
                     ->get() ?? collect(),
