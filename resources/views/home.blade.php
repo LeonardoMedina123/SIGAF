@@ -127,14 +127,14 @@
 		<section aria-label="Requisiciones" class="overflow-x-auto rounded-[20px] border border-[#b7b7b7] bg-white shadow-[0_2px_5px_rgba(0,0,0,0.1)]">
 			<table class="w-full min-w-[1000px] table-fixed border-separate border-spacing-0 text-center">
 				<colgroup>
-					<col class="{{ $canValidatePayments ? 'w-[13%]' : 'w-[15%]' }}" />
-					<col class="{{ $canValidatePayments ? 'w-[12%]' : 'w-[14%]' }}" />
-					<col class="{{ $canValidatePayments ? 'w-[11%]' : 'w-[13%]' }}" />
-					<col class="w-[7%]" />
-					<col class="{{ $canValidatePayments ? 'w-[7%]' : 'w-[8%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[13%]' : 'w-[14%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[12%]' : 'w-[13%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[11%]' : 'w-[12%]' }}" />
+					<col class="w-[12%]" />
+					<col class="{{ $canValidatePayments ? 'w-[6%]' : 'w-[7%]' }}" />
 					<col class="w-[6%]" />
-					<col class="{{ $canValidatePayments ? 'w-[17%]' : 'w-[19%]' }}" />
-					<col class="{{ $canValidatePayments ? 'w-[17%]' : 'w-[18%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[14%]' : 'w-[18%]' }}" />
+					<col class="{{ $canValidatePayments ? 'w-[16%]' : 'w-[18%]' }}" />
 					@if ($canValidatePayments)
 						<col class="w-[10%]" />
 					@endif
@@ -200,19 +200,19 @@
 							data-filter-finance-status="{{ $requisition->purchaseOrder === null ? '' : ($requisition->purchaseOrder->financial_resources_validated_at !== null ? 'Validado' : 'Pendiente') }}"
 							data-filter-complement-rfc="{{ $requisition->purchaseOrder?->supplier?->rfc }}"
 							data-filter-complement-status="{{ $requisition->purchaseOrder?->hasDocument('payment_complement') ? 'Recibido' : ($requisition->purchaseOrder?->payment_validated_at !== null ? 'Pendiente' : 'Sin validar') }}"
-							class="text-center text-xs text-[#263b46] odd:bg-white even:bg-[#f5f9fb]"
+							class="text-center text-xs leading-5 text-[#263b46] odd:bg-white even:bg-[#f5f9fb]"
 						>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+							<td class="break-words border-t border-[#d3dfe5] px-3 py-3 align-middle md:px-4 md:py-4">
 								@if ($requisition->purchaseOrder !== null)
 									<button type="button" data-edit-order data-edit-url="{{ route('orders.edit', $requisition) }}" data-update-url="{{ route('orders.update', $requisition) }}" aria-label="Editar requisición {{ $requisition->folio }}" class="font-semibold text-[#07577f] underline decoration-1 underline-offset-2 hover:text-[#064967] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">{{ $requisition->folio }}</button>
 								@else
 									{{ $requisition->folio }}
 								@endif
 							</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+							<td class="break-words border-t border-[#d3dfe5] px-3 py-3 align-middle md:px-4 md:py-4">
 								{{ $requisition->lastModifiedBy?->name ?? 'No disponible' }}
 							</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+							<td class="break-words border-t border-[#d3dfe5] px-3 py-3 align-middle md:px-4 md:py-4">
 								@if ($requisition->purchaseOrder !== null)
 									<div class="flex flex-col items-center gap-1">
 										<span>{{ $requisition->purchaseOrder->folio }}</span>
@@ -224,11 +224,11 @@
 									—
 								@endif
 							</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+							<td class="break-words border-t border-[#d3dfe5] px-3 py-3 align-middle md:px-4 md:py-4">
 								@if ($requisition->purchaseOrder !== null)
 									<div class="flex flex-col items-center gap-1">
 										<span class="font-semibold">{{ $requisition->purchaseOrder->supplier->name }}</span>
-										<span class="break-all text-[10px] text-[#60737d]">{{ $requisition->purchaseOrder->supplier->contact_email }}</span>
+										<span class="break-words text-[11px] leading-4 text-[#60737d]">{{ $requisition->purchaseOrder->supplier->contact_email }}</span>
 										@if ($requisition->purchaseOrder->hasDocument('invoice_pdf'))
 											<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'invoice-pdf']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Descargar factura PDF</a>
 										@endif
@@ -240,7 +240,7 @@
 										@endif
 										@if ($requisition->purchaseOrder->hasDocument('invoice_pdf') && $requisition->purchaseOrder->hasDocument('invoice_xml'))
 											@if ($requisition->purchaseOrder->invoice_edit_enabled)
-												<span class="mt-1 text-[10px] font-semibold text-[#145538]">Modificación habilitada</span>
+												<span class="mt-1 inline-flex items-center rounded-full bg-[#15803d] px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm">Modificación habilitada</span>
 											@else
 												<form action="{{ route('purchase-orders.enable-document-edit', $requisition->purchaseOrder) }}" method="POST" class="mt-1">
 													@csrf
@@ -254,47 +254,46 @@
 									—
 								@endif
 							</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+							<td class="break-words border-t border-[#d3dfe5] px-3 py-3 align-middle md:px-4 md:py-4">
 								—
 							</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+							<td class="break-words border-t border-[#d3dfe5] px-3 py-3 align-middle md:px-4 md:py-4">
 								@if ($requisition->purchaseOrder === null)
 									—
 								@elseif ($requisition->purchaseOrder->payment_validated_at !== null)
-									<span class="text-[#145538]">Pago validado</span>
+									<span class="inline-flex max-w-full items-center justify-center rounded-full bg-[#15803d] px-2.5 py-1 text-[11px] font-bold leading-tight text-white shadow-sm">Pago validado</span>
 								@elseif ($canValidatePayments)
 									<form action="{{ route('admin.purchase-orders.validate-payment', $requisition->purchaseOrder) }}" method="POST">
 										@csrf
 										<button type="submit" class="rounded-full bg-[#22a06b] px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f] md:px-3 md:text-xs">Validar pago</button>
 									</form>
 								@else
-									<span>Pendiente de validación</span>
+									<span class="inline-flex max-w-full items-center justify-center rounded-full bg-[#e8eef2] px-2 py-1 text-[11px] font-semibold leading-tight text-[#526777]">Pendiente de validación</span>
 								@endif
 							</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+							<td class="break-words border-t border-[#d3dfe5] px-3 py-3 align-middle md:px-4 md:py-4">
 								@if ($requisition->purchaseOrder === null)
 									—
 								@else
 									<div class="flex flex-col items-center gap-1">
-										<span>RF: {{ $requisition->purchaseOrder->rf ?? '—' }}</span>
 										@if ($requisition->purchaseOrder->financial_resources_validated_at !== null)
-											<span data-financial-resources-status="validated" class="font-semibold text-[#145538]">Validado</span>
+											<span data-financial-resources-status="validated" class="inline-flex max-w-full items-center justify-center rounded-full bg-[#15803d] px-3 py-1 text-[11px] font-bold leading-tight text-white shadow-sm">Validado</span>
 										@elseif ($canValidateFinancialResources)
 											<form action="{{ route('purchase-orders.validate-financial-resources', $requisition->purchaseOrder) }}" method="POST">
 												@csrf
 												<button type="submit" class="rounded-full bg-[#22a06b] px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-[#198754] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f] md:px-3 md:text-xs">Validar</button>
 											</form>
 										@else
-											<span data-financial-resources-status="pending" class="text-[#64748b]">Pendiente</span>
+											<span data-financial-resources-status="pending" class="inline-flex max-w-full items-center justify-center rounded-full bg-[#e8eef2] px-3 py-1 text-[11px] font-semibold leading-tight text-[#526777]">Pendiente</span>
 										@endif
 									</div>
 								@endif
 							</td>
-							<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+							<td class="break-words border-t border-[#d3dfe5] px-3 py-3 align-middle md:px-4 md:py-4">
 								@if ($requisition->purchaseOrder?->hasDocument('payment_complement'))
 									<a href="{{ route('purchase-orders.documents.download', [$requisition->purchaseOrder, 'payment-complement']) }}" class="font-semibold text-[#07577f] underline hover:text-[#064967]">Descargar complemento</a>
 									@if ($requisition->purchaseOrder->payment_complement_edit_enabled)
-										<span class="mt-1 block text-[10px] font-semibold text-[#145538]">Modificación habilitada</span>
+										<span class="mt-1 inline-flex items-center rounded-full bg-[#15803d] px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm">Modificación habilitada</span>
 									@else
 										<form action="{{ route('purchase-orders.enable-document-edit', $requisition->purchaseOrder) }}" method="POST" class="mt-1">
 											@csrf
@@ -309,7 +308,7 @@
 								@endif
 							</td>
 							@if ($canValidatePayments)
-								<td class="break-words border-t border-[#d3dfe5] px-2 py-2 md:px-3 md:py-3">
+								<td class="break-words border-t border-[#d3dfe5] px-3 py-3 align-middle md:px-4 md:py-4">
 									@if ($requisition->uploadedDocuments->isNotEmpty() || $requisition->purchaseOrder?->uploadedDocuments->isNotEmpty())
 										<a href="{{ route('admin.requisitions.documents.download', $requisition) }}" aria-label="Descargar archivos de la requisición {{ $requisition->folio }}" class="inline-flex items-center justify-center rounded-full bg-[#07577f] px-3 py-1.5 font-semibold text-white transition hover:bg-[#064967] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#07577f]">Descargar compendio</a>
 									@else
