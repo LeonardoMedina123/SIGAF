@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Department;
 use App\Models\User;
+use App\Notifications\UserActivityNotification;
 use Database\Seeders\SystemsDepartmentUserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -92,6 +93,12 @@ class LoginRouteTest extends TestCase
 
         $this->seed(SystemsDepartmentUserSeeder::class);
         $user = User::where('email', 'departamentoTI@aguascalientes.tecnm.mx')->firstOrFail();
+        $user->notify(new UserActivityNotification(
+            'requisition_created',
+            'Nueva notificación para Sistemas',
+            'Se creó una nueva requisición.',
+        ));
+        $notification = $user->notifications()->firstOrFail();
 
         $this->assertTrue(Hash::check('12345678', $user->password));
 
@@ -112,8 +119,14 @@ class LoginRouteTest extends TestCase
             ->assertSee('Fecha de modificación')
             ->assertSee('Adjunta documento de reembolso')
             ->assertSee('Pendiente de adjuntar')
+            ->assertSee('Notificaciones')
+            ->assertSee(route('notifications.index'), false)
+            ->assertSee('Nueva notificación para Sistemas')
+            ->assertSee(route('notifications.read', $notification->id), false)
+            ->assertSee('Cuenta / Ayuda')
+            ->assertSee(route('help.index'), false)
             ->assertDontSee('Los registros y estados son de ejemplo')
-            ->assertSee('Salir')
+            ->assertSee('Cerrar sesión')
             ->assertDontSee('Crear nueva orden');
     }
 

@@ -9,21 +9,10 @@
 </head>
 <body class="min-h-screen bg-white text-[#161616] antialiased">
 	@include('partials.app-header')
+	@include('partials.navigation', ['activePage' => 'home'])
 
 	<main class="px-3 pb-8 pt-3 md:px-6">
 		<div class="mx-auto max-w-[1440px]">
-			<div class="mb-3 flex justify-end">
-				<form action="{{ route('logout') }}" method="POST">
-					@csrf
-					<button type="submit" class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-semibold text-[#444] transition hover:bg-[#f1f1f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#07577f]">
-						Salir
-						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M10 17l5-5-5-5m5 5H3m9-9h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
-						</svg>
-					</button>
-				</form>
-			</div>
-
 			@if (session('success'))
 				<p role="status" class="mb-3 rounded-lg bg-[#e8fff5] px-4 py-3 text-sm text-[#14532d]">{{ session('success') }}</p>
 			@endif
