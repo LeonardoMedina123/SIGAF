@@ -42,11 +42,23 @@
 										@if ($reimbursement['document'])
 											<div class="flex flex-wrap items-center gap-2">
 												<a data-saved-document href="{{ route('systems.reimbursements.documents.download', $reimbursement['orderNumber']) }}" class="inline-flex max-w-full break-all rounded-full bg-[#e5e7eb] px-3 py-2 font-semibold text-[#374151] underline hover:bg-[#d1d5db]">{{ $reimbursement['document']->original_name }}</a>
-												<form action="{{ route('systems.reimbursements.documents.destroy', $reimbursement['orderNumber']) }}" method="POST">
-													@csrf
-													@method('DELETE')
-													<button type="submit" class="rounded-full border border-[#6b7280] px-3 py-2 text-xs font-semibold text-[#4b5563] transition hover:bg-[#f3f4f6]">Cancelar</button>
-												</form>
+												@if ($reimbursement['editingEnabled'])
+													<form data-document-form action="{{ route('systems.reimbursements.documents.store', $reimbursement['orderNumber']) }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
+														@csrf
+														<button type="button" data-cancel-change class="hidden rounded-full border border-[#6b7280] px-3 py-2 text-xs font-semibold text-[#4b5563] transition hover:bg-[#f3f4f6]">Cancelar</button>
+														<label data-file-label class="inline-flex min-h-9 max-w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#14532d] px-4 text-xs font-semibold text-white transition hover:bg-[#166534] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#07577f]">
+															<span aria-hidden="true" class="text-xl font-light leading-none">+</span>
+															<span data-file-name>Reemplaza documento de reembolso</span>
+															<input data-file-input type="file" name="document" class="sr-only" accept=".pdf,application/pdf" aria-label="Seleccionar reemplazo PDF para la orden {{ $reimbursement['orderNumber'] }}" required>
+														</label>
+														<span data-selected-file class="hidden max-w-full break-all rounded-full bg-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#374151]">
+															<span data-selected-file-name></span>
+														</span>
+														<button type="submit" data-save-document class="hidden rounded-full border border-[#9ca3af] bg-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#374151] transition hover:bg-[#d1d5db]">Guardar reemplazo</button>
+													</form>
+												@else
+													<span class="text-xs text-[#64748b]">Edición desactivada por administración</span>
+												@endif
 											</div>
 										@else
 											<form data-document-form action="{{ route('systems.reimbursements.documents.store', $reimbursement['orderNumber']) }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
@@ -79,7 +91,7 @@
 				</div>
 			</section>
 
-			<p class="mt-3 px-1 text-xs text-[#64748b]">Al guardar, el documento queda disponible para administradores. Puedes reemplazarlo cuando sea necesario.</p>
+			<p class="mt-3 px-1 text-xs text-[#64748b]">Al guardar, el documento queda disponible para administradores. Para reemplazarlo o eliminarlo, administración debe habilitar la edición.</p>
 		</div>
 	</main>
 	<script>
@@ -91,13 +103,14 @@
 			const saveButton = form.querySelector('[data-save-document]');
 			const cancelButton = form.querySelector('[data-cancel-change]');
 			const fileName = form.querySelector('[data-file-name]');
+			const defaultFileName = fileName.textContent;
 			const status = form.closest('tr').querySelector('[data-document-status]');
 			const defaultStatusText = status.textContent;
 			const defaultStatusClass = status.className;
 
 			const resetForm = () => {
 				fileInput.value = '';
-				fileName.textContent = 'Adjunta documento de reembolso';
+				fileName.textContent = defaultFileName;
 				selectedFileName.textContent = '';
 				selectedFile.classList.add('hidden');
 				fileLabel.classList.remove('hidden');

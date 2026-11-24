@@ -69,12 +69,12 @@ class HomeController extends Controller
     }
 
     /**
-     * @return array<int, array{orderNumber: int, folio: string, document: ?SystemReimbursementDocument, status: string, modifiedAt: string}>
+     * @return array<int, array{orderNumber: int, folio: string, document: ?SystemReimbursementDocument, editingEnabled: bool, status: string, modifiedAt: string}>
      */
     private function reimbursements(): array
     {
         $documents = SystemReimbursementDocument::query()
-            ->get(['order_number', 'original_name', 'updated_at'])
+            ->get(['order_number', 'original_name', 'updated_at', 'editing_enabled'])
             ->keyBy('order_number');
 
         return array_map(
@@ -85,6 +85,7 @@ class HomeController extends Controller
                     'orderNumber' => $orderNumber,
                     'folio' => 'Orden_TECNM_2515486',
                     'document' => $document,
+                    'editingEnabled' => $document?->editing_enabled ?? false,
                     'status' => $document ? 'Enviado a administradores' : 'Pendiente de adjuntar',
                     'modifiedAt' => $document?->updated_at?->format('d/m/Y') ?? '—',
                 ];

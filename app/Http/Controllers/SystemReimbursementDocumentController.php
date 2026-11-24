@@ -30,6 +30,13 @@ class SystemReimbursementDocumentController extends Controller
         $file = $validated['document'];
 
         DB::transaction(function () use ($file, $orderNumber): void {
+            $existingDocument = SystemReimbursementDocument::query()
+                ->where('order_number', $orderNumber)
+                ->lockForUpdate()
+                ->first();
+
+            abort_unless($existingDocument === null || $existingDocument->editing_enabled, 403);
+
             SystemReimbursementDocument::query()->updateOrCreate(
                 ['order_number' => $orderNumber],
                 [
@@ -48,23 +55,33 @@ class SystemReimbursementDocumentController extends Controller
             Notification::send($administrators, new UserActivityNotification(
                 'system_reimbursement_uploaded',
                 'Documento de reembolso recibido',
-                'El Departamento de Sistemas adjuntó el documento de la orden '.$orderNumber.'.',
+                'El Departamento de Sistemas adjuntó o actualizó el documento de la orden '.$orderNumber.'.',
             ));
         });
 
         return redirect()->route('home')->with('success', 'El documento se guardó correctamente.');
     }
 
-    public function destroy(Request $request, int $orderNumber): RedirectResponse
+    public function toggleEditing(Request $request, int $orderNumber): RedirectResponse
     {
-        $this->authorizeSystemsUser($request);
+        abort_unless($request->user()?->isAdministrator(), 403);
 
-        $document = SystemReimbursementDocument::query()
-            ->where('order_number', $orderNumber)
-            ->firstOrFail();
-        $document->delete();
+        $editingEnabled = DB::transaction(function () use ($orderNumber): bool {
+            $document = SystemReimbursementDocument::query()
+                ->where('order_number', $orderNumber)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $document->editing_enabled = ! $document->editing_enabled;
+            $document->saveOrFail();
 
-        return redirect()->route('home')->with('success', 'El documento se eliminó correctamente.');
+            return $document->editing_enabled;
+        });
+
+        $message = $editingEnabled
+            ? 'Se habilitó la edición del documento de reembolso.'
+            : 'Se deshabilitó la edición del documento de reembolso.';
+
+        return redirect()->route('admin.system-reimbursements.index')->with('success', $message);
     }
 
     public function download(Request $request, int $orderNumber): StreamedResponse

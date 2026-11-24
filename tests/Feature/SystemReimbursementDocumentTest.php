@@ -45,9 +45,7 @@ class SystemReimbursementDocumentTest extends TestCase
             ->assertSee('reembolso.pdf')
             ->assertSee('Enviado a administradores')
             ->assertSee(route('systems.reimbursements.documents.download', 1), false)
-            ->assertSee('Cancelar')
-            ->assertDontSee('Cambiar documento')
-            ->assertDontSee('Selecciona el nuevo documento');
+            ->assertSee('Edición desactivada por administración');
 
         $this->get(route('systems.reimbursements.documents.download', 1))
             ->assertDownload('reembolso-1.pdf')
@@ -84,10 +82,11 @@ class SystemReimbursementDocumentTest extends TestCase
             ->assertStreamedContent('PDF content');
     }
 
-    public function test_systems_users_can_replace_an_existing_reimbursement_document(): void
+    public function test_systems_users_can_replace_a_document_only_when_an_administrator_enables_editing(): void
     {
         $this->seed(DepartmentSeeder::class);
         $systemsUser = $this->createUserWithDepartment('systems');
+        $administrator = $this->createUserWithDepartment('administrator');
         $firstFile = UploadedFile::fake()->create('anterior.pdf', 20, 'application/pdf');
         $replacementFile = UploadedFile::fake()->create('actualizado.pdf', 20, 'application/pdf');
 
@@ -95,19 +94,96 @@ class SystemReimbursementDocumentTest extends TestCase
             ->post(route('systems.reimbursements.documents.store', 1), ['document' => $firstFile])
             ->assertRedirect(route('home'));
 
-        $this->post(route('systems.reimbursements.documents.store', 1), ['document' => $replacementFile])
+        $this->actingAs($systemsUser)
+            ->post(route('systems.reimbursements.documents.store', 1), ['document' => $replacementFile])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('system_reimbursement_documents', [
+            'order_number' => 1,
+            'original_name' => 'anterior.pdf',
+            'editing_enabled' => false,
+        ]);
+
+        $this->actingAs($administrator)
+            ->post(route('admin.systems.reimbursements.documents.toggle-editing', 1))
+            ->assertRedirect(route('admin.system-reimbursements.index'))
+            ->assertSessionHas('success', 'Se habilitó la edición del documento de reembolso.');
+
+        $this->actingAs($systemsUser)
+            ->post(route('systems.reimbursements.documents.store', 1), ['document' => $replacementFile])
             ->assertRedirect(route('home'))
             ->assertSessionHas('success', 'El documento se guardó correctamente.');
 
-        $this->assertDatabaseCount('system_reimbursement_documents', 1);
         $this->assertDatabaseHas('system_reimbursement_documents', [
             'order_number' => 1,
             'original_name' => 'actualizado.pdf',
-            'content' => $replacementFile->getContent(),
+            'editing_enabled' => true,
         ]);
     }
 
-    public function test_systems_users_can_cancel_a_saved_document_and_upload_another(): void
+    public function test_administrators_can_toggle_document_editing_per_reimbursement(): void
+    {
+        $this->seed(DepartmentSeeder::class);
+        $administrator = $this->createUserWithDepartment('administrator');
+        SystemReimbursementDocument::query()->create([
+            'order_number' => 1,
+            'original_name' => 'reembolso.pdf',
+            'mime_type' => 'application/pdf',
+            'content' => 'PDF content',
+        ]);
+
+        $this->actingAs($administrator)
+            ->get(route('admin.system-reimbursements.index'))
+            ->assertOk()
+            ->assertSee('Activar edición');
+
+        $this->post(route('admin.systems.reimbursements.documents.toggle-editing', 1))
+            ->assertRedirect(route('admin.system-reimbursements.index'));
+
+        $this->assertDatabaseHas('system_reimbursement_documents', [
+            'order_number' => 1,
+            'editing_enabled' => true,
+        ]);
+
+        $this->post(route('admin.systems.reimbursements.documents.toggle-editing', 1))
+            ->assertRedirect(route('admin.system-reimbursements.index'));
+
+        $this->assertDatabaseHas('system_reimbursement_documents', [
+            'order_number' => 1,
+            'editing_enabled' => false,
+        ]);
+    }
+
+    public function test_systems_users_cannot_replace_a_document_after_editing_is_disabled(): void
+    {
+        $this->seed(DepartmentSeeder::class);
+        $systemsUser = $this->createUserWithDepartment('systems');
+        $administrator = $this->createUserWithDepartment('administrator');
+        SystemReimbursementDocument::query()->create([
+            'order_number' => 1,
+            'original_name' => 'anterior.pdf',
+            'mime_type' => 'application/pdf',
+            'content' => 'Original PDF',
+            'editing_enabled' => true,
+        ]);
+        $replacementFile = UploadedFile::fake()->create('actualizado.pdf', 20, 'application/pdf');
+
+        $this->actingAs($administrator)
+            ->post(route('admin.systems.reimbursements.documents.toggle-editing', 1))
+            ->assertRedirect(route('admin.system-reimbursements.index'));
+
+        $this->post(route('systems.reimbursements.documents.store', 1), ['document' => $replacementFile])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('system_reimbursement_documents', [
+            'order_number' => 1,
+            'original_name' => 'anterior.pdf',
+            'content' => 'Original PDF',
+            'editing_enabled' => false,
+        ]);
+    }
+
+    public function test_systems_users_cannot_delete_a_document_to_bypass_the_editing_toggle(): void
     {
         $this->seed(DepartmentSeeder::class);
         $systemsUser = $this->createUserWithDepartment('systems');
@@ -119,18 +195,13 @@ class SystemReimbursementDocumentTest extends TestCase
         ]);
 
         $this->actingAs($systemsUser)
-            ->delete(route('systems.reimbursements.documents.destroy', 1))
-            ->assertRedirect(route('home'))
-            ->assertSessionHas('success', 'El documento se eliminó correctamente.');
+            ->delete('/systems/reimbursements/1/document')
+            ->assertMethodNotAllowed();
 
-        $this->assertDatabaseMissing('system_reimbursement_documents', [
+        $this->assertDatabaseHas('system_reimbursement_documents', [
             'order_number' => 1,
+            'original_name' => 'reembolso.pdf',
         ]);
-
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertSee('Adjunta documento de reembolso')
-            ->assertDontSee('reembolso.pdf');
     }
 
     public function test_users_outside_systems_cannot_upload_or_download_documents(): void
@@ -150,13 +221,13 @@ class SystemReimbursementDocumentTest extends TestCase
             ])
             ->assertForbidden();
 
+        $this->post(route('admin.systems.reimbursements.documents.toggle-editing', 1))
+            ->assertForbidden();
+
         $this->get(route('admin.system-reimbursements.index'))
             ->assertForbidden();
 
         $this->get(route('systems.reimbursements.documents.download', 1))
-            ->assertForbidden();
-
-        $this->delete(route('systems.reimbursements.documents.destroy', 1))
             ->assertForbidden();
 
         $this->assertDatabaseCount('system_reimbursement_documents', 1);
@@ -210,7 +281,7 @@ class SystemReimbursementDocumentTest extends TestCase
         $this->get(route('systems.reimbursements.documents.download', 1))
             ->assertRedirect(route('login'));
 
-        $this->delete(route('systems.reimbursements.documents.destroy', 1))
+        $this->post(route('admin.systems.reimbursements.documents.toggle-editing', 1))
             ->assertRedirect(route('login'));
 
         $this->get(route('admin.system-reimbursements.index'))

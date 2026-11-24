@@ -11,6 +11,7 @@ class SystemReimbursementDocument extends Model
         'original_name',
         'mime_type',
         'content',
+        'editing_enabled',
     ];
 
     protected $hidden = [
@@ -21,6 +22,7 @@ class SystemReimbursementDocument extends Model
     {
         return [
             'order_number' => 'integer',
+            'editing_enabled' => 'boolean',
         ];
     }
 }

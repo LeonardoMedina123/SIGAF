@@ -40,10 +40,10 @@ Route::middleware('auth')->group(function () {
         SystemReimbursementDocumentController::class,
         'store',
     ])->where('orderNumber', '[1-9]')->name('systems.reimbursements.documents.store');
-    Route::delete('/systems/reimbursements/{orderNumber}/document', [
+    Route::middleware(EnsureAdministrator::class)->post('/admin/systems/reimbursements/{orderNumber}/toggle-editing', [
         SystemReimbursementDocumentController::class,
-        'destroy',
-    ])->where('orderNumber', '[1-9]')->name('systems.reimbursements.documents.destroy');
+        'toggleEditing',
+    ])->where('orderNumber', '[1-9]')->name('admin.systems.reimbursements.documents.toggle-editing');
     Route::get('/systems/reimbursements/{orderNumber}/document', [
         SystemReimbursementDocumentController::class,
         'download',
