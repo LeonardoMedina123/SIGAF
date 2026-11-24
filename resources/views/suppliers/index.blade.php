@@ -41,15 +41,16 @@
 						<th scope="col" class="rounded-tl-[19px] px-4 py-3 text-sm font-semibold">Número</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Nombre</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">R.F.C.</th>
-						<th scope="col" class="px-4 py-3 text-sm font-semibold">Tipo de persona</th>
-						<th scope="col" class="px-4 py-3 text-sm font-semibold">Régimen fiscal</th>
-						<th scope="col" class="px-4 py-3 text-sm font-semibold">Uso CFDI</th>
-						<th scope="col" class="px-4 py-3 text-sm font-semibold">Correo de contacto</th>
+						<th scope="col" class="px-4 py-3 text-sm font-semibold">C.U.R.P.</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Dirección</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Ciudad</th>
+						<th scope="col" class="px-4 py-3 text-sm font-semibold">Teléfono 1</th>
+						<th scope="col" class="px-4 py-3 text-sm font-semibold">Representante</th>
+						<th scope="col" class="px-4 py-3 text-sm font-semibold">Celular</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Act./Eco.</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">I.V.A. (%)</th>
 						<th scope="col" class="px-4 py-3 text-sm font-semibold">Estatus</th>
+						<th scope="col" class="px-4 py-3 text-sm font-semibold">IT Captura</th>
 						<th scope="col" class="rounded-tr-[19px] px-4 py-3 text-sm font-semibold">Acciones</th>
 					</tr>
 				</thead>
@@ -59,21 +60,22 @@
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->number }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3 font-medium">{{ $supplier->name }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->rfc }}</td>
-							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $personTypes[$supplier->person_type] ?? '—' }}</td>
-							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->tax_regime ? $supplier->tax_regime.' - '.($taxRegimes[$supplier->tax_regime] ?? '') : '—' }}</td>
-							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->cfdi_use ? $supplier->cfdi_use.' - '.($cfdiUses[$supplier->cfdi_use] ?? '') : '—' }}</td>
-							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->contact_email ?? '—' }}</td>
+							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->curp ?? '—' }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->address ?? '—' }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->city ?? '—' }}</td>
+							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->phone ?? '—' }}</td>
+							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->representative ?? '—' }}</td>
+							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->cellphone ?? '—' }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->economic_activity ?? '—' }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ number_format((float) $supplier->iva_percentage, 2) }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->status }}</td>
+							<td class="border-t border-[#d3dfe5] px-4 py-3">{{ $supplier->it_capture ?? '—' }}</td>
 							<td class="border-t border-[#d3dfe5] px-4 py-3">
 								<a href="#supplier-edit-{{ $supplier->id }}" onclick="document.querySelector('#supplier-edit-{{ $supplier->id }} details').open = true" class="font-semibold text-[#07577f] hover:underline" aria-label="Editar a {{ $supplier->name }}">Editar</a>
 							</td>
 						</tr>
 						<tr id="supplier-edit-{{ $supplier->id }}">
-							<td colspan="13" class="border-t border-[#d3dfe5] bg-[#f5f9fb] px-4 py-4">
+							<td colspan="14" class="border-t border-[#d3dfe5] bg-[#f5f9fb] px-4 py-4">
 								<details @if ((string) old('supplier_id') === (string) $supplier->id) open @endif>
 									<summary class="cursor-pointer text-sm font-semibold text-[#07577f]">Editar {{ $supplier->name }}</summary>
 									<div class="mt-4 rounded-xl border border-[#d7e1e8] bg-white p-4">
@@ -90,33 +92,6 @@
 											<label class="grid gap-1 text-sm">R.F.C.
 												<input name="rfc" required minlength="12" maxlength="13" value="{{ old('supplier_id') == $supplier->id ? old('rfc', $supplier->rfc) : $supplier->rfc }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 uppercase text-[#17252b]" />
 											</label>
-											<label class="grid gap-1 text-sm">Tipo de persona
-												<select name="person_type" required class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
-													<option value="">Selecciona</option>
-													@foreach ($personTypes as $value => $label)
-														<option value="{{ $value }}" @selected(old('supplier_id') == $supplier->id ? old('person_type', $supplier->person_type) === $value : $supplier->person_type === $value)>{{ $label }}</option>
-													@endforeach
-												</select>
-											</label>
-											<label class="grid gap-1 text-sm">Régimen fiscal
-												<select name="tax_regime" required class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
-													<option value="">Selecciona</option>
-													@foreach ($taxRegimes as $value => $label)
-														<option value="{{ $value }}" @selected(old('supplier_id') == $supplier->id ? old('tax_regime', $supplier->tax_regime) === $value : $supplier->tax_regime === $value)>{{ $value }} - {{ $label }}</option>
-													@endforeach
-												</select>
-											</label>
-											<label class="grid gap-1 text-sm">Uso de CFDI
-												<select name="cfdi_use" required class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
-													<option value="">Selecciona</option>
-													@foreach ($cfdiUses as $value => $label)
-														<option value="{{ $value }}" @selected(old('supplier_id') == $supplier->id ? old('cfdi_use', $supplier->cfdi_use) === $value : $supplier->cfdi_use === $value)>{{ $value }} - {{ $label }}</option>
-													@endforeach
-												</select>
-											</label>
-											<label class="grid gap-1 text-sm">Correo de contacto
-												<input name="contact_email" type="email" required maxlength="255" value="{{ old('supplier_id') == $supplier->id ? old('contact_email', $supplier->contact_email) : $supplier->contact_email }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" />
-											</label>
 											<label class="grid gap-1 text-sm">C.U.R.P.
 												<input name="curp" maxlength="18" value="{{ old('supplier_id') == $supplier->id ? old('curp', $supplier->curp) : $supplier->curp }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" />
 											</label>
@@ -129,7 +104,7 @@
 											<label class="grid gap-1 text-sm">Teléfono 1
 												<input name="phone" maxlength="30" value="{{ old('supplier_id') == $supplier->id ? old('phone', $supplier->phone) : $supplier->phone }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" />
 											</label>
-											<label class="grid gap-1 text-sm">Nombre de contacto
+											<label class="grid gap-1 text-sm">Representante
 												<input name="representative" maxlength="255" value="{{ old('supplier_id') == $supplier->id ? old('representative', $supplier->representative) : $supplier->representative }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" />
 											</label>
 											<label class="grid gap-1 text-sm">Celular
@@ -157,7 +132,7 @@
 						</tr>
 					@empty
 						<tr>
-							<td colspan="13" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-sm text-[#60737d]">
+							<td colspan="14" class="border-t border-[#d3dfe5] px-4 py-14 text-center text-sm text-[#60737d]">
 								Aún no hay proveedores registrados. Usa el botón para agregar el primero.
 							</td>
 						</tr>
@@ -196,35 +171,16 @@
 				<label class="grid gap-1 text-sm">Número <input name="number" required maxlength="50" value="{{ old('number') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">Nombre <input name="name" required maxlength="255" value="{{ old('name') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">R.F.C. <input name="rfc" required minlength="12" maxlength="13" value="{{ old('rfc') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 uppercase text-[#17252b]" /></label>
-				<label class="grid gap-1 text-sm">Tipo de persona
-					<select name="person_type" required class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
-						<option value="">Selecciona</option>
-						@foreach ($personTypes as $value => $label)
-							<option value="{{ $value }}" @selected(old('person_type') === $value)>{{ $label }}</option>
-						@endforeach
-					</select>
-				</label>
-				<label class="grid gap-1 text-sm">Régimen fiscal
-					<select name="tax_regime" required class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
-						<option value="">Selecciona</option>
-						@foreach ($taxRegimes as $value => $label)
-							<option value="{{ $value }}" @selected(old('tax_regime') === $value)>{{ $value }} - {{ $label }}</option>
-						@endforeach
-					</select>
-				</label>
-				<label class="grid gap-1 text-sm">Uso de CFDI
-					<select name="cfdi_use" required class="h-10 rounded-lg border border-[#ccd8de] bg-white px-3 text-[#17252b]">
-						<option value="">Selecciona</option>
-						@foreach ($cfdiUses as $value => $label)
-							<option value="{{ $value }}" @selected(old('cfdi_use') === $value)>{{ $value }} - {{ $label }}</option>
-						@endforeach
-					</select>
-				</label>
-				<label class="grid gap-1 text-sm">Correo de contacto <input name="contact_email" type="email" required maxlength="255" value="{{ old('contact_email') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+				<label class="grid gap-1 text-sm">C.U.R.P. <input name="curp" maxlength="18" value="{{ old('curp') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 uppercase text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm md:col-span-2">Dirección <input name="address" maxlength="1000" value="{{ old('address') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">Ciudad <input name="city" maxlength="255" value="{{ old('city') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+				<label class="grid gap-1 text-sm">Teléfono 1 <input name="phone" maxlength="30" value="{{ old('phone') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+				<label class="grid gap-1 text-sm">Representante <input name="representative" maxlength="255" value="{{ old('representative') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+				<label class="grid gap-1 text-sm">Celular <input name="cellphone" maxlength="30" value="{{ old('cellphone') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">Act./Eco. <input name="economic_activity" maxlength="255" value="{{ old('economic_activity') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+				<label class="grid gap-1 text-sm">I.V.A. (%) <input name="iva_percentage" type="number" required min="0" max="100" step="0.01" value="{{ old('iva_percentage', '16') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<label class="grid gap-1 text-sm">Estatus <input name="status" required maxlength="100" value="{{ old('status', 'Activo') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
+				<label class="grid gap-1 text-sm">IT Captura <input name="it_capture" maxlength="255" value="{{ old('it_capture') }}" class="h-10 rounded-lg border border-[#ccd8de] px-3 text-[#17252b]" /></label>
 				<div class="flex justify-end gap-3 md:col-span-2">
 					<button type="button" data-supplier-close class="rounded-lg border border-[#9aaab2] px-4 py-2 text-sm font-semibold text-[#34464e]">Cancelar</button>
 					<button type="submit" class="rounded-lg bg-[#07577f] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#064967]">Guardar proveedor</button>

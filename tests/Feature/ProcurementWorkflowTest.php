@@ -34,6 +34,7 @@ class ProcurementWorkflowTest extends TestCase
                 'address' => 'Av. Paseo de la Reforma',
                 'city' => 'Ciudad de México',
                 'economic_activity' => 'Servicios financieros',
+                'iva_percentage' => '16',
                 'status' => 'Activo',
             ])
             ->assertRedirect(route('suppliers.index'))
@@ -141,6 +142,7 @@ class ProcurementWorkflowTest extends TestCase
             'tax_regime' => '601',
             'cfdi_use' => 'G03',
             'contact_email' => 'original@example.com',
+            'iva_percentage' => '16',
             'status' => 'Activo',
         ]);
         Supplier::create([
@@ -164,6 +166,7 @@ class ProcurementWorkflowTest extends TestCase
                 'tax_regime' => '601',
                 'cfdi_use' => 'G03',
                 'contact_email' => 'original@example.com',
+                'iva_percentage' => '16',
                 'status' => 'Activo',
             ])
             ->assertRedirect(route('suppliers.index'))
@@ -177,7 +180,7 @@ class ProcurementWorkflowTest extends TestCase
         ]);
     }
 
-    public function test_supplier_catalog_hides_contact_columns_from_the_table(): void
+    public function test_supplier_catalog_shows_the_requested_columns(): void
     {
         Supplier::create([
             'number' => '3',
@@ -197,11 +200,23 @@ class ProcurementWorkflowTest extends TestCase
 
         preg_match('/<thead\\b[^>]*>.*?<\\/thead>/s', $response->getContent(), $tableHeader);
 
-        $this->assertStringNotContainsString('C.U.R.P.', $tableHeader[0]);
-        $this->assertStringNotContainsString('Teléfono 1', $tableHeader[0]);
-        $this->assertStringNotContainsString('Nombre de contacto', $tableHeader[0]);
-        $this->assertStringNotContainsString('Celular', $tableHeader[0]);
-        $this->assertStringNotContainsString('IT Captura', $tableHeader[0]);
+        foreach ([
+            'Número',
+            'Nombre',
+            'R.F.C.',
+            'C.U.R.P.',
+            'Dirección',
+            'Ciudad',
+            'Teléfono 1',
+            'Representante',
+            'Celular',
+            'Act./Eco.',
+            'I.V.A. (%)',
+            'Estatus',
+            'IT Captura',
+        ] as $column) {
+            $this->assertStringContainsString($column, $tableHeader[0]);
+        }
     }
 
     public function test_creating_supplier_does_not_change_an_existing_account(): void
@@ -588,7 +603,7 @@ class ProcurementWorkflowTest extends TestCase
             ->assertSee('BBVA México');
     }
 
-    public function test_supplier_form_omits_duplicate_and_removed_fields(): void
+    public function test_supplier_form_contains_the_requested_fields(): void
     {
         $response = $this->actingAs(User::factory()->create())
             ->get(route('suppliers.index'))
@@ -611,10 +626,13 @@ class ProcurementWorkflowTest extends TestCase
             '<input name="phone"',
             '<input name="cellphone"',
             '<input name="curp"',
+            '<input name="address"',
+            '<input name="city"',
+            '<input name="economic_activity"',
             '<input name="iva_percentage"',
             '<input name="it_capture"',
-        ] as $removedFieldName) {
-            $this->assertSame(0, substr_count($supplierForm[0], $removedFieldName));
+        ] as $fieldName) {
+            $this->assertSame(1, substr_count($supplierForm[0], $fieldName));
         }
     }
 
@@ -629,6 +647,7 @@ class ProcurementWorkflowTest extends TestCase
                 'tax_regime' => '612',
                 'cfdi_use' => 'G03',
                 'contact_email' => 'ana@example.com',
+                'iva_percentage' => '16',
                 'status' => 'Activo',
             ])
             ->assertRedirect(route('suppliers.index'))
@@ -648,7 +667,7 @@ class ProcurementWorkflowTest extends TestCase
         ]);
     }
 
-    public function test_supplier_catalog_rejects_a_tax_regime_outside_the_sat_catalog(): void
+    public function test_supplier_catalog_accepts_only_the_requested_supplier_data(): void
     {
         $this->from(route('suppliers.index'))
             ->actingAs(User::factory()->create())
@@ -665,9 +684,13 @@ class ProcurementWorkflowTest extends TestCase
                 'status' => 'Activo',
             ])
             ->assertRedirect(route('suppliers.index'))
-            ->assertSessionHasErrors('tax_regime');
+            ->assertSessionHas('success');
 
-        $this->assertDatabaseMissing('suppliers', ['number' => '5']);
+        $this->assertDatabaseHas('suppliers', [
+            'number' => '5',
+            'representative' => 'Contacto',
+            'iva_percentage' => '16.00',
+        ]);
     }
 
     public function test_requisition_capture_form_contains_only_the_requested_fields(): void

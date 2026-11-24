@@ -20,22 +20,24 @@ class SupplierController extends Controller
         DB::transaction(function () use ($validated): void {
             Supplier::create($validated);
 
-            $email = Str::lower($validated['contact_email']);
-            $userExists = User::query()
-                ->whereRaw('LOWER(email) = ?', [$email])
-                ->exists();
+            if (isset($validated['contact_email'])) {
+                $email = Str::lower($validated['contact_email']);
+                $userExists = User::query()
+                    ->whereRaw('LOWER(email) = ?', [$email])
+                    ->exists();
 
-            if (! $userExists) {
-                $supplierDepartment = Department::query()
-                    ->where('slug', 'suppliers')
-                    ->firstOrFail();
+                if (! $userExists) {
+                    $supplierDepartment = Department::query()
+                        ->where('slug', 'suppliers')
+                        ->firstOrFail();
 
-                User::create([
-                    'name' => $validated['name'],
-                    'email' => $email,
-                    'password' => '12345',
-                    'department_id' => $supplierDepartment->id,
-                ]);
+                    User::create([
+                        'name' => $validated['name'],
+                        'email' => $email,
+                        'password' => '12345',
+                        'department_id' => $supplierDepartment->id,
+                    ]);
+                }
             }
         });
 
@@ -63,6 +65,12 @@ class SupplierController extends Controller
             $request->merge(['rfc' => strtoupper($rfc)]);
         }
 
+        $curp = $request->input('curp');
+
+        if (is_string($curp)) {
+            $request->merge(['curp' => strtoupper($curp)]);
+        }
+
         $numberRule = Rule::unique('suppliers', 'number');
         $rfcRule = Rule::unique('suppliers', 'rfc');
 
@@ -75,26 +83,18 @@ class SupplierController extends Controller
             'number' => ['required', 'string', 'max:50', $numberRule],
             'name' => ['required', 'string', 'max:255'],
             'rfc' => ['bail', 'required', 'string', 'regex:/^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/iu', $rfcRule],
-            'person_type' => ['required', Rule::in(array_keys(Supplier::PERSON_TYPES))],
-            'tax_regime' => ['required', Rule::in(array_keys(Supplier::TAX_REGIMES))],
-            'cfdi_use' => ['required', Rule::in(array_keys(Supplier::CFDI_USES))],
-            'contact_email' => ['required', 'email', 'max:255'],
+            'curp' => ['nullable', 'string', 'max:18'],
             'address' => ['nullable', 'string', 'max:1000'],
             'city' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'representative' => ['nullable', 'string', 'max:255'],
+            'cellphone' => ['nullable', 'string', 'max:30'],
             'economic_activity' => ['nullable', 'string', 'max:255'],
+            'iva_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
             'status' => ['required', 'string', 'max:100'],
+            'it_capture' => ['nullable', 'string', 'max:255'],
+            'contact_email' => ['nullable', 'email', 'max:255'],
         ];
-
-        if ($supplier !== null) {
-            $rules += [
-                'curp' => ['nullable', 'string', 'max:18'],
-                'phone' => ['nullable', 'string', 'max:30'],
-                'representative' => ['nullable', 'string', 'max:255'],
-                'cellphone' => ['nullable', 'string', 'max:30'],
-                'iva_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
-                'it_capture' => ['nullable', 'string', 'max:255'],
-            ];
-        }
 
         return $request->validate($rules);
     }
